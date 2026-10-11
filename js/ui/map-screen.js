@@ -13,6 +13,7 @@ import { TERRAINS, DANGERS } from '../data/routes.js';
 import { tripNeeds, canTravel } from '../game/travel.js';
 import { startTrip } from '../game/season.js';
 import { otherEnd } from '../game/map-gen.js';
+import { regionId } from '../game/perks.js';
 import { canPayHere } from '../game/debt.js';
 import { zoneName } from '../game/reputation.js';
 import { goodArt } from './art.js';
@@ -101,7 +102,7 @@ function openCity(app, cityId, onClose) {
     }
     if (seen && !here) {
       parts.push(h('h3', { style: 'margin-top:6px' }, `Precios de venta (${ago(state.day, seen.day)})`));
-      parts.push(h('dl', { class: 'kv small' }, activeGoods().map((g) => [h('dt', { class: 'row', style: 'gap:8px' }, goodArt(g.id, 24), g.name), h('dd', {}, fmtPrice(seen.sell[g.id]))])));
+      parts.push(h('dl', { class: 'kv small' }, activeGoods(regionId(state)).map((g) => [h('dt', { class: 'row', style: 'gap:8px' }, goodArt(g.id, 24), g.name), h('dd', {}, fmtPrice(seen.sell[g.id]))])));
     } else if (!here) {
       parts.push(h('p', { class: 'muted small' }, 'Todavía no conocés sus precios.'));
     }

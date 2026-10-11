@@ -6,7 +6,8 @@
 
 import { MERCHANTS_BY_ID } from '../data/merchants.js';
 import { UPGRADES_BY_ID } from '../data/upgrades.js';
-import { isTradedIn } from '../data/goods.js';
+import { isTradedIn, inRegion } from '../data/goods.js';
+import { getRegion } from '../data/regions.js';
 
 /**
  * Dice si la temporada se juega con ese mercader.
@@ -58,11 +59,29 @@ export function getMerchant(id) {
 
 /**
  * Dice si este jugador puede comerciar un bien en un tipo de ciudad
- * (al Contrabandista no le importa que las armas estén prohibidas).
+ * (al Contrabandista no le importa que las armas estén prohibidas; los
+ * bienes de otra región, como el jade, no existen acá).
  * @param {object} state
  * @param {string} goodId
  * @param {string} cityType
  */
 export function canTrade(state, goodId, cityType) {
+  if (!inRegion(goodId, regionId(state))) return false;
   return isTradedIn(goodId, cityType) || hasPerk(state, 'contrabandista');
+}
+
+/**
+ * Id de la región de la temporada.
+ * @param {object} state
+ */
+export function regionId(state) {
+  return state.region ?? 'desierto';
+}
+
+/**
+ * Datos de la región de la temporada (montura, impuesto, deuda…).
+ * @param {object} state
+ */
+export function regionOf(state) {
+  return getRegion(regionId(state));
 }

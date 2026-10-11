@@ -6,14 +6,14 @@
  */
 
 import { getGood } from '../data/goods.js';
-import { canTravel, dailyRation, waterUntil, passDay } from './travel.js';
+import { canTravel, dailyRation, waterUntil, passDay, routeDays } from './travel.js';
 import { rollEvent, resolveOption } from './events.js';
 import { otherEnd } from './map-gen.js';
 import { addLog, discoverAround, snapshotPrices } from './knowledge.js';
 import { withRng } from './random.js';
 import { plural } from '../core/text.js';
 import { refreshOffers } from './contracts.js';
-import { guideDays, scoutLevel, refreshHires, crewArrive } from './crew.js';
+import { scoutLevel, refreshHires, crewArrive } from './crew.js';
 import { RULES } from '../data/rules.js';
 import { bump, see, notePeaks } from './stats.js';
 
@@ -33,7 +33,7 @@ export function startTrip(game, routeId) {
   const route = map.routeById[routeId];
   const from = state.location;
   const to = otherEnd(route, from);
-  let days = guideDays(state, route.days);
+  let days = routeDays(state, route.days);
   if (route.danger !== 'bajo') bump(state, 'riskyTrips');
   if (route.danger === 'alto') bump(state, 'highTrips');
   state.trip = { routeId, from, to, done: 0, days, rolled: 0, event: null };

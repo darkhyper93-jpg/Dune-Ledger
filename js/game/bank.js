@@ -6,6 +6,7 @@
 
 import { canPayHere } from './debt.js';
 import { hasPerk } from './perks.js';
+import { getDifficulty } from '../data/rules.js';
 import { addLog } from './knowledge.js';
 import { fmt } from '../core/text.js';
 
@@ -39,6 +40,7 @@ export function takeLoan(game, amount) {
   const err = check(game, amount);
   if (err) return { ok: false, error: err };
   const { state } = game;
+  if (getDifficulty(state.difficulty).noLoans) return { ok: false, error: 'En Pesadilla el Gremio no presta.' };
   if (state.loan + amount > LOAN_LIMIT) return { ok: false, error: `El Gremio presta hasta ${fmt(LOAN_LIMIT)} en total.` };
   state.loan += amount;
   state.gold += amount;

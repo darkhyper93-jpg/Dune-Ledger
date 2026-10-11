@@ -4,7 +4,7 @@
  * tienen fecha; si se vencen, baja la reputación en la zona de destino.
  */
 
-import { ACTIVE_GOODS, getGood, isTradedIn } from '../data/goods.js';
+import { ACTIVE_GOODS, getGood, isTradedIn, inRegion } from '../data/goods.js';
 import { RULES } from '../data/rules.js';
 import { cityMod, sellPriceAt } from './market.js';
 import { travelDays } from './map-gen.js';
@@ -13,7 +13,7 @@ import { changeRep } from './reputation.js';
 import { addLog } from './knowledge.js';
 import { withRng } from './random.js';
 import { fmt } from '../core/text.js';
-import { upgradeValue } from './perks.js';
+import { upgradeValue, regionId } from './perks.js';
 
 /** Contratos activos como máximo. */
 export const MAX_ACTIVE = 3;
@@ -41,7 +41,7 @@ export function offersHere(game) {
  */
 function makeOffer(game, city, days, rng, source, taken) {
   const { state, map } = game;
-  const goods = ACTIVE_GOODS.filter((g) => isTradedIn(g, city.type) && cityMod(city.type, g) <= 1);
+  const goods = ACTIVE_GOODS.filter((g) => isTradedIn(g, city.type) && inRegion(g, regionId(state)) && cityMod(city.type, g) <= 1);
   for (let tries = 0; tries < 20; tries++) {
     const goodId = rng.pick(goods);
     const dests = map.cities.filter((c) => c.id !== city.id && isTradedIn(goodId, c.type) && cityMod(c.type, goodId) >= 1

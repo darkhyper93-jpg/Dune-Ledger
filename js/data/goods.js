@@ -7,7 +7,8 @@
  * comerciada: los bienes caros mueven más el mercado, así no se puede
  * inundar una ciudad de seda sin que se note.
  *
- * `banned` lista los tipos de ciudad donde el bien está prohibido.
+ * `banned` lista los tipos de ciudad donde el bien está prohibido y
+ * `regions`, si está, las únicas regiones donde existe (el jade).
  */
 
 /** @typedef {{id:string,name:string,base:number,weight:number,produces:string[],consumes:string[],stockStep:number,decay?:number,banned?:string[],icon:string,note?:string}} Good */
@@ -25,10 +26,11 @@ export const GOODS = [
   { id: 'libros', name: 'Libros', base: 45, weight: 1, produces: ['santa'], consumes: ['capital'], stockStep: 3.6, icon: '▤' },
   { id: 'seda', name: 'Seda', base: 60, weight: 1, produces: ['puerto'], consumes: ['capital'], stockStep: 4.4, icon: '∿' },
   { id: 'armas', name: 'Armas', base: 70, weight: 2, produces: ['minera'], consumes: ['aldea'], stockStep: 4.8, banned: ['santa'], icon: '⚔', note: 'Ilegales en la ciudad santa' },
+  { id: 'jade', name: 'Jade', base: 150, weight: 1, produces: ['minera'], consumes: ['capital', 'santa'], stockStep: 6, regions: ['jade'], icon: '◆', note: 'Sólo en las Montañas de Jade' },
   { id: 'perlas', name: 'Perlas', base: 120, weight: 0, produces: ['puerto'], consumes: ['capital', 'santa'], stockStep: 6, icon: '○', note: 'No ocupan lugar, pero atraen bandidos' },
 ];
 
-/** Ids de los bienes que se juegan (desde la etapa 2, los 12). */
+/** Ids de todos los bienes (el jade sólo se comercia en su región). */
 export const ACTIVE_GOODS = GOODS.map((g) => g.id);
 
 /** Acceso rápido por id. */
@@ -55,11 +57,23 @@ export function isGoodId(id) {
 }
 
 /**
- * Lista de bienes activos en el orden de la tabla.
+ * Lista de bienes activos en el orden de la tabla. Con `regionId`, sólo
+ * los que existen en esa región.
+ * @param {string} [regionId]
  * @returns {Good[]}
  */
-export function activeGoods() {
-  return GOODS.filter((g) => ACTIVE_GOODS.includes(g.id));
+export function activeGoods(regionId) {
+  return GOODS.filter((g) => ACTIVE_GOODS.includes(g.id) && (!regionId || inRegion(g.id, regionId)));
+}
+
+/**
+ * Dice si un bien existe en una región.
+ * @param {string} goodId
+ * @param {string} regionId
+ */
+export function inRegion(goodId, regionId) {
+  const regions = getGood(goodId).regions;
+  return !regions || regions.includes(regionId);
 }
 
 /**

@@ -11,12 +11,12 @@
 
 import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
-import { RULES } from '../data/rules.js';
+import { RULES, getDifficulty } from '../data/rules.js';
 import { hashUnit } from '../core/rng.js';
 import { repBuyFactor } from './reputation.js';
 import { newsMult } from './news.js';
 import { tradeBonus } from './crew.js';
-import { hasPerk, upgradeValue } from './perks.js';
+import { hasPerk, upgradeValue, regionOf } from './perks.js';
 
 const M = RULES.market;
 
@@ -43,6 +43,26 @@ export function cityMod(cityType, goodId) {
  */
 export function priceNoise(seed, cityId, goodId) {
   return M.noiseMin + hashUnit(`${seed}|${cityId}|${goodId}`) * (M.noiseMax - M.noiseMin);
+}
+
+/** Días que dura cada "semana" de precios volátiles. */
+const SWING_DAYS = 5;
+
+/**
+ * Multiplicador de mercado de un bien en una ciudad hoy: las noticias y, en
+ * Difícil y Pesadilla, un vaivén que cambia cada 5 días (fijo dentro de la
+ * semana, para que descansar un día no sirva para "tirar el dado").
+ * @param {object} game
+ * @param {string} cityId
+ * @param {string} goodId
+ */
+export function marketMult(game, cityId, goodId) {
+  const { state } = game;
+  const vol = getDifficulty(state.difficulty).volatility ?? 0;
+  const news = newsMult(game, cityId, goodId);
+  if (!vol) return news;
+  const week = Math.floor((state.day - 1) / SWING_DAYS);
+  return news * (1 + vol * (2 * hashUnit(`${state.seed}|vaiven|${cityId}|${goodId}|${week}`) - 1));
 }
 
 /**
@@ -115,11 +135,12 @@ export function buyFactor(game, cityId) {
 }
 
 /**
- * Factor de venta: el contable vende un poco más caro.
+ * Factor de venta: el contable vende un poco más caro; en el Reino del
+ * Sultán se paga un impuesto.
  * @param {object} game
  */
 export function sellFactor(game) {
-  return 1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio');
+  return (1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio')) * (1 - (regionOf(game.state).salesTax ?? 0));
 }
 
 /**
@@ -149,7 +170,7 @@ export function quote(game, cityId, goodId, qty, side) {
   const fresh = side === 'sell' && good.decay ? (state.freshness[goodId] ?? 1) : 1;
   const sf = sellFactor(game);
   const factor = buyFactor(game, cityId);
-  const mult = newsMult(game, cityId, goodId);
+  const mult = marketMult(game, cityId, goodId);
   const prices = [];
   for (let i = 0; i < qty; i++) {
     if (side === 'buy') {
@@ -179,7 +200,7 @@ export function cityPrices(game, cityId, goodIds) {
   const factor = buyFactor(game, cityId);
   for (const id of goodIds) {
     const stock = state.stock[cityId][id];
-    const mult = newsMult(game, cityId, id);
+    const mult = marketMult(game, cityId, id);
     sell[id] = sellPriceAt(state.seed, city, id, stock, mult, sellFactor(game));
     buy[id] = buyPriceAt(state.seed, city, id, stock, factor, mult);
   }

@@ -8,6 +8,7 @@ import { ROLES, TRAITS } from '../data/crew.js';
 import { levelOf, hiresHere, hire, fire, MAX_CREW, DESERT_MORALE, LEVELS, WAGE_DAYS } from '../game/crew.js';
 import { avgHealth } from '../game/camels.js';
 import { fmt } from '../core/text.js';
+import { mountName } from '../game/caravan.js';
 
 /**
  * Barra de 0 a 100 con color según el valor.
@@ -27,11 +28,11 @@ export function bar(value, label) {
 export function renderCamels(app) {
   const { state } = app.game;
   return h('div', { class: 'card stack', 'data-testid': 'camels' },
-    h('div', { class: 'row between' }, h('h3', {}, 'Camellos'), h('span', { class: 'small muted' }, `salud promedio ${avgHealth(state)}%`)),
+    h('div', { class: 'row between' }, h('h3', {}, mountName(state, 2, true)), h('span', { class: 'small muted' }, `salud promedio ${avgHealth(state)}%`)),
     state.camelHp.map((hp, i) => h('div', { class: 'stack', style: 'gap:4px' },
-      h('div', { class: 'row between small' }, h('span', {}, `Camello ${i + 1}`), h('b', { class: hp < 30 ? 'bad' : '' }, `${hp}%`)),
-      bar(hp, `Salud del camello ${i + 1}`))),
-    h('p', { class: 'muted small', style: 'margin:0' }, 'Se cansan viajando (más en la montaña y sin agua) y se recuperan descansando en una ciudad. Un camello sin salud muere.'));
+      h('div', { class: 'row between small' }, h('span', {}, `${mountName(state, 1, true)} ${i + 1}`), h('b', { class: hp < 30 ? 'bad' : '' }, `${hp}%`)),
+      bar(hp, `Salud del ${mountName(state)} ${i + 1}`))),
+    h('p', { class: 'muted small', style: 'margin:0' }, `Se cansan viajando (más en la montaña y sin agua) y se recuperan descansando en una ciudad. Un ${mountName(state)} sin salud muere.`));
 }
 
 /**

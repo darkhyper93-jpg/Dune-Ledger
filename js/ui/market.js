@@ -6,7 +6,7 @@
 
 import { h, mount, openSheet, fmtPrice } from './dom.js';
 import { activeGoods, getGood } from '../data/goods.js';
-import { canTrade } from '../game/perks.js';
+import { canTrade, regionId } from '../game/perks.js';
 import { goodArt } from './art.js';
 import { cityPrices, quote, cityMod } from '../game/market.js';
 import { buy, sell, undo, maxBuy } from '../game/actions.js';
@@ -35,7 +35,7 @@ export function renderMarket(app) {
   const { game } = app;
   const { state, map } = game;
   const city = map.cityById[state.location];
-  const goods = activeGoods();
+  const goods = activeGoods(regionId(state));
   const prices = cityPrices(game, state.location, goods.map((g) => g.id));
   const wrap = h('div', { class: 'stack' });
 

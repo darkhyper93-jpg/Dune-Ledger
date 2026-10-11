@@ -1,12 +1,13 @@
-/** Pruebas de los bienes de la etapa 2: los 12 activos y reglas especiales. */
+/** Pruebas de los bienes de la etapa 2: los 13 activos y reglas especiales. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTIVE_GOODS, GOODS, isTradedIn } from '../../js/data/goods.js';
 import { buy, sell } from '../../js/game/actions.js';
 import { testGame } from './helpers.js';
 
-test('se juegan los 12 bienes', () => {
-  assert.equal(ACTIVE_GOODS.length, 12);
+test('hay 13 bienes: 12 comunes y el jade de las montañas', () => {
+  assert.equal(ACTIVE_GOODS.length, 13);
+  assert.equal(GOODS.filter((g) => !g.regions).length, 12);
   assert.deepEqual([...ACTIVE_GOODS].sort(), GOODS.map((g) => g.id).sort());
 });
 

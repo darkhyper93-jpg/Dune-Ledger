@@ -6,14 +6,36 @@ import { RULES } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
 import { hashUnit } from '../core/rng.js';
-import { upgradeValue } from './perks.js';
+import { upgradeValue, regionOf } from './perks.js';
 
 /**
- * Carga máxima: 20 por camello (más con alforjas grandes).
+ * Carga que lleva cada animal: 20 un camello (12 un caballo en la Estepa),
+ * más con alforjas grandes.
+ * @param {object} state
+ */
+export function perMount(state) {
+  return regionOf(state).mount.capacity + upgradeValue(state, 'carga');
+}
+
+/**
+ * Carga máxima de la caravana.
  * @param {object} state
  */
 export function capacity(state) {
-  return state.camels * (RULES.camelCapacity + upgradeValue(state, 'carga'));
+  return state.camels * perMount(state);
+}
+
+/**
+ * Nombre de la montura de la región: mountName(state) → "camello",
+ * mountName(state, 3) → "camellos", con `cap` en mayúscula.
+ * @param {object} state
+ * @param {number} [n=1]
+ * @param {boolean} [cap=false]
+ */
+export function mountName(state, n = 1, cap = false) {
+  const m = regionOf(state).mount;
+  const name = n === 1 ? m.one : m.many;
+  return cap ? name[0].toUpperCase() + name.slice(1) : name;
 }
 
 /**

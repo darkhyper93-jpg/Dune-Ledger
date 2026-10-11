@@ -2,7 +2,8 @@
  * Eventos de viaje, en datos. Cada uno es una carta con texto y 1 a 3 opciones.
  *
  * - when: condiciones para que aparezca (danger: peligros de la ruta,
- *   terrain: terrenos). Sin `when`, puede salir en cualquier ruta.
+ *   terrain: terrenos, notTerrain: terrenos donde no sale, region:
+ *   regiones). Sin `when`, puede salir en cualquier ruta.
  * - weight: qué tan seguido sale (las rutas peligrosas suben los malos).
  * - setup(game, rng): calcula valores para el texto y las opciones
  *   (peaje, mercadería del nómada…). Se guardan con el evento.
@@ -36,7 +37,7 @@ function cargoBase(state) {
 export const EVENTS = [
   {
     id: 'bandidos',
-    when: { danger: ['medio', 'alto'] },
+    when: { danger: ['medio', 'alto'], notTerrain: ['mar'] },
     weight: 3,
     text: 'Una banda de bandidos te corta el paso. El jefe pide $toll de oro para dejarte seguir.',
     setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
@@ -78,6 +79,7 @@ export const EVENTS = [
   },
   {
     id: 'nomada',
+    when: { notTerrain: ['mar'] },
     weight: 1.5,
     text: 'Un mercader nómada te ofrece $qty de $goodName por $price de oro.$sellText',
     setup: (game, rng) => {
@@ -98,6 +100,7 @@ export const EVENTS = [
   },
   {
     id: 'ruinas',
+    when: { notTerrain: ['mar'] },
     weight: 1,
     text: 'Entre las dunas asoman unas ruinas antiguas. Puede haber un tesoro… o una trampa.',
     options: [
@@ -110,6 +113,7 @@ export const EVENTS = [
   },
   {
     id: 'viajero',
+    when: { notTerrain: ['mar'] },
     weight: 1,
     text: 'Un viajero herido te pide ayuda al costado del camino.',
     options: [
@@ -129,6 +133,65 @@ export const EVENTS = [
       { label: 'Sobornar (20 de oro)', cost: { gold: 20 }, chance: 'bribe', win: { gold: -20 }, lose: { gold: -20, inspect: true, rep: -5 },
         winText: 'El guardia mira para otro lado.', loseText: 'No aceptó el soborno y revisó igual.' },
       { label: 'Desviarse (+1 día)', spareDays: 1, effects: { delay: 1 } },
+    ],
+  },
+  // ── Eventos de cada región ──
+  {
+    id: 'piratas',
+    when: { terrain: ['mar'] },
+    weight: 3,
+    text: 'Una galera de velas negras se pone a la par. Los piratas piden $toll de oro para no abordarte.',
+    setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
+    options: [
+      { label: 'Pagar $toll de oro', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
+      { label: 'Defender el barco', chance: 'fight', win: { rep: 5, loot: [30, 90], morale: 10 }, lose: { cargoPct: 0.4, morale: -10 },
+        winText: '¡Los rechazaste! En la huida dejaron caer un cofre.', loseText: 'Te abordaron y se llevaron parte de la carga.' },
+      { label: 'Escapar a toda vela', chance: 'flee', win: {}, lose: { cargoPct: 0.25 },
+        winText: 'El viento estuvo de tu lado y los dejaste atrás.', loseText: 'Te alcanzaron: tiraste carga al agua para ganar velocidad.' },
+    ],
+  },
+  {
+    id: 'calma',
+    when: { terrain: ['mar'] },
+    weight: 1.5,
+    text: 'Se para el viento. Las velas cuelgan y el barco no avanza.',
+    options: [
+      { label: 'Esperar el viento (+1 día)', spareDays: 1, effects: { delay: 1 } },
+      { label: 'Remar todos juntos', effects: { morale: -8, water: -4 } },
+    ],
+  },
+  {
+    id: 'estampida',
+    when: { region: ['estepa'], notTerrain: ['mar'] },
+    weight: 2,
+    text: 'La tierra tiembla: una manada de caballos salvajes viene en estampida hacia la caravana.',
+    options: [
+      { label: 'Apartarse y esperar (+1 día)', spareDays: 1, effects: { delay: 1 } },
+      { label: 'Cruzar antes de que lleguen', chance: 0.6, win: {}, lose: { cargoPct: 0.15, camelHp: -15 },
+        winText: 'Pasaste justo a tiempo.', loseText: 'La manada te pasó por encima: perdiste carga.' },
+    ],
+  },
+  {
+    id: 'avalancha',
+    when: { region: ['jade'], terrain: ['montana'] },
+    weight: 2,
+    text: 'Un ruido seco arriba del paso: se vienen piedras y nieve.',
+    options: [
+      { label: 'Volver y rodear (+2 días)', spareDays: 2, effects: { delay: 2 } },
+      { label: 'Apurar el paso', chance: 0.55, win: {}, lose: { cargoPct: 0.2, breakFragile: 0.5, camelHp: -25 },
+        winText: 'Cruzaste un segundo antes del derrumbe.', loseText: 'La avalancha te alcanzó de costado.' },
+    ],
+  },
+  {
+    id: 'recaudador',
+    when: { region: ['sultan'] },
+    weight: 2,
+    text: 'Un recaudador del sultán cobra el diezmo del camino: $tax de oro.',
+    setup: (game) => ({ tax: Math.max(15, Math.round(cargoBase(game.state) * 0.08)), fine: Math.max(40, Math.round(cargoBase(game.state) * 0.2)) }),
+    options: [
+      { label: 'Pagar el diezmo ($tax)', cost: { gold: '$tax' }, effects: { gold: '-$tax', rep: 2 } },
+      { label: 'Esconder la carga', chance: 'bribe', win: {}, lose: { gold: '-$fine', rep: -5 },
+        winText: 'Revisó por arriba y no vio nada.', loseText: 'Encontró la carga escondida y te multó con $fine.' },
     ],
   },
 ];

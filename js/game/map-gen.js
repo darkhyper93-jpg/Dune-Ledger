@@ -11,7 +11,8 @@
 
 import { Rng } from '../core/rng.js';
 import { CITY_TYPES, CITY_NAMES } from '../data/cities.js';
-import { ACTIVE_GOODS, isTradedIn } from '../data/goods.js';
+import { ACTIVE_GOODS, isTradedIn, inRegion } from '../data/goods.js';
+import { getRegion } from '../data/regions.js';
 import { RULES } from '../data/rules.js';
 import { sellPriceAt, buyPriceAt } from './market.js';
 import { assignZones } from './reputation.js';
@@ -67,16 +68,18 @@ function placePoints(rng, n) {
  * Elige el tipo de cada ciudad respetando mínimos y máximos por tipo.
  * La capital va en la ciudad más cercana al centro del mapa.
  */
-function assignTypes(rng, points) {
+function assignTypes(rng, points, minPorts = 0) {
   const n = points.length;
   const center = { x: R.width / 2, y: R.height / 2 };
   const capitalIdx = points.reduce((best, p, i) => (dist(p, center) < dist(points[best], center) ? i : best), 0);
   const types = [];
-  for (const t of CITY_TYPES) for (let i = 0; i < t.min; i++) types.push(t.id);
-  const counts = Object.fromEntries(CITY_TYPES.map((t) => [t.id, t.min]));
+  const min = (t) => (t.id === 'puerto' ? Math.max(t.min, minPorts) : t.min);
+  const max = (t) => (t.id === 'puerto' ? Math.max(t.max, minPorts + 2) : t.max);
+  for (const t of CITY_TYPES) for (let i = 0; i < min(t); i++) types.push(t.id);
+  const counts = Object.fromEntries(CITY_TYPES.map((t) => [t.id, min(t)]));
   while (types.length < n) {
     const weights = {};
-    for (const t of CITY_TYPES) if (counts[t.id] < t.max) weights[t.id] = t.weight;
+    for (const t of CITY_TYPES) if (counts[t.id] < max(t)) weights[t.id] = t.weight;
     const id = rng.weighted(weights);
     counts[id]++;
     types.push(id);
@@ -90,9 +93,9 @@ function assignTypes(rng, points) {
  * pegado a otra ciudad, respetando el máximo de rutas por ciudad.
  * @returns {[number,number][]} pares de índices
  */
-function buildEdges(points) {
+function buildEdges(points, distPerDay) {
   const n = points.length;
-  const maxLen = R.maxDays * R.distPerDay;
+  const maxLen = R.maxDays * distPerDay;
   const pairs = [];
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([i, j, dist(points[i], points[j])]);
   pairs.sort((p, q) => p[2] - q[2]);
@@ -106,7 +109,7 @@ function buildEdges(points) {
   };
   for (const [i, j, len] of pairs) {
     // Rutas largas sólo si alguna de las dos ciudades tiene pocas.
-    if (len > R.distPerDay * 3.2 && deg[i] >= R.minDegree && deg[j] >= R.minDegree) continue;
+    if (len > distPerDay * 3.2 && deg[i] >= R.minDegree && deg[j] >= R.minDegree) continue;
     if (canAdd(i, j, len, R.maxDegree)) {
       edges.push([i, j]);
       deg[i]++;
@@ -141,8 +144,9 @@ function isConnected(n, edges) {
 /**
  * Elige el terreno de una ruta según el tipo de las ciudades que une.
  */
-function pickTerrain(rng, typeA, typeB) {
+function pickTerrain(rng, typeA, typeB, bias = {}) {
   const w = { arena: 4, piedra: 3, montana: 1, rio: 1 };
+  for (const [t, extra] of Object.entries(bias)) w[t] += extra;
   for (const t of [typeA, typeB]) {
     if (t === 'oasis') w.arena += 3;
     if (t === 'minera') w.montana += 3;
@@ -158,15 +162,16 @@ function pickTerrain(rng, typeA, typeB) {
  * @param {object} map
  * @param {string} seed
  * @param {string} cityId
+ * @param {string} [region='desierto'] los bienes de otras regiones no cuentan
  * @returns {number}
  */
-export function bestNeighborMargin(map, seed, cityId) {
+export function bestNeighborMargin(map, seed, cityId, region = 'desierto') {
   const from = map.cityById[cityId];
   let best = 0;
   for (const route of map.routesByCity[cityId]) {
     const to = map.cityById[route.a === cityId ? route.b : route.a];
     for (const g of ACTIVE_GOODS) {
-      if (!isTradedIn(g, from.type) || !isTradedIn(g, to.type)) continue;
+      if (!isTradedIn(g, from.type) || !isTradedIn(g, to.type) || !inRegion(g, region)) continue;
       const margin = sellPriceAt(seed, to, g, RULES.market.stockNormal) / buyPriceAt(seed, from, g, RULES.market.stockNormal);
       if (margin > best) best = margin;
     }
@@ -193,12 +198,14 @@ export function indexMap(map) {
 /**
  * Arma un intento de mapa. Devuelve null si no cumple las reglas.
  */
-function tryMap(rng, seed) {
+function tryMap(rng, seed, region) {
+  const rm = getRegion(region).map;
+  const distPerDay = rm.distPerDay ?? R.distPerDay;
   const n = rng.int(R.minCities, R.maxCities);
   const points = placePoints(rng, n);
   if (!points) return null;
-  const types = assignTypes(rng, points);
-  const edges = buildEdges(points);
+  const types = assignTypes(rng, points, rm.minPorts ?? 0);
+  const edges = buildEdges(points, distPerDay);
   const deg = new Array(n).fill(0);
   for (const [a, b] of edges) {
     deg[a]++;
@@ -210,17 +217,23 @@ function tryMap(rng, seed) {
   const pools = Object.fromEntries(Object.entries(CITY_NAMES).map(([t, list]) => [t, rng.shuffle(list)]));
   const cities = points.map((p, i) => ({ id: `c${i}`, name: pools[types[i]].pop(), type: types[i], x: p.x, y: p.y, guildPost: false, zone: '' }));
   assignZones(cities);
-  const dangerW = { bajo: 7, medio: 2, alto: 1.5 };
+  const dangerW = rm.danger ?? { bajo: 7, medio: 2, alto: 1.5 };
   const routes = edges.map(([a, b], i) => {
     const len = dist(points[a], points[b]);
-    return {
+    const route = {
       id: `r${i}`,
       a: cities[a].id,
       b: cities[b].id,
-      days: Math.min(R.maxDays, Math.max(1, Math.round(len / R.distPerDay))),
-      terrain: pickTerrain(rng, types[a], types[b]),
+      days: Math.min(R.maxDays, Math.max(1, Math.round(len / distPerDay))),
+      terrain: pickTerrain(rng, types[a], types[b], rm.terrain),
       danger: rng.weighted(dangerW),
     };
+    // En la Costa, entre dos puertos se va en barco: más rápido.
+    if (rm.sea && types[a] === 'puerto' && types[b] === 'puerto') {
+      route.terrain = 'mar';
+      route.days = Math.max(1, route.days - 1);
+    }
+    return route;
   });
   const map = indexMap({ cities, routes });
 
@@ -230,7 +243,7 @@ function tryMap(rng, seed) {
   const far = rng.shuffle(cities.filter((c) => !near.has(c.id)));
   for (const c of far.slice(0, R.guildPosts)) c.guildPost = true;
 
-  if (cities.some((c) => bestNeighborMargin(map, seed, c.id) < MIN_ROUTE_MARGIN)) return null;
+  if (cities.some((c) => bestNeighborMargin(map, seed, c.id, region) < MIN_ROUTE_MARGIN)) return null;
   return map;
 }
 
@@ -238,14 +251,16 @@ function tryMap(rng, seed) {
  * Genera el mapa de una temporada a partir de su semilla. Siempre da el
  * mismo resultado para la misma semilla.
  * @param {string} seed
- * @returns {{cities:object[],routes:object[],cityById:object,routeById:object,routesByCity:object,capitalId:string}}
+ * @param {string} [region='desierto']
+ * @returns {{cities:object[],routes:object[],cityById:object,routeById:object,routesByCity:object,capitalId:string,region:string}}
  */
-export function generateMap(seed) {
-  const rng = new Rng(`map:${seed}`);
+export function generateMap(seed, region = 'desierto') {
+  const rng = new Rng(region === 'desierto' ? `map:${seed}` : `map:${region}:${seed}`);
   for (let attempt = 0; attempt < 400; attempt++) {
-    const map = tryMap(rng, seed);
+    const map = tryMap(rng, seed, region);
     if (map) {
       map.capitalId = map.cities.find((c) => c.type === 'capital').id;
+      map.region = region;
       return map;
     }
   }

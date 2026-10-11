@@ -1,5 +1,5 @@
 /**
- * Ilustraciones de los 12 bienes, dibujadas a mano en SVG (caja de 48×48).
+ * Ilustraciones de los 13 bienes, dibujadas a mano en SVG (caja de 48×48).
  * Mismo estilo para todas: formas planas con un contorno índigo de 2 px,
  * una luz y una sombra, sobre una medalla de arena para que se lean igual
  * en modo claro y en modo noche.
@@ -125,6 +125,18 @@ export const GOOD_ART = {
     <path d="M10 26h28" ${O}/>
     <circle cx="24" cy="28.5" r="5" fill="#FBF6EE" ${O}/>
     <circle cx="22.5" cy="27" r="1.5" fill="#FFFFFF"/>`,
+
+  // Un disco de jade tallado colgado de un cordón rojo con borla, y una piedra en bruto.
+  jade: `
+    <path d="M24 5v7" stroke="#B4482A" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="24" cy="5" r="2" fill="#E2A42C" ${O}/>
+    <circle cx="23" cy="24" r="12.5" fill="#3FA77A" ${O}/>
+    <circle cx="23" cy="24" r="8.5" fill="none" stroke="#2C8560" stroke-width="1.8"/>
+    <circle cx="23" cy="24" r="4" fill="#F1E2C2" ${O}/>
+    <path d="M14.5 19c1.5-3 4-5 7-5.6" fill="none" stroke="#A8E6C4" stroke-width="2" stroke-linecap="round"/>
+    <path d="M30 29l-2 2M16 29l2 2M17 17l1.5 1.5" stroke="#2C8560" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M33 43l2-7 6-2 4 4-1 5z" fill="#5FBF8F" ${O}/>
+    <path d="M36 37l3 1" stroke="#C4F0D8" stroke-width="1.6" stroke-linecap="round"/>`,
 };
 
 /**

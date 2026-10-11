@@ -5,15 +5,15 @@
  */
 
 import { EVENTS, EVENTS_BY_ID } from '../data/events.js';
-import { RULES } from '../data/rules.js';
+import { RULES, getDifficulty } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { cargoFree, provisionCap } from './caravan.js';
-import { hasPerk, upgradeValue } from './perks.js';
+import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
 import { tireCamels } from './camels.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
-import { fmt } from '../core/text.js';
+import { fmt, plural } from '../core/text.js';
 
 /** Probabilidad base de evento por día de viaje (≈ uno cada 3 o 4 días). */
 export const EVENT_RATE = 0.33;
@@ -88,6 +88,55 @@ export function createEvent(game, id, rng) {
 }
 
 /**
+ * Dice si un evento puede salir en una ruta: peligro, terreno y región.
+ * @param {object} game
+ * @param {{danger:string, terrain:string}} route
+ * @param {object} def evento de js/data/events.js
+ */
+export function eventAllowed(game, route, def) {
+  const w = def.when ?? {};
+  if (w.danger && !w.danger.includes(route.danger)) return false;
+  if (w.terrain && !w.terrain.includes(route.terrain)) return false;
+  if (w.region && !w.region.includes(regionId(game.state))) return false;
+  if (w.notTerrain && w.notTerrain.includes(route.terrain)) return false;
+  return true;
+}
+
+/**
+ * Chance de que pase algo en un día de viaje por esta ruta.
+ * @param {object} game
+ * @param {{danger:string}} route
+ */
+export function eventChance(game, route) {
+  const diff = getDifficulty(game.state.difficulty);
+  return (game.options?.eventRate ?? EVENT_RATE) * DANGER_RATE[route.danger] * (diff.eventRate ?? 1);
+}
+
+/**
+ * Peso de cada evento posible en esta ruta: el de la carta, el de la
+ * región y la dificultad (más bandidos y piratas en Difícil).
+ * @param {object} game
+ * @param {{danger:string, terrain:string}} route
+ * @returns {Record<string, number>}
+ */
+export function eventWeights(game, route) {
+  const weights = {};
+  const regional = regionOf(game.state).eventWeights ?? {};
+  const bandits = getDifficulty(game.state.difficulty).bandits ?? 1;
+  for (const e of EVENTS) {
+    if (e.weight <= 0 || !eventAllowed(game, route, e)) continue;
+    let w = e.weight * (regional[e.id] ?? 1);
+    if (e.id === 'bandidos') {
+      if (route.danger === 'alto') w *= 3;
+      w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos
+    }
+    if (e.id === 'bandidos' || e.id === 'piratas') w *= bandits;
+    weights[e.id] = w;
+  }
+  return weights;
+}
+
+/**
  * Decide si hoy pasa algo en el camino y qué.
  * @param {object} game
  * @param {{danger:string, terrain:string}} route
@@ -95,20 +144,8 @@ export function createEvent(game, id, rng) {
  * @returns {{id:string, params:object}|null}
  */
 export function rollEvent(game, route, rng) {
-  if (!rng.chance((game.options?.eventRate ?? EVENT_RATE) * DANGER_RATE[route.danger])) return null;
-  const weights = {};
-  for (const e of EVENTS) {
-    if (e.weight <= 0) continue;
-    if (e.when?.danger && !e.when.danger.includes(route.danger)) continue;
-    if (e.when?.terrain && !e.when.terrain.includes(route.terrain)) continue;
-    let w = e.weight;
-    if (e.id === 'bandidos') {
-      if (route.danger === 'alto') w *= 3;
-      w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos
-    }
-    weights[e.id] = w;
-  }
-  let id = rng.weighted(weights);
+  if (!rng.chance(eventChance(game, route))) return null;
+  let id = rng.weighted(eventWeights(game, route));
   if (id === 'bandidos' && game.state.rep[tripInfo(game).zone] >= FRIENDLY_REP && rng.chance(0.4)) id = 'bandidos-amigos';
   return createEvent(game, id, rng);
 }
@@ -198,7 +235,7 @@ function applyEffects(game, eff, params, rng) {
     }
   }
   if (eff.camelHp) {
-    lines.push(`Los camellos pierden ${Math.abs(eff.camelHp)} de salud`);
+    lines.push(`Los ${regionOf(state).mount.many} pierden ${Math.abs(eff.camelHp)} de salud`);
     lines.push(...tireCamels(state, -eff.camelHp));
   }
   if (eff.morale && state.crew.length) {
@@ -207,7 +244,7 @@ function applyEffects(game, eff, params, rng) {
   }
   if (eff.delay) {
     state.trip.days += eff.delay;
-    lines.push(`+${eff.delay} día de viaje`);
+    lines.push(`+${plural(eff.delay, 'día', 'días')} de viaje`);
   }
   if (eff.rep) {
     changeRep(state, map.cityById[state.trip.to].zone, eff.rep);
@@ -269,7 +306,7 @@ export function resolveOption(game, idx, rng) {
   const lines = applyEffects(game, eff, ev.params, rng);
   game.state.trip.event = null;
   noteEvent(game.state, ev.id, idx, success);
-  const text = (success === false ? opt.loseText : opt.winText) ?? (lines.length ? 'Listo.' : 'Seguís tu camino.');
+  const text = fillText((success === false ? opt.loseText : opt.winText) ?? (lines.length ? 'Listo.' : 'Seguís tu camino.'), ev.params);
   addLog(game.state, `${fillText(def.text, ev.params).split('.')[0]}: ${st.label}. ${text}${lines.length ? ` (${lines.join(', ')})` : ''}`, success === false ? 'bad' : 'info');
   return { ok: true, success, text, lines };
 }

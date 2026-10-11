@@ -14,7 +14,8 @@ import { renderTravel } from './travel.js';
 import { renderCaravan, renderJournal } from './caravan.js';
 import { renderSummary } from './summary.js';
 import { renderMenu, renderSettings, renderHelp } from './menu.js';
-import { renderChoose, renderShop, renderRecords } from './progress.js';
+import { renderShop, renderRecords } from './progress.js';
+import { renderChoose } from './choose.js';
 import { mergeSeen } from '../game/profile.js';
 import { iconSvg } from '../render/ui-icons.js';
 import { svgNode } from '../render/shapes.js';
@@ -104,11 +105,11 @@ export function createApp(els) {
     },
 
     /**
-     * Empieza una temporada nueva con el mercader elegido y las mejoras del perfil.
-     * @param {string} [merchant='aprendiz']
+     * Empieza una temporada nueva con lo elegido y las mejoras del perfil.
+     * @param {{region?:string, difficulty?:string, merchant?:string}} [pick]
      */
-    newSeason(merchant = 'aprendiz') {
-      app.game = createSeason({ seed: freshSeed(), difficulty: 'normal', merchant, upgrades: app.profile.upgrades });
+    newSeason({ region = 'desierto', difficulty = 'normal', merchant = 'aprendiz' } = {}) {
+      app.game = createSeason({ seed: freshSeed(), region, difficulty, merchant, upgrades: app.profile.upgrades });
       saveSeason(app.game);
       app.go('city');
       toast('¡Arranca la temporada! Mirá el mercado y comprá algo barato.');

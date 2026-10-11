@@ -226,3 +226,23 @@ test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async
   await page.getByTestId('records').click();
   await expect(page.getByTestId('achievements-count')).toContainText('/30');
 });
+
+test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a caballo', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('dune-ledger:perfil', JSON.stringify({ seals: 0, totalSeals: 0, seasons: 1, wins: 1, bestScore: 900, tutorialDone: false, merchants: ['aprendiz'], upgrades: {}, achievements: {}, codex: {}, regions: ['desierto', 'estepa'], hardWin: false }));
+  });
+  await page.reload();
+  await page.getByTestId('new-season').click();
+  await expect(page.getByTestId('region-costa')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.getByTestId('difficulty-pesadilla')).toHaveAttribute('aria-disabled', 'true');
+  // Tocar algo bloqueado no lo elige.
+  await page.getByTestId('region-costa').click({ force: true });
+  await expect(page.getByTestId('region-desierto')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('region-estepa').click();
+  await page.getByTestId('difficulty-dificil').click();
+  await expect(page.getByText('Deuda: 2.200 de oro')).toBeVisible();
+  await page.getByTestId('start-season').click();
+  await expect(page.getByTestId('hud-camels')).toContainText('Caballos');
+  await page.getByTestId('tab-provisiones').click();
+  await expect(page.getByText('Cada caballo lleva 12 de carga')).toBeVisible();
+});

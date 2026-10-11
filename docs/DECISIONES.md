@@ -200,3 +200,39 @@ revisarlo más adelante.
 - **Botones tipo ficha**: se hunden al tocarlos (borde inferior de color).
 - **Nombres de ciudades** en castellano y según su tipo (puertos que suenan
   a mar, mineras a roca), así el nombre ya da una pista.
+
+## Etapa 5 — Regiones y dificultades
+
+- **Regiones en datos** (`js/data/regions.js`): cada una cambia el mapa
+  (terrenos, peligro, distancias, puertos), la montura, impuestos o deuda
+  y el peso de algunos eventos. Se abren en orden ganando una temporada en
+  la anterior. El mapa del Desierto es el mismo que antes para la misma semilla.
+- **Estepa**: caballos que cargan 12 (un camello carga 20) y hacen las rutas
+  en el 80% de los días. Con 14 de carga y 70% de días el juego quedaba muy
+  fácil (89% para el bot codicioso, 50 viajes).
+- **Costa**: al menos 4 puertos; entre dos puertos la ruta es por mar (un
+  día menos, poco gasto de agua, sin cansar a los camellos), con piratas y
+  calma chicha en vez de bandidos, tormentas de arena o nómadas.
+- **Montañas de Jade**: casi todo montaña (cansa más a los camellos) y más
+  peligro. El jade (base 150, peso 1) sólo existe en esta región: se saca en
+  las mineras y se paga en la Capital y las ciudades santas.
+- **Reino del Sultán**: deuda ×1,2, 5% de impuesto a cada venta, controles
+  el doble de seguido y un recaudador que cobra el diezmo del camino. Con
+  deuda ×1,3 y 10% de impuesto el bot codicioso ganaba sólo 29%.
+- **Eventos nuevos**: piratas y calma chicha (mar), estampida (Estepa),
+  avalancha (Jade, montaña) y recaudador (Sultán).
+- **Balance por región** (decisión propia, sin mejoras ni mercader): el
+  codicioso tiene que ganar entre 40% y 85% en cada región, con 15 a 45
+  viajes. Hoy: Estepa 80%, Costa 76%, Jade 54%, Sultán 55%. Las regiones
+  del final son más difíciles a propósito: se llega a ellas con mejoras.
+- **Dificultades**: Fácil baja 30% la chance de evento por día. Difícil y
+  Pesadilla tienen "vaivén" de precios: cada bien en cada ciudad sube o
+  baja hasta 15% cada 5 días (fijo dentro de esos 5 días, para que
+  descansar no sirva para tirar el dado), y 50% más de bandidos y piratas.
+  Pesadilla además no deja pedir préstamos y se abre ganando en Difícil.
+  Orden comprobado con bots: Fácil 89% > Normal 70% > Difícil 44% >
+  Pesadilla 25%.
+- **Partidas viejas**: una temporada guardada con la versión anterior se
+  carga en el Desierto (se le agrega el jade vacío y se descarta deshacer).
+- **Montura en los textos**: donde decía "camellos" ahora dice la montura
+  de la región ("caballos" en la Estepa).

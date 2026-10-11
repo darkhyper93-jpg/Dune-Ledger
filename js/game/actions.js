@@ -12,7 +12,7 @@ import { getGood, ACTIVE_GOODS } from '../data/goods.js';
 import { canTrade } from './perks.js';
 import { see, notePeaks } from './stats.js';
 import { quote } from './market.js';
-import { cargoFree, camelPrice, camelResale, provisionPrices, provisionCap } from './caravan.js';
+import { cargoFree, camelPrice, camelResale, provisionPrices, provisionCap, perMount, mountName } from './caravan.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { payDebt, canPayHere, totalOwed } from './debt.js';
 
@@ -199,15 +199,15 @@ export function buyProvision(game, kind, qty) {
 export function buyCamel(game) {
   const { state, map } = game;
   if (state.over || state.trip) return fail('Ahora no se puede.');
-  if (state.camels >= RULES.maxCamels) return fail(`Ya tenés ${RULES.maxCamels} camellos.`);
+  if (state.camels >= RULES.maxCamels) return fail(`Ya tenés ${RULES.maxCamels} ${mountName(state, 2)}.`);
   const price = camelPrice(state.seed, map.cityById[state.location]);
   if (price > state.gold) return fail('No te alcanza el oro.');
-  pushUndo(state, 'compra de camello');
+  pushUndo(state, `compra de ${mountName(state)}`);
   state.gold -= price;
   state.camels += 1;
   state.camelHp.push(100);
   notePeaks(state);
-  addLog(state, `Compraste un camello por ${price}.`, 'trade');
+  addLog(state, `Compraste un ${mountName(state)} por ${price}.`, 'trade');
   return { ok: true, total: price };
 }
 
@@ -219,14 +219,14 @@ export function sellCamel(game) {
   const { state, map } = game;
   if (state.over || state.trip) return fail('Ahora no se puede.');
   if (state.camels <= 1) return fail('Necesitás al menos un camello.');
-  if (cargoFree(state) < RULES.camelCapacity) return fail('Primero liberá carga: no entraría en los demás camellos.');
+  if (cargoFree(state) < perMount(state)) return fail(`Primero liberá carga: no entraría en los demás ${mountName(state, 2)}.`);
   const weakest = state.camelHp.indexOf(Math.min(...state.camelHp));
   const price = camelResale(state.seed, map.cityById[state.location], state.camelHp[weakest]);
-  pushUndo(state, 'venta de camello');
+  pushUndo(state, `venta de ${mountName(state)}`);
   state.gold += price;
   state.camels -= 1;
   state.camelHp.splice(weakest, 1);
-  addLog(state, `Vendiste un camello por ${price}.`, 'trade');
+  addLog(state, `Vendiste un ${mountName(state)} por ${price}.`, 'trade');
   return { ok: true, total: price };
 }
 

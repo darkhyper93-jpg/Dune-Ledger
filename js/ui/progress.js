@@ -1,5 +1,5 @@
 /**
- * Pantallas del progreso permanente: elegir mercader al empezar, la tienda
+ * Pantallas del progreso permanente: la tienda
  * del Gremio (mercaderes y mejoras con sellos), logros y códice, y el
  * código de progreso para copiar o pegar.
  */
@@ -21,32 +21,8 @@ import { goodArt } from './art.js';
 const EVENT_NAMES = {
   bandidos: 'Bandidos', 'bandidos-amigos': 'Bandidos conocidos', tormenta: 'Tormenta de arena', 'oasis-seco': 'Oasis seco',
   nomada: 'Mercader nómada', ruinas: 'Ruinas', viajero: 'Viajero herido', control: 'Control del sultán',
+  piratas: 'Piratas', calma: 'Calma chicha', estampida: 'Estampida', avalancha: 'Avalancha', recaudador: 'Recaudador del sultán',
 };
-
-/**
- * Elegir mercader antes de empezar la temporada.
- * @param {object} app
- */
-export function renderChoose(app) {
-  const owned = MERCHANTS.filter((m) => app.profile.merchants.includes(m.id));
-  let chosen = owned.some((m) => m.id === app.params.merchant) ? app.params.merchant : 'aprendiz';
-  const list = h('div', { class: 'stack', role: 'radiogroup', 'aria-label': 'Mercader' });
-  const paint = () => {
-    list.replaceChildren(...owned.map((m) => h('button', {
-      class: `card merchant${m.id === chosen ? ' chosen' : ''}`, role: 'radio', 'aria-checked': String(m.id === chosen), 'data-testid': `merchant-${m.id}`,
-      onclick: () => { chosen = m.id; paint(); },
-    }, h('b', {}, m.name), h('span', { class: 'small muted' }, m.desc))));
-  };
-  paint();
-  const ups = Object.entries(app.profile.upgrades);
-  return h('div', { class: 'stack' },
-    h('h1', {}, 'Nueva temporada'),
-    h('p', { class: 'muted', style: 'margin:0' }, 'Elegí con qué mercader jugar. Comprá más en el Gremio con tus sellos.'),
-    list,
-    ups.length ? h('p', { class: 'small muted', style: 'margin:0' }, `Mejoras activas: ${ups.map(([id, l]) => `${UPGRADES.find((u) => u.id === id).name} ${l}`).join(', ')}.`) : null,
-    h('button', { class: 'btn big primary', 'data-testid': 'start-season', onclick: () => app.newSeason(chosen) }, 'Empezar'),
-    h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
-}
 
 /**
  * Tienda del Gremio: mercaderes y mejoras.

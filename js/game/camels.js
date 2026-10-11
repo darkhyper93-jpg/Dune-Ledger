@@ -9,7 +9,7 @@
 
 import { getGood } from '../data/goods.js';
 import { TERRAINS } from '../data/routes.js';
-import { cargoUsed, capacity } from './caravan.js';
+import { cargoUsed, capacity, mountName } from './caravan.js';
 import { upgradeValue } from './perks.js';
 
 /** Cansancio por día de viaje en terreno normal. */
@@ -69,7 +69,7 @@ export function tireCamels(state, amount) {
   if (dead > 0) {
     if (alive.length === 0) alive.push(1);
     const died = state.camelHp.length - alive.length;
-    if (died > 0) lines.push(died === 1 ? 'Murió un camello de cansancio' : `Murieron ${died} camellos de cansancio`);
+    if (died > 0) lines.push(died === 1 ? `Murió un ${mountName(state)} de cansancio` : `Murieron ${died} ${mountName(state, 2)} de cansancio`);
     state.camelHp = alive;
     state.camels = alive.length;
     lines.push(...dropOverflow(state));

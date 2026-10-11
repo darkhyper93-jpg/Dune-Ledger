@@ -7,11 +7,12 @@
 import { RULES } from '../data/rules.js';
 import { getMerchant, hasPerk, upgradeLevel, upgradeValue } from './perks.js';
 import { otherEnd } from './map-gen.js';
+import { getRegion } from '../data/regions.js';
 import { snapshotPrices } from './knowledge.js';
 
 /**
  * Recursos con los que empieza la caravana.
- * @param {object} state con `merchant` y `upgrades` ya puestos
+ * @param {object} state con `merchant`, `upgrades` y `region` ya puestos
  * @returns {{gold:number, camels:number, food:number, water:number, debtMult:number, delays:number}}
  */
 export function startingResources(state) {
@@ -23,7 +24,7 @@ export function startingResources(state) {
     camels: Math.min(RULES.maxCamels, (m.start?.camels ?? s.camels) + upgradeValue(state, 'camello')),
     food: s.food + extra,
     water: s.water + extra,
-    debtMult: m.debtMult ?? 1,
+    debtMult: (m.debtMult ?? 1) * (getRegion(state.region ?? 'desierto').debtMult ?? 1),
     delays: upgradeLevel(state, 'plazo'),
   };
 }

@@ -21,6 +21,7 @@ import { CITY_TYPES_BY_ID } from '../data/cities.js';
 import { ROLES, TRAITS } from '../data/crew.js';
 import { MAX_CREW } from './crew.js';
 import { MERCHANTS_BY_ID } from '../data/merchants.js';
+import { REGIONS_BY_ID } from '../data/regions.js';
 import { cleanUpgrades } from './perks.js';
 import { startingResources } from './start.js';
 import { debtPlan } from './debt.js';
@@ -140,18 +141,38 @@ function marketPart(v, map, cityId) {
 }
 
 /**
+ * Pasa una partida de la versión 2 (antes de las regiones) a la 3: se
+ * jugaba en el Desierto y no existía el jade. Lo de deshacer se descarta.
+ * Copia sólo lo que cambia; el resto se valida igual que siempre.
+ * @param {Record<string, any>} raw
+ */
+function migrateV2(raw) {
+  const withJade = (row, value) => (isObj(row) ? { ...row, jade: value } : row);
+  const out = { ...raw, v: STATE_VERSION, region: 'desierto', undo: [] };
+  out.cargo = withJade(raw.cargo, 0);
+  out.costBasis = withJade(raw.costBasis, 0);
+  if (isObj(raw.stock)) out.stock = Object.fromEntries(Object.entries(raw.stock).map(([k, row]) => [k, withJade(row, RULES.market.stockNormal)]));
+  if (isObj(raw.prices)) {
+    out.prices = Object.fromEntries(Object.entries(raw.prices).map(([k, p]) => [k, isObj(p) ? { ...p, sell: withJade(p.sell, 0), buy: withJade(p.buy, 0) } : p]));
+  }
+  return out;
+}
+
+/**
  * Valida y limpia una partida. Devuelve el juego listo ({ map, state }).
- * @param {unknown} raw objeto leído del almacenamiento
+ * @param {unknown} input objeto leído del almacenamiento
  * @returns {{ok:true, game:{map:object,state:object}} | {ok:false, error:string}}
  */
-export function validateState(raw) {
+export function validateState(input) {
   try {
-    need(isObj(raw), 'no es un objeto');
+    need(isObj(input), 'no es un objeto');
+    const raw = input.v === 2 ? migrateV2(input) : input;
     need(raw.v === STATE_VERSION, 'versión');
     const seed = str(raw.seed, 64, 'semilla');
     need(seed.length > 0, 'semilla vacía');
     need(typeof raw.difficulty === 'string' && Object.hasOwn(DIFFICULTIES, raw.difficulty), 'dificultad');
-    const map = generateMap(seed);
+    need(typeof raw.region === 'string' && Object.hasOwn(REGIONS_BY_ID, raw.region), 'región');
+    const map = generateMap(seed, raw.region);
     const cityOk = (k) => Object.hasOwn(map.cityById, k);
     const routeOk = (k) => Object.hasOwn(map.routeById, k);
     need(cityOk(raw.location), 'ubicación');
@@ -159,13 +180,14 @@ export function validateState(raw) {
     need(Array.isArray(raw.rng) && raw.rng.length === 4, 'azar');
     need(typeof raw.merchant === 'string' && Object.hasOwn(MERCHANTS_BY_ID, raw.merchant), 'mercader');
     need(isObj(raw.upgrades), 'mejoras');
-    const perks = { merchant: raw.merchant, upgrades: cleanUpgrades(raw.upgrades) };
+    const perks = { merchant: raw.merchant, region: raw.region, upgrades: cleanUpgrades(raw.upgrades) };
     need(Object.keys(perks.upgrades).length === Object.keys(raw.upgrades).length, 'mejoras');
 
     const base = marketPart(raw, map);
     const state = {
       v: STATE_VERSION,
       seed,
+      region: raw.region,
       difficulty: raw.difficulty,
       day: int(raw.day, 1, RULES.seasonDays, 'día'),
       rng: raw.rng.map((n) => int(n, 0, 4294967295, 'azar')),
@@ -358,5 +380,6 @@ function overPart(v) {
     owed: int(v.owed, 0, 1e8, 'final'),
     recorded: v.recorded === true,
     newAchievements: Array.isArray(v.newAchievements) ? v.newAchievements.filter((id) => typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS_BY_ID, id)) : [],
+    unlocked: Array.isArray(v.unlocked) ? v.unlocked.filter((id) => id === 'pesadilla' || (typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id))) : [],
   };
 }

@@ -7,7 +7,8 @@ import { createSeason, travel } from '../../js/game/season.js';
 import { buy, sell, maxBuy } from '../../js/game/actions.js';
 import { quote } from '../../js/game/market.js';
 import { provisionPrices } from '../../js/game/caravan.js';
-import { ACTIVE_GOODS, getGood, isTradedIn } from '../../js/data/goods.js';
+import { ACTIVE_GOODS, getGood } from '../../js/data/goods.js';
+import { canTrade } from '../../js/game/perks.js';
 import { buyPriceAt, sellPriceAt } from '../../js/game/market.js';
 
 /**
@@ -19,7 +20,7 @@ export function bestLoop(game) {
   for (const r of map.routes) {
     for (const [a, b] of [[r.a, r.b], [r.b, r.a]]) {
       for (const g of ACTIVE_GOODS) {
-        if (!isTradedIn(g, map.cityById[a].type) || !isTradedIn(g, map.cityById[b].type)) continue;
+        if (!canTrade(state, g, map.cityById[a].type) || !canTrade(state, g, map.cityById[b].type)) continue;
         const m = sellPriceAt(state.seed, map.cityById[b], g, 50) / buyPriceAt(state.seed, map.cityById[a], g, 50);
         if (!best || m > best.margin) best = { route: r, from: a, to: b, goodId: g, margin: m };
       }

@@ -70,14 +70,20 @@ export const RULES = {
 
 /**
  * Dificultades: deuda total, cuotas por día y multiplicador de sellos.
- * La etapa 1 sólo usa "normal"; las demás se habilitan en la etapa 5.
+ * - eventRate: multiplica la chance de evento por día (Fácil: más tranquilo).
+ * - volatility: cuánto puede subir o bajar cada precio de semana en semana.
+ * - bandits: multiplica qué tan seguido salen los bandidos (y piratas).
+ * - noLoans: el Gremio no presta. `unlock: 'hardWin'` = hay que ganar en Difícil.
  */
 export const DIFFICULTIES = {
-  facil: { id: 'facil', name: 'Fácil', installments: [{ day: 20, amount: 200 }, { day: 40, amount: 350 }, { day: 60, amount: 450 }], sealMult: 1 },
-  normal: { id: 'normal', name: 'Normal', installments: [{ day: 20, amount: 300 }, { day: 40, amount: 500 }, { day: 60, amount: 700 }], sealMult: 1.25 },
-  dificil: { id: 'dificil', name: 'Difícil', installments: [{ day: 20, amount: 450 }, { day: 40, amount: 750 }, { day: 60, amount: 1000 }], sealMult: 1.6 },
-  pesadilla: { id: 'pesadilla', name: 'Pesadilla', installments: [{ day: 20, amount: 600 }, { day: 40, amount: 1000 }, { day: 60, amount: 1400 }], sealMult: 2 },
+  facil: { id: 'facil', name: 'Fácil', desc: 'Menos sorpresas en el camino.', installments: [{ day: 20, amount: 200 }, { day: 40, amount: 350 }, { day: 60, amount: 450 }], sealMult: 1, eventRate: 0.7 },
+  normal: { id: 'normal', name: 'Normal', desc: 'La temporada de siempre.', installments: [{ day: 20, amount: 300 }, { day: 40, amount: 500 }, { day: 60, amount: 700 }], sealMult: 1.25 },
+  dificil: { id: 'dificil', name: 'Difícil', desc: 'Precios que cambian cada semana y más bandidos.', installments: [{ day: 20, amount: 450 }, { day: 40, amount: 750 }, { day: 60, amount: 1000 }], sealMult: 1.6, volatility: 0.15, bandits: 1.5 },
+  pesadilla: { id: 'pesadilla', name: 'Pesadilla', desc: 'Como Difícil, pero el Gremio no presta.', installments: [{ day: 20, amount: 600 }, { day: 40, amount: 1000 }, { day: 60, amount: 1400 }], sealMult: 2, volatility: 0.15, bandits: 1.5, noLoans: true, unlock: 'hardWin' },
 };
+
+/** Dificultades en orden, de la más fácil a la más difícil. */
+export const DIFFICULTY_LIST = Object.values(DIFFICULTIES);
 
 /**
  * Devuelve la dificultad con ese id, o lanza un error.

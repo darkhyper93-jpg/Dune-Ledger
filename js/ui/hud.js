@@ -5,7 +5,7 @@
 
 import { h, mount } from './dom.js';
 import { RULES } from '../data/rules.js';
-import { cargoUsed, capacity } from '../game/caravan.js';
+import { cargoUsed, capacity, mountName } from '../game/caravan.js';
 import { nextDue } from '../game/season.js';
 import { dailyRation } from '../game/travel.js';
 import { avgHealth } from '../game/camels.js';
@@ -46,7 +46,7 @@ export function renderHud(el, game) {
     item('cargo', 'Carga', `${cargoUsed(state)}/${capacity(state)}`, false, 'hud-cargo'),
     item('food', 'Comida', String(state.food), state.food < ration * 2, 'hud-food'),
     item('water', 'Agua', String(state.water), state.water < ration * 2, 'hud-water'),
-    item('camel', 'Camellos', `${state.camels} (${avgHealth(state)}%)`, avgHealth(state) < 30, 'hud-camels'),
+    item('camel', mountName(state, 2, true), `${state.camels} (${avgHealth(state)}%)`, avgHealth(state) < 30, 'hud-camels'),
     state.crew.length ? item('morale', 'Moral', String(morale), morale < 35, 'hud-morale') : null,
     state.loan ? item('loan', 'Préstamo', fmt(state.loan), true, 'hud-loan') : null,
     dueLine);

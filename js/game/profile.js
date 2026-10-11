@@ -12,6 +12,8 @@ import { GOODS_BY_ID } from '../data/goods.js';
 import { CITY_TYPES_BY_ID } from '../data/cities.js';
 import { EVENTS_BY_ID } from '../data/events.js';
 import { ROLES, TRAITS } from '../data/crew.js';
+import { REGIONS, REGIONS_BY_ID } from '../data/regions.js';
+import { DIFFICULTIES } from '../data/rules.js';
 import { hashString } from '../core/rng.js';
 import { safeParse } from '../core/json.js';
 
@@ -29,6 +31,7 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
+    regions: ['desierto'], hardWin: false,
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -52,6 +55,11 @@ export function validateProfile(raw) {
     out.merchants = ['aprendiz', ...raw.merchants.filter((id) => typeof id === 'string' && id !== 'aprendiz' && Object.hasOwn(MERCHANTS_BY_ID, id))];
     out.merchants = [...new Set(out.merchants)];
   }
+  if (Array.isArray(raw.regions)) {
+    const ok = new Set(raw.regions.filter((id) => typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id)));
+    out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
+  }
+  out.hardWin = raw.hardWin === true;
   if (isObj(raw.upgrades)) {
     for (const [id, lvl] of Object.entries(raw.upgrades)) {
       if (Object.hasOwn(UPGRADES_BY_ID, id) && Number.isInteger(lvl) && lvl > 0) out.upgrades[id] = Math.min(lvl, UPGRADES_BY_ID[id].costs.length);
@@ -131,14 +139,19 @@ export function mergeSeen(profile, seen) {
  * logros nuevos. Sólo cuenta una vez por temporada.
  * @param {object} profile se modifica
  * @param {{state:object, map:object}} game
- * @returns {{newAchievements:string[]}}
+ * @returns {{newAchievements:string[], unlocked:string[]}} unlocked: ids de región
+ *   abiertas y 'pesadilla' si se habilitó
  */
 export function recordSeason(profile, game) {
   const { state, map } = game;
   const over = state.over;
-  if (!over || over.recorded) return { newAchievements: over?.newAchievements ?? [] };
+  if (!over || over.recorded) return { newAchievements: over?.newAchievements ?? [], unlocked: over?.unlocked ?? [] };
   profile.seasons += 1;
-  if (over.won) profile.wins += 1;
+  const unlocked = [];
+  if (over.won) {
+    profile.wins += 1;
+    unlocked.push(...unlockNext(profile, state));
+  }
   profile.seals += over.seals;
   profile.totalSeals += over.seals;
   profile.bestScore = Math.max(profile.bestScore, Math.max(0, over.score));
@@ -148,7 +161,39 @@ export function recordSeason(profile, game) {
   for (const id of fresh) profile.achievements[id] = true;
   over.recorded = true;
   over.newAchievements = fresh;
-  return { newAchievements: fresh };
+  over.unlocked = unlocked;
+  return { newAchievements: fresh, unlocked };
+}
+
+/**
+ * Dice si el perfil ya puede jugar esa región en esa dificultad.
+ * @param {object} profile
+ * @param {string} regionId
+ * @param {string} difficultyId
+ */
+export function canPlay(profile, regionId, difficultyId) {
+  if (!profile.regions.includes(regionId) || !Object.hasOwn(DIFFICULTIES, difficultyId)) return false;
+  return DIFFICULTIES[difficultyId].unlock !== 'hardWin' || profile.hardWin;
+}
+
+/**
+ * Ganar una temporada desbloquea la región siguiente (en el orden de la
+ * lista); ganar en Difícil o Pesadilla habilita la Pesadilla.
+ * @returns {string[]} lo que se abrió recién
+ */
+function unlockNext(profile, state) {
+  const out = [];
+  const i = REGIONS.findIndex((r) => r.id === (state.region ?? 'desierto'));
+  const next = REGIONS[i + 1];
+  if (next && !profile.regions.includes(next.id)) {
+    profile.regions = REGIONS.map((r) => r.id).filter((id) => id === next.id || profile.regions.includes(id));
+    out.push(next.id);
+  }
+  if ((state.difficulty === 'dificil' || state.difficulty === 'pesadilla') && !profile.hardWin) {
+    profile.hardWin = true;
+    out.push('pesadilla');
+  }
+  return out;
 }
 
 /** Suma de control de un texto (base 36). */

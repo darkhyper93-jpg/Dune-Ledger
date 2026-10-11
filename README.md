@@ -10,7 +10,7 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 4 — Progreso permanente** (ver `docs/DISENO.md`, "Plan por etapas").
+**Etapa 5 — Regiones y dificultades** (ver `docs/DISENO.md`, "Plan por etapas").
 
 Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
 
@@ -25,6 +25,10 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   moral, deserciones y niveles. Bot prudente.
 - Etapa 4: sellos del Gremio, 8 mercaderes, 15 mejoras, préstamos y oro
   guardado, 30 logros, códice y código de progreso para copiar y pegar.
+- Etapa 5: 5 regiones (Desierto, Estepa a caballo, Costa con rutas por mar,
+  Montañas de Jade y Reino del Sultán) con mapa, bien estrella y eventos
+  propios, que se abren ganando la anterior; 4 dificultades (Fácil, Normal,
+  Difícil con precios que cambian cada semana, y Pesadilla sin préstamos).
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

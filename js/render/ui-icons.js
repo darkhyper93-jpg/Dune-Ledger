@@ -30,6 +30,8 @@ export const UI_ICONS = {
   /** Mapa: un pliego con una ruta. */
   map: `<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" ${S}/><path d="M9 4v14M15 6v14" ${S}/>`,
   /** Diario: un libro abierto. */
+  /** Candado: algo que todavía no se desbloqueó. */
+  lock: `<rect x="5" y="11" width="14" height="10" rx="2" ${S}/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2" ${S}/>`,
   journal: `<path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v14" ${S}/>`,
 };
 

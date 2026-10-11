@@ -372,20 +372,6 @@ input[type='range'] { width: 100%; height: 48px; accent-color: var(--primary); }
 .rep-bar { height: 10px; border-radius: 5px; background: var(--surface-2); position: relative; overflow: hidden; border: 1px solid var(--line); }
 .rep-bar span { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
 
-/* ---------- Progreso ---------- */
-.merchant { display: grid; gap: 4px; text-align: left; cursor: pointer; width: 100%; font: inherit; color: inherit; }
-.merchant.chosen { border-color: var(--primary); box-shadow: 0 3px 0 var(--primary-deep); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { padding: 4px 10px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 700; }
-.chip.locked { background: var(--surface-2); color: var(--ink-2); font-weight: 500; }
-.codex-goods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.codex-goods figure { margin: 0; text-align: center; font-size: 12px; font-weight: 500; }
-.codex-goods .goodart { width: 56px; height: 56px; margin: 0 auto 4px; display: block; }
-.codex-goods .locked .goodart { filter: grayscale(1) brightness(0.4); opacity: 0.35; }
-.achievement { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); opacity: 0.6; }
-.achievement.done { opacity: 1; border-color: var(--gold); box-shadow: 0 2px 0 var(--gold-deep); }
-textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); overflow-wrap: anywhere; }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

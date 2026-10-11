@@ -1,0 +1,65 @@
+/*
+ * Pantallas de progreso: nueva temporada (región, dificultad, mercader),
+ * tienda del Gremio, logros y códice. Usa los tokens de css/main.css.
+ */
+
+/* ---------- Progreso ---------- */
+.merchant { display: grid; gap: 4px; text-align: left; cursor: pointer; width: 100%; font: inherit; color: inherit; }
+.merchant.chosen { border-color: var(--primary); box-shadow: 0 3px 0 var(--primary-deep); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 10px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 700; }
+.chip.locked { background: var(--surface-2); color: var(--ink-2); font-weight: 500; }
+.codex-goods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.codex-goods figure { margin: 0; text-align: center; font-size: 12px; font-weight: 500; }
+.codex-goods .goodart { width: 56px; height: 56px; margin: 0 auto 4px; display: block; }
+.codex-goods .locked .goodart { filter: grayscale(1) brightness(0.4); opacity: 0.35; }
+.achievement { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); opacity: 0.6; }
+.achievement.done { opacity: 1; border-color: var(--gold); box-shadow: 0 2px 0 var(--gold-deep); }
+textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); overflow-wrap: anywhere; }
+
+
+/* ---------- Nueva temporada: regiones ---------- */
+.region-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.region-card {
+  display: grid; gap: 0; padding: 0; overflow: hidden; cursor: pointer; text-align: left;
+  font: inherit; color: inherit; background: var(--surface);
+  border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 3px 0 var(--edge);
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  touch-action: manipulation;
+}
+.region-card:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge); }
+.region-card.chosen { border-color: var(--primary); box-shadow: 0 3px 0 var(--primary-deep), 0 0 0 3px var(--primary-soft); }
+.region-art { position: relative; display: block; aspect-ratio: 5 / 2; background: var(--surface-2); }
+.region-art svg { display: block; width: 100%; height: 100%; }
+.region-name { display: block; padding: 8px 10px 9px; font-family: var(--font-display); font-size: 16px; line-height: 1.15; letter-spacing: 0.01em; }
+.region-card.locked .region-art svg { filter: grayscale(1) contrast(0.7); opacity: 0.45; }
+.region-card.locked .region-name { color: var(--ink-2); }
+.region-lock {
+  position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink);
+}
+.region-lock svg { width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: var(--surface); box-shadow: 0 2px 0 var(--edge); }
+/* La primera región ocupa todo el ancho: es la de siempre y la que más se juega. */
+.region-grid > .region-card:first-child { grid-column: 1 / -1; }
+.region-grid > .region-card:first-child .region-art { aspect-ratio: 16 / 5; }
+
+/* ---------- Nueva temporada: dificultad (control segmentado) ---------- */
+.seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 5px; border-radius: 14px; background: var(--surface-2); border: 2px solid var(--line); }
+.seg-btn {
+  display: grid; justify-items: center; gap: 1px; min-height: 52px; padding: 6px 2px; cursor: pointer;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 10px;
+  touch-action: manipulation;
+}
+.seg-btn b { font-size: 14px; }
+.seg-btn .tiny { color: var(--ink-2); }
+.seg-btn.chosen { background: var(--primary); color: var(--primary-ink); box-shadow: 0 2px 0 var(--primary-deep); }
+.seg-btn.chosen .tiny { color: var(--primary-soft); }
+.seg-btn.locked { color: var(--ink-2); opacity: 0.7; }
+.seg-btn svg { width: 16px; height: 16px; }
+@media (max-width: 360px) {
+  .seg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- Resumen: lo que se desbloqueó ---------- */
+.unlock { border-color: var(--gold); box-shadow: 0 3px 0 var(--gold-deep); }
+.region-unlock { padding: 0; overflow: hidden; }
+.region-unlock .region-art { aspect-ratio: 16 / 5; }

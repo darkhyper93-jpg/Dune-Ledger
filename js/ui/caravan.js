@@ -6,7 +6,7 @@
 import { h } from './dom.js';
 import { getGood, ACTIVE_GOODS } from '../data/goods.js';
 import { RULES } from '../data/rules.js';
-import { cargoUsed, capacity } from '../game/caravan.js';
+import { cargoUsed, capacity, perMount, mountName } from '../game/caravan.js';
 import { dailyRation } from '../game/travel.js';
 import { totalOwed } from '../game/debt.js';
 import { fmt, plural } from '../core/text.js';
@@ -28,7 +28,7 @@ export function renderCaravan(app) {
     h('h1', {}, 'Tu caravana'),
     h('div', { class: 'card stack' },
       h('dl', { class: 'kv' },
-        h('dt', {}, 'Camellos'), h('dd', {}, `${state.camels} (lleva ${RULES.camelCapacity} c/u)`),
+        h('dt', {}, mountName(state, 2, true)), h('dd', {}, `${state.camels} (lleva ${perMount(state)} c/u)`),
         h('dt', {}, 'Carga'), h('dd', {}, `${cargoUsed(state)} de ${capacity(state)}`),
         h('dt', {}, 'Gasto por día'), h('dd', {}, `${ration} de comida y ${water} de agua`),
         h('dt', {}, 'Comida alcanza'), h('dd', {}, plural(Math.floor(state.food / ration), 'día', 'días')),
@@ -45,7 +45,7 @@ export function renderCaravan(app) {
         const fresh = g.decay ? ` · frescura ${Math.round((state.freshness[id] ?? 1) * 100)}%` : '';
         return [h('dt', { class: 'row', style: 'gap:8px' }, goodArt(id, 28), g.name), h('dd', {}, `${state.cargo[id]} (peso ${state.cargo[id] * g.weight})${fresh}`)];
       })))
-      : h('p', { class: 'muted' }, 'Los camellos van vacíos. Comprá algo barato en el Mercado.'),
+      : h('p', { class: 'muted' }, `Los ${mountName(state, 2)} van vacíos. Comprá algo barato en el Mercado.`),
     h('h2', {}, 'Contratos'),
     state.contracts.active.length
       ? state.contracts.active.map((k) => contractCard(app, k, 'active'))

@@ -13,6 +13,7 @@ export const TERRAINS = {
   piedra: { id: 'piedra', name: 'Piedra', water: 1, fatigue: 1, color: '#9a8a78' },
   montana: { id: 'montana', name: 'Montaña', water: 1, fatigue: 1.6, color: '#7d5a44' },
   rio: { id: 'rio', name: 'Río', water: 0.25, fatigue: 0.8, color: '#2aa198' },
+  mar: { id: 'mar', name: 'Mar (en barco)', water: 0.5, fatigue: 0, color: '#2B6C8F' },
 };
 
 /** @type {Record<string,{id:string,name:string,level:number}>} */

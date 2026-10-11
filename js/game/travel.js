@@ -16,11 +16,12 @@ import { settleInstallment } from './debt.js';
 import { addLog } from './knowledge.js';
 import { tickNews, extraRumor } from './news.js';
 import { crewDay, foodFactor, guideDays, healMult } from './crew.js';
-import { hasPerk } from './perks.js';
+import { hasPerk, regionOf } from './perks.js';
 import { tickBank } from './bank.js';
 import { notePeaks } from './stats.js';
 import { tickContracts } from './contracts.js';
 import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels.js';
+import { mountName } from './caravan.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
 export const SHORTAGE_LOSS = 0.1;
@@ -47,6 +48,16 @@ export function dailyRation(state, kind = 'water') {
 }
 
 /**
+ * Días reales de una ruta: los caballos de la Estepa van más rápido y el
+ * guía acorta un día (mínimo 1).
+ * @param {object} state
+ * @param {number} days días de la ruta en el mapa
+ */
+export function routeDays(state, days) {
+  return guideDays(state, Math.max(1, Math.round(days * regionOf(state).mount.speed)));
+}
+
+/**
  * Agua que se gasta en total hasta el día k de una ruta (acumulado).
  * @param {object} state
  * @param {string} terrain
@@ -63,7 +74,7 @@ export function waterUntil(state, terrain, k) {
  * @returns {{days:number,food:number,water:number,enoughFood:boolean,enoughWater:boolean}}
  */
 export function tripNeeds(state, route) {
-  const days = guideDays(state, route.days);
+  const days = routeDays(state, route.days);
   const food = days * dailyRation(state, 'food');
   const water = waterUntil(state, route.terrain, days);
   return { days, food, water, enoughFood: state.food >= food, enoughWater: state.water >= water };
@@ -83,7 +94,7 @@ export function canTravel(game, routeId) {
   if (!route || (route.a !== state.location && route.b !== state.location)) {
     return { ok: false, error: 'No hay ruta directa a esa ciudad.' };
   }
-  if (state.day + guideDays(state, route.days) > RULES.seasonDays) {
+  if (state.day + routeDays(state, route.days) > RULES.seasonDays) {
     return { ok: false, error: `No llegás antes del día ${RULES.seasonDays}.` };
   }
   return { ok: true };
@@ -123,7 +134,7 @@ export function passDay(game, use, where, mode = {}) {
   state.day += 1;
   if (thirsty) {
     const lost = loseCargo(state, SHORTAGE_LOSS);
-    addLog(state, `Sin agua ${where}: los camellos sufren y dejaste ${lost} unidades de carga.`, 'bad');
+    addLog(state, `Sin agua ${where}: los ${mountName(state, 2)} sufren y dejaste ${lost} unidades de carga.`, 'bad');
   }
   if (hungry || thirsty) state.stats.shortageDays += 1;
   if (hungry) addLog(state, `Sin comida ${where}: la caravana pasa hambre.`, 'bad');

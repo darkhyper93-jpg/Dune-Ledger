@@ -12,12 +12,12 @@
 
 import { Rng } from '../../js/core/rng.js';
 import { RULES } from '../../js/data/rules.js';
-import { getGood, ACTIVE_GOODS, isTradedIn } from '../../js/data/goods.js';
+import { getGood, ACTIVE_GOODS } from '../../js/data/goods.js';
+import { canTrade } from '../../js/game/perks.js';
 import { createSeason, travel, rest, finishSeason, canFinish } from '../../js/game/season.js';
 import { buy, sell, buyProvision, buyCamel, payGuild, maxBuy } from '../../js/game/actions.js';
-import { buyPriceAt, buyFactor, quote } from '../../js/game/market.js';
+import { buyPriceAt, buyFactor, quote, marketMult } from '../../js/game/market.js';
 import { offersHere, acceptContract, deliverContract } from '../../js/game/contracts.js';
-import { newsMult } from '../../js/game/news.js';
 import { tripNeeds, canTravel } from '../../js/game/travel.js';
 import { cargoFree, camelPrice, provisionPrices, provisionCap } from '../../js/game/caravan.js';
 import { canPayHere, nextInstallment, owedOn, totalOwed } from '../../js/game/debt.js';
@@ -117,7 +117,7 @@ function planCargo(game, destId, budget) {
   const bought = Object.fromEntries(ACTIVE_GOODS.map((id) => [id, 0]));
   const dest = map.cityById[destId];
   const factor = buyFactor(game, city.id);
-  const goods = ACTIVE_GOODS.filter((id) => isTradedIn(id, city.type) && isTradedIn(id, dest.type));
+  const goods = ACTIVE_GOODS.filter((id) => canTrade(state, id, city.type) && canTrade(state, id, dest.type));
   let space = cargoFree(state);
   let profit = 0;
   for (let guard = 0; guard < 400; guard++) {
@@ -125,7 +125,7 @@ function planCargo(game, destId, budget) {
     for (const id of goods) {
       const good = getGood(id);
       if (good.weight > space) continue;
-      const price = buyPriceAt(state.seed, city, id, stock[id], factor, newsMult(game, city.id, id));
+      const price = buyPriceAt(state.seed, city, id, stock[id], factor, marketMult(game, city.id, id));
       if (price > budget) continue;
       const gain = expectedSell(game, destId, id, bought[id]) - price;
       const score = gain / Math.max(1, good.weight);
@@ -262,11 +262,11 @@ function randomTurn(game, rng) {
  * Juega una temporada completa con un bot.
  * @param {'greedy'|'prudent'|'random'} kind
  * @param {string} seed
- * @param {{difficulty?:string, onTurn?:Function}} [opts] onTurn se llama después de cada turno
+ * @param {{difficulty?:string, region?:string, onTurn?:Function}} [opts] onTurn se llama después de cada turno
  * @returns {{won:boolean, score:number, game:object}}
  */
 export function playSeason(kind, seed, opts = {}) {
-  const game = createSeason({ seed, difficulty: opts.difficulty ?? 'normal' });
+  const game = createSeason({ seed, region: opts.region ?? 'desierto', difficulty: opts.difficulty ?? 'normal' });
   const rng = new Rng(`bot:${kind}:${seed}`);
   for (let turn = 0; turn < 500 && !game.state.over; turn++) {
     if (kind === 'random') randomTurn(game, rng);
@@ -282,13 +282,14 @@ export function playSeason(kind, seed, opts = {}) {
  * @param {'greedy'|'prudent'|'random'} kind
  * @param {number} n
  * @param {string} [prefix='sim']
+ * @param {{difficulty?:string, region?:string}} [opts]
  */
-export function runMany(kind, n, prefix = 'sim') {
+export function runMany(kind, n, prefix = 'sim', opts = {}) {
   let wins = 0;
   const scores = [];
   const trips = [];
   for (let i = 0; i < n; i++) {
-    const r = playSeason(kind, `${prefix}-${i}`);
+    const r = playSeason(kind, `${prefix}-${i}`, opts);
     if (r.won) wins++;
     scores.push(r.score);
     trips.push(r.game.state.stats.trips);

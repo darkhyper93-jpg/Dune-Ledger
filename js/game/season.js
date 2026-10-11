@@ -8,6 +8,7 @@
  */
 
 import { RULES, getDifficulty } from '../data/rules.js';
+import { getRegion } from '../data/regions.js';
 import { ACTIVE_GOODS } from '../data/goods.js';
 import { Rng } from '../core/rng.js';
 import { generateMap } from './map-gen.js';
@@ -30,22 +31,24 @@ export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.j
 export { startTrip, chooseOption } from './trip.js';
 
 /** Versión del formato de la partida guardada. */
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 /**
  * Crea una temporada nueva.
  * `events` y `eventRate` son opciones del juego (no se guardan): sirven
  * para pruebas que necesitan viajes sin sorpresas o con muchos eventos.
- * `merchant` y `upgrades` son el mercader elegido y las mejoras del Gremio.
- * @param {{seed:string, difficulty?:string, merchant?:string, upgrades?:Record<string,number>, events?:boolean, eventRate?:number}} opts
+ * `merchant` y `upgrades` son el mercader elegido y las mejoras del Gremio;
+ * `region` decide el mapa, la montura, los bienes y los eventos.
+ * @param {{seed:string, region?:string, difficulty?:string, merchant?:string, upgrades?:Record<string,number>, events?:boolean, eventRate?:number}} opts
  * @returns {{map:object,state:object,options:object}}
  */
-export function createSeason({ seed, difficulty = 'normal', merchant = 'aprendiz', upgrades = {}, events = true, eventRate }) {
+export function createSeason({ seed, region = 'desierto', difficulty = 'normal', merchant = 'aprendiz', upgrades = {}, events = true, eventRate }) {
   getDifficulty(difficulty);
   getMerchant(merchant);
-  const perks = { merchant, upgrades: cleanUpgrades(upgrades) };
+  getRegion(region);
+  const perks = { merchant, region, upgrades: cleanUpgrades(upgrades) };
   const s = startingResources(perks);
-  const map = generateMap(seed);
+  const map = generateMap(seed, region);
   const rng = new Rng(`season:${seed}`);
   const starts = map.cities.filter((c) => c.type !== 'capital');
   const start = rng.pick(starts);
@@ -53,6 +56,7 @@ export function createSeason({ seed, difficulty = 'normal', merchant = 'aprendiz
   const state = {
     v: STATE_VERSION,
     seed: String(seed),
+    region,
     difficulty,
     merchant,
     upgrades: perks.upgrades,

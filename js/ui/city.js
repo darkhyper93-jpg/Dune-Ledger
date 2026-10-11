@@ -15,7 +15,7 @@ import { sceneSvg } from '../render/scenes.js';
 import { canPayHere, totalOwed, owedOn, nextInstallment } from '../game/debt.js';
 import { canFinish, rest, finishSeason } from '../game/season.js';
 import { buyProvision, buyCamel, sellCamel, payGuild } from '../game/actions.js';
-import { camelPrice, camelResale, provisionPrices, provisionCap } from '../game/caravan.js';
+import { camelPrice, camelResale, provisionPrices, provisionCap, perMount, mountName } from '../game/caravan.js';
 import { dailyRation, canTravel } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
@@ -128,24 +128,24 @@ function renderProvisions(app) {
   const resale = camelResale(state.seed, city);
   const ration = dailyRation(state, 'food');
   return h('div', { class: 'stack' },
-    h('p', { class: 'muted small', style: 'margin:0' }, 'Por día de viaje se gasta 1 de comida y 1 de agua cada 2 (vos, la tripulación y los camellos). La arena gasta más agua; el río, casi nada.'),
+    h('p', { class: 'muted small', style: 'margin:0' }, `Por día de viaje se gasta 1 de comida y 1 de agua cada 2 (vos, la tripulación y los ${mountName(state, 2)}). La arena gasta más agua; el río, casi nada.`),
     provisionCard(app, 'food', 'Comida', p.food),
     provisionCard(app, 'water', 'Agua', p.water),
     h('div', { class: 'card stack' },
-      h('div', { class: 'row between' }, h('h3', {}, 'Camellos'), h('span', { class: 'muted small' }, `${state.camels} de ${RULES.maxCamels}`)),
-      h('div', { class: 'small' }, `Cada camello lleva ${RULES.camelCapacity} de carga, pero también come y toma.`),
+      h('div', { class: 'row between' }, h('h3', {}, mountName(state, 2, true)), h('span', { class: 'muted small' }, `${state.camels} de ${RULES.maxCamels}`)),
+      h('div', { class: 'small' }, `Cada ${mountName(state)} lleva ${perMount(state)} de carga, pero también come y toma.`),
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn small', 'data-testid': 'camel-buy', disabled: state.camels >= RULES.maxCamels, onclick: () => {
           const res = app.act((g) => buyCamel(g));
-          if (res.ok) app.toast(`¡Camello nuevo por ${fmt(res.total)}!`);
+          if (res.ok) app.toast(`¡${mountName(state, 1, true)} nuevo por ${fmt(res.total)}!`);
         } }, `Comprar (${fmt(price)})`),
         h('button', { class: 'btn small', disabled: state.camels <= 1, onclick: () => {
           const res = app.act((g) => sellCamel(g));
-          if (res.ok) app.toast(`Vendiste un camello por ${fmt(res.total)}.`);
+          if (res.ok) app.toast(`Vendiste un ${mountName(state)} por ${fmt(res.total)}.`);
         } }, `Vender (${fmt(resale)})`))),
     h('div', { class: 'card stack' },
       h('h3', {}, 'Descansar'),
-      h('div', { class: 'small' }, `Pasás un día en ${city.name}: los camellos recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),
+      h('div', { class: 'small' }, `Pasás un día en ${city.name}: los ${mountName(state, 2)} recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),
       h('button', { class: 'btn', 'data-testid': 'rest', disabled: state.day >= RULES.seasonDays, onclick: () => {
         app.act((g) => rest(g));
         if (app.game.state.over) app.go('summary');

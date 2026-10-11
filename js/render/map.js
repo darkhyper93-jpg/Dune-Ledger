@@ -9,6 +9,7 @@
 import { CITY_PATHS, FLAG_PATH } from './shapes.js';
 import { CAMEL_PATH } from './scenes.js';
 import { TERRAINS } from '../data/routes.js';
+import { routeDays } from '../game/travel.js';
 import { hashUnit } from '../core/rng.js';
 
 const CITY_R = 5.2;
@@ -107,6 +108,16 @@ export function createMapView(canvas, opts) {
       const picked = extra.selected && fromHere && (r.a === extra.selected || r.b === extra.selected);
       ctx.save();
       ctx.lineCap = 'round';
+      if (r.terrain === 'mar') {
+        // Ruta por mar: un canal de agua ancho debajo de la línea.
+        ctx.strokeStyle = TERRAINS.mar.color;
+        ctx.globalAlpha = 0.22;
+        ctx.lineWidth = 5 * s;
+        ctx.beginPath();
+        ctx.moveTo(sx(a.x), sy(a.y));
+        ctx.lineTo(sx(b.x), sy(b.y));
+        ctx.stroke();
+      }
       ctx.strokeStyle = TERRAINS[r.terrain].color;
       ctx.lineWidth = (picked ? 1.9 : fromHere ? 1.3 : 0.9) * s;
       ctx.globalAlpha = fromHere || picked ? 1 : 0.7;
@@ -116,7 +127,7 @@ export function createMapView(canvas, opts) {
       ctx.lineTo(sx(b.x), sy(b.y));
       ctx.stroke();
       ctx.restore();
-      drawDays(pal, (a.x + b.x) / 2, (a.y + b.y) / 2, r.days, r.danger, picked);
+      drawDays(pal, (a.x + b.x) / 2, (a.y + b.y) / 2, routeDays(state, r.days), r.danger, picked);
     }
 
     const targets = new Set(state.contracts.active.map((k) => k.to));

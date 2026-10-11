@@ -34,6 +34,14 @@ function toV4(raw) {
 }
 
 /**
+ * Versión 4 → 5 (llega la caravana rival): las partidas empezadas siguen sin rival.
+ * @param {Record<string, any>} raw
+ */
+function toV5(raw) {
+  return { ...raw, v: 5, rival: null };
+}
+
+/**
  * Lleva una partida leída a la versión actual (si es de una conocida).
  * @param {Record<string, any>} raw
  * @returns {Record<string, any>}
@@ -42,5 +50,6 @@ export function migrate(raw) {
   let out = raw;
   if (out.v === 2) out = toV3(out);
   if (out.v === 3) out = toV4(out);
+  if (out.v === 4) out = toV5(out);
   return out;
 }

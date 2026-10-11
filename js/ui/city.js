@@ -37,7 +37,7 @@ export function renderCity(app, params = {}) {
 
   const kind = city.type === 'capital' ? 'Capital, sede del Gremio' : `${getCityType(city.type).name}${city.guildPost ? ', con Puesto del Gremio' : ''}`;
   const head = h('div', { class: 'city-head' },
-    h('div', { class: 'scene' }, svgNode(sceneSvg(city.type))),
+    h('div', { class: 'scene' }, svgNode(sceneSvg(city.type, state.region))),
     h('div', { class: 'plaque' },
       h('h1', { 'data-testid': 'city-name' }, city.name),
       h('div', { class: 'kind' }, kind)));

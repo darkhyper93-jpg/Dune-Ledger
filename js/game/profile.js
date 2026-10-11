@@ -31,7 +31,7 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], hardWin: false, daily: null,
+    regions: ['desierto'], wonIn: [], hardWin: false, daily: null,
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -60,6 +60,10 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (Array.isArray(raw.wonIn)) {
+    const ok = new Set(raw.wonIn.filter((id) => typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id)));
+    out.wonIn = REGIONS.map((r) => r.id).filter((id) => ok.has(id));
+  }
   if (isObj(raw.daily) && typeof raw.daily.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.daily.date) && Number.isFinite(raw.daily.score)) {
     out.daily = { date: raw.daily.date, score: Math.round(raw.daily.score) };
   }
@@ -164,6 +168,8 @@ export function recordSeason(profile, game) {
   const unlocked = [];
   if (over.won) {
     profile.wins += 1;
+    const region = state.region ?? 'desierto';
+    if (!profile.wonIn.includes(region)) profile.wonIn = REGIONS.map((r) => r.id).filter((id) => id === region || profile.wonIn.includes(id));
     unlocked.push(...unlockNext(profile, state));
   }
   profile.seals += over.seals;

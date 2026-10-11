@@ -99,6 +99,7 @@ export function renderHelp(app) {
       p('Al final, tu puntaje es el oro más la carga menos lo que debas. Con él ganás Sellos del Gremio.'),
       p('Con los sellos, en el Gremio comprás mercaderes con habilidades especiales y mejoras que valen para todas las temporadas. Algunos mercaderes piden un logro.'),
       p('Ganar una temporada abre la región siguiente: la Estepa (a caballo), la Costa (con barcos), las Montañas de Jade y el Reino del Sultán. Ganar en Difícil abre la Pesadilla.'),
+      p('Kasim "el Zorro", la caravana rival, anda por el mismo mapa: donde compra, el precio sube; donde vende, baja. En la Taberna te cuentan por dónde anda si está cerca. Al final se compara su oro con tu puntaje.'),
       p('El Desafío del día es el mismo mapa para todos: al terminar te da un código para comparar con tus amigos. El Modo libre no tiene deuda ni apuro, ideal para aprender.')),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
 }

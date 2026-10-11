@@ -9,7 +9,7 @@ import { getDifficulty } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { cargoFree, provisionCap } from './caravan.js';
 import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
-import { tireCamels } from './camels.js';
+import { tireCamels, healCamels } from './camels.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
@@ -239,6 +239,10 @@ function applyEffects(game, eff, params, rng) {
     lines.push(`Los ${regionOf(state).mount.many} pierden ${Math.abs(eff.camelHp)} de salud`);
     lines.push(...tireCamels(state, -eff.camelHp));
   }
+  if (eff.heal) {
+    healCamels(state, eff.heal);
+    lines.push(`Los ${regionOf(state).mount.many} recuperan ${eff.heal} de salud`);
+  }
   if (eff.morale && state.crew.length) {
     changeMorale(state, eff.morale);
     lines.push(`${eff.morale > 0 ? '+' : '−'}${Math.abs(eff.morale)} de moral`);
@@ -282,6 +286,8 @@ function loseCargo(state, goodId, part) {
  */
 function noteEvent(state, id, idx, success) {
   state.seen.events[id] = true;
+  const stat = eventDef(id).options[idx].stat;
+  if (stat && success !== false) state.stats[stat] = (state.stats[stat] ?? 0) + 1;
   if (id === 'bandidos' && idx === 1 && success) state.stats.fightsWon += 1;
   if (id === 'ruinas' && success) state.stats.treasures += 1;
   if (id === 'tormenta' && idx === 1 && success) state.stats.stormsBeaten += 1;

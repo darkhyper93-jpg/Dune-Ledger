@@ -108,7 +108,8 @@ function stats(v, map) {
     earned: num(v.earned, -1e8, 1e8, 'ganado'),
     spent: num(v.spent, 0, 1e8, 'gastado'),
     sold: record(v.sold, isGoodId, (x, w) => int(x, 0, 1e6, w), 'vendido'),
-    ...Object.fromEntries(COUNTERS.map((k) => [k, int(v[k], 0, 1e6, k)])),
+    // Contadores nuevos que una partida vieja no tiene arrancan en 0.
+    ...Object.fromEntries(COUNTERS.map((k) => [k, int(v[k] ?? 0, 0, 1e6, k)])),
   };
 }
 
@@ -214,6 +215,7 @@ export function validateState(input) {
       undo: undoPart(raw.undo, map, raw.location),
       stats: base.stats,
       seen: seenPart(raw.seen),
+      rival: rivalPart(raw.rival, cityOk),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);
@@ -224,6 +226,19 @@ export function validateState(input) {
     if (e instanceof SaveError) return { ok: false, error: e.message };
     return { ok: false, error: `Partida inválida: ${e.message}` };
   }
+}
+
+/** Valida la caravana rival (puede no haber, en partidas viejas). */
+function rivalPart(v, cityOk) {
+  if (v === null || v === undefined) return null;
+  need(isObj(v) && cityOk(v.at) && (v.to === null || cityOk(v.to)), 'rival');
+  need(v.cargo === null || (isObj(v.cargo) && isGoodId(v.cargo.goodId)), 'carga del rival');
+  return {
+    at: v.at, to: v.to,
+    left: int(v.left, 0, 30, 'rival'), days: int(v.days, 0, 30, 'rival'), wait: int(v.wait, 0, 10, 'rival'),
+    gold: int(v.gold, 0, 1e8, 'oro del rival'),
+    cargo: v.cargo === null ? null : { goodId: v.cargo.goodId, qty: int(v.cargo.qty, 1, 999, 'rival'), cost: int(v.cargo.cost, 0, 1e8, 'rival') },
+  };
 }
 
 /** Valida la deuda contra las cuotas de la dificultad (sin cuotas en el modo libre). */
@@ -371,6 +386,7 @@ function overPart(v) {
     recorded: v.recorded === true,
     newAchievements: Array.isArray(v.newAchievements) ? v.newAchievements.filter((id) => typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS_BY_ID, id)) : [],
     official: typeof v.official === 'boolean' ? v.official : null,
+    rivalGold: v.rivalGold === null || v.rivalGold === undefined ? null : int(v.rivalGold, 0, 1e8, 'rival'),
     unlocked: Array.isArray(v.unlocked) ? v.unlocked.filter((id) => id === 'pesadilla' || (typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id))) : [],
   };
 }

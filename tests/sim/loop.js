@@ -63,8 +63,9 @@ export function runLoop(seed, times = 10, camels = 5) {
   Object.assign(state, { location: loop.from, camels, camelHp: Array(camels).fill(100), gold: 100000, food: 200, water: 200 });
   const prov = provisionPrices(game.map.cityById[loop.from]);
   state.debt.installments.forEach((i) => { i.paid = i.amount; });
-  // Sin noticias de mercado: sólo cuenta cómo se agota el stock.
+  // Sin noticias ni caravana rival: sólo cuenta cómo se agota el stock.
   state.news = { next: 999, items: [] };
+  state.rival = null;
   const profits = [];
   for (let k = 0; k < times; k++) {
     state.day = 2; // que la temporada no termine durante la prueba

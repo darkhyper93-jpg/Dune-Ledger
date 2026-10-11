@@ -1,6 +1,7 @@
 /**
  * Escenas ilustradas de cada tipo de ciudad para la cabecera de la pantalla
- * de ciudad (SVG de 360×140). Cielo al atardecer, dunas y la silueta propia
+ * de ciudad (SVG de 360×140). El fondo cambia con la región (dunas, pastos,
+ * mar, picos nevados o el cielo violeta del sultán) y adelante va la silueta propia
  * de cada lugar: el puerto con barcos, el oasis con palmeras, la mina en la
  * montaña, las cúpulas de la ciudad santa, la aldea con su molino y la
  * Capital amurallada.
@@ -8,22 +9,63 @@
 
 const INK = '#2A2340';
 
-/** Cielo, sol y dunas de fondo, comunes a todas las escenas. */
-function backdrop(id) {
+/**
+ * Fondo de cada región: colores del cielo, el astro, el paisaje de atrás
+ * (dunas, pastos, mar, picos nevados) y el color del suelo de adelante.
+ */
+const LANDS = {
+  desierto: {
+    sky: ['#3E5C9A', '#E7965A', '#F6CF8A'], sun: '#FBE3A6',
+    back: '<path d="M0 98c50-14 95-14 140-4s90 8 130-6 70-10 90-4v56H0z" fill="#D9A15F"/>',
+    ground: '#C4813F',
+  },
+  estepa: {
+    sky: ['#5F8FB8', '#A9CDD6', '#EDE6B9'], sun: '#FFF4CC',
+    back: `<path d="M0 96c40-16 90-18 140-8s90 10 130-4 70-8 90-2v58H0z" fill="#9DB45A"/>
+      <path d="M40 60c10-3 20-3 30 0M250 48c8-2 16-2 24 0M262 54c8-2 14-2 20 0" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".8"/>`,
+    ground: '#7E9A42',
+  },
+  costa: {
+    sky: ['#4D7FB5', '#E9A27A', '#F6D3A0'], sun: '#FBE3A6',
+    back: `<path d="M0 86h360v54H0z" fill="#2B6C8F"/>
+      <path d="M0 90c20 3 40 3 60 0s40-3 60 0 40 3 60 0 40-3 60 0 40 3 60 0 40-3 60 0" stroke="#7FC6D9" stroke-width="2" fill="none"/>
+      <path d="M300 86l8-10h14l4 10z" fill="#1E2742" opacity=".55"/><path d="M312 76V60l10 14z" fill="#F8EED9" opacity=".7"/>`,
+    ground: '#D9A15F',
+  },
+  jade: {
+    sky: ['#536B9C', '#9FB6C8', '#DCE6E4'], sun: '#F3F6F2',
+    back: `<path d="M0 100l50-46 30 22 50-50 50 52 40-30 60 44 40-26 40 34v40H0z" fill="#5B6E7E"/>
+      <path d="M38 65l12-11 10 8-8 2zM118 38l12-12 13 14-8-1zM248 70l8-6 8 6z" fill="#FFFFFF"/>
+      <path d="M0 106c60-10 110-8 170-2s120 4 190-6v42H0z" fill="#3F8466"/>`,
+    ground: '#2F6E54',
+  },
+  sultan: {
+    sky: ['#3B2F78', '#B0638A', '#EFA772'], sun: '#FCE7B0', moon: true,
+    back: '<path d="M0 98c50-14 95-14 140-4s90 8 130-6 70-10 90-4v56H0z" fill="#C98A5E"/>',
+    ground: '#A8653D',
+  },
+};
+
+/** Cielo, astro y paisaje de fondo de la región. */
+function backdrop(id, region) {
+  const land = LANDS[region] ?? LANDS.desierto;
+  const [top, mid, low] = land.sky;
+  const astro = land.moon
+    ? `<circle cx="282" cy="52" r="16" fill="${land.sun}"/><circle cx="290" cy="47" r="14" fill="${mid}"/>`
+    : `<circle cx="282" cy="62" r="20" fill="${land.sun}"/><circle cx="282" cy="62" r="30" fill="${land.sun}" opacity=".25"/>`;
   return `
   <defs>
-    <linearGradient id="sky-${id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3E5C9A"/><stop offset=".55" stop-color="#E7965A"/><stop offset="1" stop-color="#F6CF8A"/>
+    <linearGradient id="sky-${id}-${region}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${top}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${low}"/>
     </linearGradient>
   </defs>
-  <rect width="360" height="140" fill="url(#sky-${id})"/>
-  <circle cx="282" cy="62" r="20" fill="#FBE3A6"/>
-  <circle cx="282" cy="62" r="30" fill="#FBE3A6" opacity=".25"/>
-  <path d="M0 98c50-14 95-14 140-4s90 8 130-6 70-10 90-4v56H0z" fill="#D9A15F"/>`;
+  <rect width="360" height="140" fill="url(#sky-${id}-${region})"/>
+  ${astro}
+  ${land.back}`;
 }
 
-/** Suelo de adelante. */
-const ground = '<path d="M0 116c60-10 120-8 180 0s120 6 180-4v28H0z" fill="#C4813F"/>';
+/** Suelo de adelante, del color de la región. */
+const ground = (region) => `<path d="M0 116c60-10 120-8 180 0s120 6 180-4v28H0z" fill="${(LANDS[region] ?? LANDS.desierto).ground}"/>`;
 
 /** Silueta de camello de perfil (también la usa el mapa). */
 export const CAMEL_PATH = 'M-30 6c0-8 6-12 12-12 3-9 8-13 13-13s8 5 10 11c3-5 6-7 10-7 5 0 7 6 10 12h4l5-14h10l-2 9-6 11c-2 4-6 6-11 6h-1v26h-5V14h-6v14h-5V14h-14v14h-5V14h-6v14h-5V14c-6-1-9-4-9-8z';
@@ -86,9 +128,10 @@ const SKYLINES = {
 };
 
 /**
- * Escena completa de un tipo de ciudad, como texto SVG fijo.
+ * Escena completa de un tipo de ciudad en una región, como texto SVG fijo.
  * @param {string} type
+ * @param {string} [region='desierto']
  */
-export function sceneSvg(type) {
-  return `<svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${backdrop(type)}${SKYLINES[type]}${ground}</svg>`;
+export function sceneSvg(type, region = 'desierto') {
+  return `<svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${backdrop(type, region)}${SKYLINES[type]}${ground(region)}</svg>`;
 }

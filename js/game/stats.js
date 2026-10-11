@@ -12,6 +12,7 @@ export function initialStats() {
     sold: {}, fightsWon: 0, contractsDone: 0, smuggled: 0, highTrips: 0, riskyTrips: 0,
     restDays: 0, shortageDays: 0, treasures: 0, stormsBeaten: 0, helped: 0,
     maxCamels: 0, maxCrew: 0, maxLevel: 0,
+    pilgrims: 0, wolves: 0, banquets: 0, piratesBeaten: 0,
   };
 }
 

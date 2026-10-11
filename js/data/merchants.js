@@ -15,6 +15,8 @@ export const MERCHANTS = [
   { id: 'negociante', name: 'Negociante', cost: 100, desc: 'Compra un 8% más barato y los mercados se le recuperan más rápido.' },
   { id: 'capitana', name: 'Capitana de guardia', cost: 120, desc: 'Empieza con 2 guardias leales y gana las peleas un 20% más seguido.' },
   { id: 'cartografo', name: 'Cartógrafo', cost: 150, requires: 'trotamundos', desc: 'Ve todo el mapa y los precios de todas las ciudades al inicio.' },
+  { id: 'espia', name: 'Espía del Gremio', cost: 110, requires: 'zorro', desc: 'Sabe siempre dónde anda Kasim y qué lleva, y los rumores que oye son verdad más seguido.' },
+  { id: 'caravanero', name: 'Caravanero', cost: 140, requires: 'estepa', desc: 'Cada animal carga 5 más y se cansa un 30% menos.' },
   { id: 'sultan', name: 'Viejo Sultán', cost: 250, requires: 'tres-victorias', start: { gold: 500, camels: 4 }, debtMult: 2, desc: 'Empieza con 500 de oro y 4 camellos, pero debe el doble.' },
 ];
 

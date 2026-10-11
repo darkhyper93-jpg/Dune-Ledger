@@ -7,7 +7,8 @@
  */
 
 import { CITY_PATHS, FLAG_PATH } from './shapes.js';
-import { CAMEL_PATH } from './scenes.js';
+import { drawCamelRow, RIVAL_PACKS } from './caravans.js';
+import { rivalNews } from '../game/rival.js';
 import { TERRAINS } from '../data/routes.js';
 import { routeDays } from '../game/travel.js';
 import { hashUnit } from '../core/rng.js';
@@ -201,6 +202,7 @@ export function createMapView(canvas, opts) {
       const b = map.cityById[route.a === from ? route.b : route.a];
       caravan = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, moving: true, dir: Math.sign(b.x - a.x) || 1 };
     }
+    drawRival(pal, game);
     drawCaravan(pal, caravan);
 
     if (extra.night) {
@@ -316,23 +318,29 @@ export function createMapView(canvas, opts) {
   /** La caravana: tres camellos chiquitos en fila. */
   function drawCaravan(pal, pos) {
     const s = view.scale;
-    const dir = pos.dir ?? 1;
-    const baseX = sx(pos.x) + (pos.moving ? 0 : CITY_R * s + 14 * s);
-    const baseY = sy(pos.y) - (pos.moving ? 0 : CITY_R * s * 0.9);
-    const k = 0.065 * s;
-    const body = pathFor('camel', CAMEL_PATH);
-    const pack = pathFor('pack', 'M-16 -4h22v-8h-22z');
-    const packs = [pal.accent, pal.teal, pal.gold];
-    for (let i = 0; i < 3; i++) {
-      ctx.save();
-      ctx.translate(baseX - i * 5.4 * s * dir, baseY);
-      ctx.scale(k * dir, k);
-      ctx.fillStyle = pal.ink;
-      ctx.fill(body);
-      ctx.fillStyle = packs[i];
-      ctx.fill(pack);
-      ctx.restore();
-    }
+    drawCamelRow(ctx, {
+      x: sx(pos.x) + (pos.moving ? 0 : CITY_R * s + 14 * s),
+      y: sy(pos.y) - (pos.moving ? 0 : CITY_R * s * 0.9),
+      s, dir: pos.dir, ink: pal.ink, packs: [pal.accent, pal.teal, pal.gold],
+    });
+  }
+
+  /** La caravana rival, si las noticias dicen dónde anda (del otro lado de la ciudad). */
+  function drawRival(pal, game) {
+    const { state, map } = game;
+    const r = state.rival;
+    if (!r || !rivalNews(game) || !state.known[r.at]) return;
+    const a = map.cityById[r.at];
+    const b = r.to && state.known[r.to] ? map.cityById[r.to] : null;
+    const t = b && r.days ? 1 - r.left / r.days : 0;
+    const x = b ? a.x + (b.x - a.x) * t : a.x;
+    const y = b ? a.y + (b.y - a.y) * t : a.y;
+    const s = view.scale;
+    const dir = b ? Math.sign(b.x - a.x) || 1 : -1;
+    drawCamelRow(ctx, {
+      x: sx(x) + (b ? 0 : -(CITY_R * s + 6 * s)), y: sy(y) + (b ? 0 : CITY_R * s * 0.6),
+      s, dir, ink: pal.ink, packs: RIVAL_PACKS, size: 0.8,
+    });
   }
 
   /**

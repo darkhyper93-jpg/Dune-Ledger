@@ -6,6 +6,9 @@
  * Las estadísticas que usan están en `state.stats` (ver js/game/stats.js).
  */
 
+/** Ganaste esta temporada en esa región. */
+const wonIn = (region) => ({ over, state }) => over.won && state.region === region;
+
 /** Cantidad vendida de un bien en la temporada. */
 const sold = (s, id) => s.stats.sold[id] ?? 0;
 
@@ -40,6 +43,24 @@ export const ACHIEVEMENTS = [
   { id: 'viajero', name: 'Siempre en camino', desc: 'Hacé 30 viajes en una temporada.', check: ({ state }) => state.stats.trips >= 30 },
   { id: 'cien-sellos', name: 'Cien sellos', desc: 'Juntá 100 sellos en total.', check: ({ profile }) => profile.totalSeals >= 100 },
   { id: 'coleccionista', name: 'Coleccionista', desc: 'Comerciá los 12 bienes (códice de bienes completo).', check: ({ profile }) => Object.keys(profile.codex.goods).length >= 12 },
+  // ── Regiones y dificultades ──
+  { id: 'estepa', name: 'Jinete de la estepa', desc: 'Ganá en la Estepa del Viento (desbloquea al Caravanero).', check: wonIn('estepa') },
+  { id: 'costa', name: 'Lobo de mar', desc: 'Ganá en la Costa de las Perlas.', check: wonIn('costa') },
+  { id: 'jade', name: 'Señor del jade', desc: 'Ganá en las Montañas de Jade.', check: wonIn('jade') },
+  { id: 'sultan', name: 'Favorito del sultán', desc: 'Ganá en el Reino del Sultán.', check: wonIn('sultan') },
+  { id: 'cinco-rutas', name: 'Las cinco rutas', desc: 'Ganá al menos una vez en cada una de las 5 regiones.', check: ({ profile }) => profile.wonIn.length >= 5 },
+  { id: 'dificil', name: 'Mano firme', desc: 'Ganá una temporada en Difícil.', check: ({ over, state }) => over.won && state.difficulty === 'dificil' },
+  { id: 'pesadilla', name: 'Sin red', desc: 'Ganá una temporada en Pesadilla.', check: ({ over, state }) => over.won && state.difficulty === 'pesadilla' },
+  { id: 'desafio', name: 'Desafío cumplido', desc: 'Ganá un desafío del día.', check: ({ over, state }) => over.won && state.mode === 'diario' },
+  // ── La caravana rival ──
+  { id: 'zorro', name: 'Más zorro que el Zorro', desc: 'Terminá con más puntaje que el oro de Kasim (desbloquea a la Espía del Gremio).', check: ({ over }) => over.rivalGold !== null && over.score > over.rivalGold },
+  { id: 'zorro-doble', name: 'Kasim, a casa', desc: 'Terminá con el doble de puntaje que el oro de Kasim.', check: ({ over }) => over.rivalGold !== null && over.score >= 2 * Math.max(1, over.rivalGold) },
+  // ── Eventos del camino ──
+  { id: 'piratas', name: 'Ni un doblón', desc: 'Rechazá a los piratas peleando.', check: ({ state }) => state.stats.piratesBeaten >= 1 },
+  { id: 'peregrinos', name: 'Camino santo', desc: 'Acompañá a 2 grupos de peregrinos en una temporada.', check: ({ state }) => state.stats.pilgrims >= 2 },
+  { id: 'lobos', name: 'Noche de lobos', desc: 'Espantá a los lobos con tus guardias.', check: ({ state }) => state.stats.wolves >= 1 },
+  { id: 'banquete', name: 'Invitado de honor', desc: 'Andá a un banquete del visir.', check: ({ state }) => state.stats.banquets >= 1 },
+  { id: 'altar', name: 'Altar de jade', desc: 'Vendé 10 de jade en una temporada.', check: ({ state }) => sold(state, 'jade') >= 10 },
 ];
 
 /** Acceso por id. */

@@ -24,6 +24,7 @@ import { canPayHere, nextInstallment, owedOn, totalOwed } from '../../js/game/de
 import { otherEnd } from '../../js/game/map-gen.js';
 import { optionState } from '../../js/game/events.js';
 import { bestOption } from './bot-choices.js';
+import { rivalNews } from '../../js/game/rival.js';
 import { avgHealth } from '../../js/game/camels.js';
 import { hiresHere, hire } from '../../js/game/crew.js';
 
@@ -96,13 +97,16 @@ function provisionCost(game, route) {
 /**
  * Precio de venta que el bot espera en un destino para la unidad k:
  * el último precio visto, bajando a medida que vende. Si nunca vio la
- * ciudad, supone el precio base.
+ * ciudad, supone el precio base. Si las noticias dicen que la caravana
+ * rival va a vender ese bien ahí, cuenta con que llegó antes.
  */
 function expectedSell(game, destId, goodId, k) {
   const info = game.state.prices[destId];
   const good = getGood(goodId);
   const p0 = info ? info.sell[goodId] : good.base;
-  return p0 * Math.max(0.3, 1 - (k * good.stockStep * RULES.market.stockImpact) / 100);
+  const r = game.state.rival;
+  const ahead = r && r.to === destId && r.cargo?.goodId === goodId && rivalNews(game) ? r.cargo.qty : 0;
+  return p0 * Math.max(0.3, 1 - ((k + ahead) * good.stockStep * RULES.market.stockImpact) / 100);
 }
 
 /**

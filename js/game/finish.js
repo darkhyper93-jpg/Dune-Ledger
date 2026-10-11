@@ -7,6 +7,7 @@ import { quote } from './market.js';
 import { totalOwed, settleInstallment, spendFunds } from './debt.js';
 import { addLog } from './knowledge.js';
 import { isFree } from './modes.js';
+import { rivalWorth } from './rival.js';
 
 /**
  * Valor de la carga si la vendieras toda acá, unidad por unidad.
@@ -84,6 +85,8 @@ export function finishSeason(game, reason) {
     newAchievements: [],
     /** En el desafío: si fue la primera partida del día (la que cuenta). */
     official: null,
+    /** Oro de la caravana rival al cierre (para compararse). */
+    rivalGold: rivalWorth(state),
   };
   state.undo = [];
   if (free) addLog(state, `Terminó el modo libre con ${score} de puntaje.`, 'info');

@@ -22,6 +22,7 @@ import { notePeaks } from './stats.js';
 import { tickContracts } from './contracts.js';
 import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels.js';
 import { mountName } from './caravan.js';
+import { rivalDay } from './rival.js';
 import { lastDay } from './modes.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
@@ -147,6 +148,7 @@ export function passDay(game, use, where, mode = {}) {
   notePeaks(state);
   const crew = crewDay(game, { travel: !!mode.terrain, rest: !!mode.rest, hungry, thirsty });
   recoverStock(state.stock, RULES.market.stockRecovery * (hasPerk(state, 'negociante') ? 1.5 : 1));
+  rivalDay(game);
   tickNews(game);
   if (crew.extraRumor) extraRumor(game);
   tickContracts(game);

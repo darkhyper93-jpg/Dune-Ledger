@@ -35,6 +35,8 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   el momento, animaciones que responden a lo que hacés, accesibilidad
   revisada con axe (modo claro y noche) y prueba de rendimiento con el
   procesador 6 veces más lento.
+- Contenido extra: 24 eventos, la caravana rival de Kasim «el Zorro», 45
+  logros, 10 mercaderes y escenas de ciudad distintas en cada región.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

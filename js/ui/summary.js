@@ -13,6 +13,7 @@ import { DIFFICULTIES } from '../data/rules.js';
 import { regionSvg } from '../render/regions-art.js';
 import { svgNode } from '../render/shapes.js';
 import { dailyResultCard } from './modes.js';
+import { kasimSvg } from '../render/portraits.js';
 
 /** Textos de cómo terminó la temporada. */
 const REASONS = {
@@ -30,6 +31,18 @@ function record(app) {
   const res = recordSeason(app.profile, app.game);
   app.saveAll();
   return res;
+}
+
+/** Cómo te fue contra Kasim, la caravana rival. */
+function rivalCard(over) {
+  if (over.rivalGold === null || over.rivalGold === undefined) return null;
+  const diff = Math.round(over.score - over.rivalGold);
+  const verdict = diff > 0 ? `¡Le ganaste por ${fmt(diff)}!` : diff < 0 ? `Te ganó por ${fmt(-diff)}. La próxima será.` : '¡Empate exacto!';
+  return h('div', { class: 'card rival', 'data-testid': 'rival-result' },
+    h('span', { class: 'rival-face', 'aria-hidden': 'true' }, svgNode(kasimSvg())),
+    h('div', { class: 'stack', style: 'gap:4px' },
+      h('h3', {}, 'Kasim «el Zorro»'),
+      h('p', { class: 'small', style: 'margin:0' }, `Terminó la temporada con ${fmt(over.rivalGold)} de oro. ${verdict}`)));
 }
 
 /** Tarjeta de lo que se abrió al ganar: región nueva o la Pesadilla. */
@@ -72,6 +85,7 @@ export function renderSummary(app) {
       counts ? h('div', {}, 'Ganaste ', h('b', { 'data-testid': 'final-seals' }, `${over.seals} sellos del Gremio`)) : null,
       h('div', { class: 'muted small' }, free ? 'Puntaje = oro + valor de la carga.' : 'Puntaje = oro + valor de la carga − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
     state.mode === 'diario' ? dailyResultCard(app) : null,
+    rivalCard(over),
     h('div', { class: 'card' }, h('dl', { class: 'kv' },
       h('dt', {}, 'Oro final'), h('dd', {}, fmt(over.gold)),
       h('dt', {}, 'Deuda sin pagar'), h('dd', { class: over.owed ? 'bad' : 'good' }, fmt(over.owed)),

@@ -27,13 +27,14 @@ import { getMerchant, cleanUpgrades } from './perks.js';
 import { startingResources, applyStartPerks } from './start.js';
 import { initialStats, initialSeen, see, bump, notePeaks } from './stats.js';
 import { lastDay, isFree, MODES } from './modes.js';
+import { createRival } from './rival.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
 export { lastDay } from './modes.js';
 
 /** Versión del formato de la partida guardada. */
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 /**
  * Crea una temporada nueva.
@@ -96,8 +97,10 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     undo: [],
     stats: initialStats(),
     seen: initialSeen(),
+    rival: null,
     over: null,
   };
+  state.rival = createRival(map, state.seed, start.id);
   const game = { map, state, options: { events, eventRate } };
   discoverAround(game, start.id);
   applyStartPerks(game);

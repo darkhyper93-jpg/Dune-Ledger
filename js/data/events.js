@@ -22,19 +22,17 @@
  * rep (reputación en la zona de destino), loot [mín, máx] de oro,
  * give { good, qty }, takeAll (bien que se pierde entero), inspect
  * (revisión: multa y confiscación de armas), reveal (dato de precios) y
- * camelHp (salud que pierde cada camello) y morale (moral de la tripulación).
+ * camelHp (salud que pierde cada camello), heal (salud que recupera cada
+ * uno) y morale (moral de la tripulación).
+ * - stat: estadística que suma la opción si sale bien (para logros).
+ * Los eventos propios de cada región están en events-regional.js.
  */
 
 import { getGood } from './goods.js';
+import { REGIONAL_EVENTS, cargoBase } from './events-regional.js';
 
-/** Valor de la carga a precio base (para calcular peajes). */
-function cargoBase(state) {
-  let v = 0;
-  for (const [id, q] of Object.entries(state.cargo)) v += q * getGood(id).base;
-  return v;
-}
-
-export const EVENTS = [
+/** Eventos que pueden salir en cualquier región. */
+const COMMON_EVENTS = [
   {
     id: 'bandidos',
     when: { danger: ['medio', 'alto'], notTerrain: ['mar'] },
@@ -135,66 +133,88 @@ export const EVENTS = [
       { label: 'Desviarse (+1 día)', spareDays: 1, effects: { delay: 1 } },
     ],
   },
-  // ── Eventos de cada región ──
   {
-    id: 'piratas',
-    when: { terrain: ['mar'] },
-    weight: 3,
-    text: 'Una galera de velas negras se pone a la par. Los piratas piden $toll de oro para no abordarte.',
-    setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
+    id: 'espejismo',
+    when: { terrain: ['arena'] },
+    weight: 1,
+    text: 'En el horizonte brilla un oasis con palmeras. ¿Será real o un espejismo?',
     options: [
-      { label: 'Pagar $toll de oro', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
-      { label: 'Defender el barco', chance: 'fight', win: { rep: 5, loot: [30, 90], morale: 10 }, lose: { cargoPct: 0.4, morale: -10 },
-        winText: '¡Los rechazaste! En la huida dejaron caer un cofre.', loseText: 'Te abordaron y se llevaron parte de la carga.' },
-      { label: 'Escapar a toda vela', chance: 'flee', win: {}, lose: { cargoPct: 0.25 },
-        winText: 'El viento estuvo de tu lado y los dejaste atrás.', loseText: 'Te alcanzaron: tiraste carga al agua para ganar velocidad.' },
+      { label: 'Preguntarle al guía', role: 'guia', chance: 0.9, win: { water: 12 }, lose: { delay: 1 },
+        winText: 'El guía conocía el lugar: era real. Llenaste los odres.', loseText: 'Ni el guía se salvó del engaño: perdiste un día.' },
+      { label: 'Desviarse a ver', spareDays: 1, chance: 0.35, win: { water: 12 }, lose: { delay: 1, water: -4 },
+        winText: '¡Era real! Agua fresca para todos.', loseText: 'Era un espejismo. Perdiste un día y agua.' },
+      { label: 'Seguir la ruta', effects: {} },
     ],
   },
   {
-    id: 'calma',
-    when: { terrain: ['mar'] },
-    weight: 1.5,
-    text: 'Se para el viento. Las velas cuelgan y el barco no avanza.',
+    id: 'pata-herida',
+    when: { notTerrain: ['mar'] },
+    weight: 1,
+    text: 'Uno de tus animales pisó mal entre las piedras y renguea.',
     options: [
-      { label: 'Esperar el viento (+1 día)', spareDays: 1, effects: { delay: 1 } },
-      { label: 'Remar todos juntos', effects: { morale: -8, water: -4 } },
+      { label: 'Que lo cure el curandero', role: 'curandero', effects: { heal: 10 },
+        winText: 'Lo vendó con hierbas: en un rato estaba como nuevo.' },
+      { label: 'Parar a curarlo (+1 día)', spareDays: 1, effects: { delay: 1, heal: 5 } },
+      { label: 'Seguir igual', effects: { camelHp: -20 } },
     ],
   },
   {
-    id: 'estampida',
-    when: { region: ['estepa'], notTerrain: ['mar'] },
-    weight: 2,
-    text: 'La tierra tiembla: una manada de caballos salvajes viene en estampida hacia la caravana.',
+    id: 'peregrinos',
+    when: { notTerrain: ['mar'], danger: ['bajo', 'medio'] },
+    weight: 1,
+    text: 'Unos peregrinos van rumbo a la ciudad santa y te piden que los acompañes. Pagan poco, pero se habla bien de quien los cuida.',
     options: [
-      { label: 'Apartarse y esperar (+1 día)', spareDays: 1, effects: { delay: 1 } },
-      { label: 'Cruzar antes de que lleguen', chance: 0.6, win: {}, lose: { cargoPct: 0.15, camelHp: -15 },
-        winText: 'Pasaste justo a tiempo.', loseText: 'La manada te pasó por encima: perdiste carga.' },
+      { label: 'Acompañarlos (+1 día)', spareDays: 1, effects: { delay: 1, gold: 25, rep: 8 }, stat: 'pilgrims',
+        winText: 'Llegaron sanos y salvos: te bendicen en cada pueblo.' },
+      { label: 'Compartirles comida (3)', needs: { food: 3 }, effects: { food: -3, rep: 4 } },
+      { label: 'Seguir solo', effects: {} },
     ],
   },
   {
-    id: 'avalancha',
-    when: { region: ['jade'], terrain: ['montana'] },
-    weight: 2,
-    text: 'Un ruido seco arriba del paso: se vienen piedras y nieve.',
+    id: 'mercado-negro',
+    when: { notTerrain: ['mar'], danger: ['medio', 'alto'] },
+    weight: 1,
+    text: 'Un encapuchado ofrece $qty de $goodName a precio de remate: $price de oro. Demasiado barato…',
+    setup: (game, rng) => {
+      const good = rng.pick(['seda', 'especias', 'incienso', 'perlas']);
+      const qty = rng.int(3, 6);
+      return { good, goodName: getGood(good).name.toLowerCase(), qty, price: Math.round(getGood(good).base * qty * 0.45) };
+    },
     options: [
-      { label: 'Volver y rodear (+2 días)', spareDays: 2, effects: { delay: 2 } },
-      { label: 'Apurar el paso', chance: 0.55, win: {}, lose: { cargoPct: 0.2, breakFragile: 0.5, camelHp: -25 },
-        winText: 'Cruzaste un segundo antes del derrumbe.', loseText: 'La avalancha te alcanzó de costado.' },
+      { label: 'Comprar ($price de oro)', cost: { gold: '$price' }, space: true, chance: 0.65,
+        win: { gold: '-$price', give: { good: '$good', qty: '$qty' } }, lose: { gold: '-$price' },
+        winText: 'Era mercadería buena. ¡Negocio redondo!', loseText: 'Los fardos tenían arena adentro. Te estafaron.' },
+      { label: 'Denunciarlo en la próxima ciudad', effects: { rep: 5 } },
+      { label: 'Pasar de largo', effects: {} },
     ],
   },
   {
-    id: 'recaudador',
-    when: { region: ['sultan'] },
-    weight: 2,
-    text: 'Un recaudador del sultán cobra el diezmo del camino: $tax de oro.',
-    setup: (game) => ({ tax: Math.max(15, Math.round(cargoBase(game.state) * 0.08)), fine: Math.max(40, Math.round(cargoBase(game.state) * 0.2)) }),
+    id: 'pozo',
+    when: { notTerrain: ['mar', 'rio'] },
+    weight: 1,
+    text: 'Encontrás un pozo viejo al costado del camino. El agua huele raro.',
     options: [
-      { label: 'Pagar el diezmo ($tax)', cost: { gold: '$tax' }, effects: { gold: '-$tax', rep: 2 } },
-      { label: 'Esconder la carga', chance: 'bribe', win: {}, lose: { gold: '-$fine', rep: -5 },
-        winText: 'Revisó por arriba y no vio nada.', loseText: 'Encontró la carga escondida y te multó con $fine.' },
+      { label: 'Que el cocinero la hierva', role: 'cocinero', effects: { water: 15 },
+        winText: 'Hervida y con unas hojas de menta, quedó rica.' },
+      { label: 'Tomar igual', chance: 0.6, win: { water: 15 }, lose: { water: 5, camelHp: -15, morale: -10 },
+        winText: 'Estaba buena. Odres llenos.', loseText: 'Les cayó mal a todos.' },
+      { label: 'No arriesgarse', effects: {} },
+    ],
+  },
+  {
+    id: 'fogon',
+    weight: 1,
+    text: 'Te cruzás con otra caravana del Gremio. Arman un fogón juntos y se cuentan novedades.',
+    options: [
+      { label: 'Invitar la cena (2 de comida)', needs: { food: 2 }, effects: { food: -2, morale: 8, reveal: 1 },
+        winText: 'Entre té y dátiles te pasaron precios frescos.' },
+      { label: 'Saludar y seguir', effects: {} },
     ],
   },
 ];
+
+/** Todos los eventos: los comunes y los de cada región. */
+export const EVENTS = [...COMMON_EVENTS, ...REGIONAL_EVENTS];
 
 /** Acceso por id. */
 export const EVENTS_BY_ID = Object.fromEntries(EVENTS.map((e) => [e.id, e]));

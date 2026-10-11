@@ -279,3 +279,37 @@ revisarlo más adelante.
 - **Mapa**: el círculo de días de cada ruta se corre para no tapar nombres
   ni ciudades, los nombres tienen un borde para leerse sobre las rutas y el
   mapa no se acerca tanto con pocas ciudades conocidas.
+
+## Contenido nuevo (después del plan)
+
+- **Eventos**: 11 más (24 en total). Comunes: espejismo, pata herida,
+  peregrinos, mercado negro, pozo viejo y fogón compartido. Regionales
+  (en `js/data/events-regional.js`): niebla en el mar, lobos en la Estepa,
+  monasterio en las Montañas de Jade (compra jade y deja descansar), banquete
+  del visir en el Reino del Sultán y un pastor en el Desierto. Efecto nuevo
+  `heal` (los animales recuperan salud) y campo `stat` para contar logros
+  desde los datos.
+- **Caravana rival** (idea propia): Kasim «el Zorro» recorre el mismo mapa
+  con unos 32 de carga. Al salir de una ciudad compra el bien con mejor
+  margen hacia una vecina y al llegar lo vende, así que mueve el stock como
+  un jugador: donde compra sube el precio y donde vende baja. Descansa 2
+  días en cada ciudad. Es temerario: prefiere rutas de peligro medio y alto,
+  porque si competía por las rutas seguras el bot prudente caía a 40%. Usa
+  su propio azar, así que no cambia tus eventos. En la Taberna se cuenta por
+  dónde anda si está a una ruta de distancia, también se ve en el mapa, y al
+  final del resumen se compara su oro con tu puntaje. La prueba del bucle lo
+  excluye, igual que las noticias, porque mide sólo cómo se agota el stock.
+  Los bots usan sus noticias para no ir a vender adonde él llega primero.
+- **Logros**: 15 más (45). Ganar en cada región, en Difícil, en Pesadilla y
+  en las cinco regiones; ganar un desafío; ganarle a Kasim (y por el doble);
+  y uno por cada evento nuevo importante. El perfil guarda en qué regiones
+  ganaste (`wonIn`).
+- **Mercaderes**: Espía del Gremio (110 sellos, pide ganarle a Kasim): sabe
+  siempre dónde anda el rival y sus rumores son verdad un 15% más seguido.
+  Caravanero (140, pide ganar en la Estepa): +5 de carga por animal y se
+  cansan un 30% menos.
+- **Escenas por región**: el fondo de cada ciudad cambia con la región
+  (dunas, pastos con nubes de viento, mar con velero, picos nevados o el
+  cielo violeta con luna del sultán).
+- **Balance con todo esto** (300 temporadas, Normal): codicioso 76,7%,
+  prudente 43,7%, aleatorio 0%.

@@ -10,7 +10,7 @@
 import { getGood } from '../data/goods.js';
 import { TERRAINS } from '../data/routes.js';
 import { cargoUsed, capacity, mountName } from './caravan.js';
-import { upgradeValue } from './perks.js';
+import { upgradeValue, hasPerk } from './perks.js';
 
 /** Cansancio por día de viaje en terreno normal. */
 export const FATIGUE_PER_DAY = 3;
@@ -62,7 +62,7 @@ export function dropOverflow(state) {
  */
 export function tireCamels(state, amount) {
   const lines = [];
-  const tired = Math.round(amount * (1 - upgradeValue(state, 'resistentes')));
+  const tired = Math.round(amount * (1 - upgradeValue(state, 'resistentes')) * (hasPerk(state, 'caravanero') ? 0.7 : 1));
   state.camelHp = state.camelHp.map((hp) => hp - tired);
   const alive = state.camelHp.filter((hp) => hp > 0);
   const dead = state.camelHp.length - alive.length;

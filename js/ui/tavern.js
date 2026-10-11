@@ -13,6 +13,9 @@ import { fmt, plural } from '../core/text.js';
 import { playCoins } from '../core/audio.js';
 import { renderHires } from './crew.js';
 import { goodArt } from './art.js';
+import { RIVAL, rivalNews, rivalWorth } from '../game/rival.js';
+import { kasimSvg } from '../render/portraits.js';
+import { svgNode } from '../render/shapes.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -79,10 +82,28 @@ export function renderTavern(app) {
     news.length
       ? h('ul', { class: 'result-lines' }, news.map((n) => h('li', {}, newsText(n), h('span', { class: 'muted small' }, ` (hasta el día ${n.endDay})`))))
       : h('p', { class: 'muted small', style: 'margin:0' }, 'Ninguna por ahora.'),
+    rivalCard(app),
     h('h3', {}, 'Contratos'),
     h('p', { class: 'muted small', style: 'margin:0' }, 'Pagan más que el mercado, pero tienen fecha. Si no cumplís, baja tu reputación en esa zona.'),
     offers.length ? offers.map((k) => contractCard(app, k, 'offer')) : h('p', { class: 'muted small' }, 'No hay encargos nuevos. Volvé en unos días.'),
     renderHires(app));
+}
+
+/**
+ * Lo que se cuenta en la taberna de Kasim, la caravana rival.
+ * @param {object} app
+ */
+function rivalCard(app) {
+  const { state } = app.game;
+  if (!state.rival) return null;
+  const news = rivalNews(app.game);
+  const worth = Math.max(0, Math.round(rivalWorth(state) / 100) * 100);
+  return h('div', { class: 'card rival', 'data-testid': 'rival' },
+    h('span', { class: 'rival-face', 'aria-hidden': 'true' }, svgNode(kasimSvg())),
+    h('div', { class: 'stack', style: 'gap:4px' },
+      h('h3', {}, `${RIVAL.name} «el Zorro»`),
+      h('p', { class: 'small', style: 'margin:0' }, news ?? 'Nadie lo vio por esta zona. Anda por otro lado del mapa.'),
+      h('p', { class: 'small muted', style: 'margin:0' }, `Dicen que ya junta unos ${fmt(worth)} de oro. Donde él compra, sube el precio; donde vende, baja.`)));
 }
 
 /**

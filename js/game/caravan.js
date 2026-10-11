@@ -6,7 +6,7 @@ import { RULES } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
 import { hashUnit } from '../core/rng.js';
-import { upgradeValue, regionOf } from './perks.js';
+import { upgradeValue, regionOf, hasPerk } from './perks.js';
 
 /**
  * Carga que lleva cada animal: 20 un camello (12 un caballo en la Estepa),
@@ -14,7 +14,7 @@ import { upgradeValue, regionOf } from './perks.js';
  * @param {object} state
  */
 export function perMount(state) {
-  return regionOf(state).mount.capacity + upgradeValue(state, 'carga');
+  return regionOf(state).mount.capacity + upgradeValue(state, 'carga') + (hasPerk(state, 'caravanero') ? 5 : 0);
 }
 
 /**

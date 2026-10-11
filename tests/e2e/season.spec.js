@@ -225,7 +225,7 @@ test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async
   await page.getByText('Volver').click();
   await expect(page.getByTestId('shop')).toContainText('130 sellos');
   await page.getByTestId('records').click();
-  await expect(page.getByTestId('achievements-count')).toContainText('/30');
+  await expect(page.getByTestId('achievements-count')).toContainText('/45');
 });
 
 test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a caballo', async ({ page }) => {
@@ -291,4 +291,20 @@ test('tutorial: aconseja paso a paso y se puede saltear para siempre', async ({ 
   await page.getByTestId('continue').click();
   await expect(page.getByTestId('city-name')).toBeVisible();
   await expect(page.locator('.coach')).toHaveCount(0);
+});
+
+test('caravana rival: Kasim aparece en la taberna y en el resumen', async ({ page }) => {
+  await newSeason(page);
+  await page.getByTestId('tab-taberna').click();
+  await expect(page.getByTestId('rival')).toContainText('Kasim');
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('dune-ledger:temporada'));
+    s.gold = 3000; s.debt.installments.forEach((i) => { i.paid = i.amount; });
+    localStorage.setItem('dune-ledger:temporada', JSON.stringify(s));
+  });
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await page.getByTestId('finish').click();
+  await page.getByTestId('finish-confirm').click();
+  await expect(page.getByTestId('rival-result')).toContainText('Le ganaste');
 });

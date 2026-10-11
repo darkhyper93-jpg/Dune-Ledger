@@ -207,8 +207,8 @@ function tryMap(rng, seed) {
   if (deg.some((d) => d < R.minDegree || d > R.maxDegree)) return null;
   if (!isConnected(n, edges)) return null;
 
-  const names = rng.shuffle(CITY_NAMES);
-  const cities = points.map((p, i) => ({ id: `c${i}`, name: names[i], type: types[i], x: p.x, y: p.y, guildPost: false, zone: '' }));
+  const pools = Object.fromEntries(Object.entries(CITY_NAMES).map(([t, list]) => [t, rng.shuffle(list)]));
+  const cities = points.map((p, i) => ({ id: `c${i}`, name: pools[types[i]].pop(), type: types[i], x: p.x, y: p.y, guildPost: false, zone: '' }));
   assignZones(cities);
   const dangerW = { bajo: 7, medio: 2, alto: 1.5 };
   const routes = edges.map(([a, b], i) => {

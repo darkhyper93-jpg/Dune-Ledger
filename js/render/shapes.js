@@ -1,5 +1,5 @@
 /**
- * Siluetas geométricas de las ciudades y del logo, como trazos SVG en una
+ * Siluetas geométricas de las ciudades (para el mapa), como trazos SVG en una
  * caja de 24×24. El mismo trazo sirve para SVG (pantallas) y para canvas
  * (mapa) con Path2D, así el arte es uno solo y no hay imágenes externas.
  */
@@ -16,27 +16,6 @@ export const CITY_PATHS = {
 
 /** Banderita del Gremio (para puestos). */
 export const FLAG_PATH = 'M5 22V3h1.6v1h11l-2.6 4 2.6 4h-11v10z';
-
-/** Logo: sol, dunas y una fila de camellos. */
-export const LOGO_SVG = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <circle cx="60" cy="60" r="56" fill="var(--surface-2)"/>
-  <circle cx="78" cy="44" r="16" fill="var(--accent)"/>
-  <path d="M4 78c18-10 34-12 52-6s34 6 60-4v22a56 56 0 0 1-112 0z" fill="var(--gold)" opacity=".55"/>
-  <path d="M4 90c22-8 44-8 62-2s32 4 50-2v4a56 56 0 0 1-112 0z" fill="var(--accent)" opacity=".85"/>
-  <g fill="var(--ink)">
-    <path d="M26 74c0-4 3-6 6-6 1-3 3-5 5-5s3 2 4 4c1-1 2-1 3 0l2-3h3l-1 4c-1 2-2 3-4 3v8h-2v-6h-7v6h-2v-6c-2 0-4-1-5-2l-1 8h-2z"/>
-    <path d="M52 72c0-3 2-5 5-5 1-2 2-4 4-4s3 2 3 3c1-1 2-1 3 0l1-2h3l-1 3c-1 2-2 3-3 3v7h-2v-5h-6v5h-2v-5c-1 0-3 0-4-1l-1 6h-2z"/>
-    <path d="M75 70c0-3 2-4 4-4 1-2 2-3 3-3s2 1 3 3l1-2h3l-1 3c-1 1-1 2-3 2v6h-1.5v-4h-5v4H77v-4l-1 4h-1.5z"/>
-  </g>
-</svg>`;
-
-/**
- * SVG de la silueta de una ciudad, como texto (contenido fijo, sin datos del jugador).
- * @param {string} type
- */
-export function citySvg(type) {
-  return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12.5" r="11.5" fill="var(--surface-2)"/><path d="${CITY_PATHS[type]}" fill="var(--ink)" transform="translate(2.4 2.6) scale(.8)"/></svg>`;
-}
 
 /**
  * Convierte un SVG fijo (de este archivo) en un nodo, sin usar innerHTML.

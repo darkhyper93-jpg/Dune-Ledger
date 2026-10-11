@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateMap, bestNeighborMargin, otherEnd, MIN_ROUTE_MARGIN } from '../../js/game/map-gen.js';
 import { isTerrain, isDanger } from '../../js/data/routes.js';
+import { CITY_NAMES } from '../../js/data/cities.js';
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => `mapa-${i}`);
 
@@ -66,6 +67,12 @@ test('regla 2: desde cada ciudad hay un negocio razonable con una vecina', () =>
   for (const seed of SEEDS) {
     const map = generateMap(seed);
     for (const c of map.cities) assert.ok(bestNeighborMargin(map, seed, c.id) >= MIN_ROUTE_MARGIN, `${seed} ${c.name}`);
+  }
+});
+
+test('cada ciudad tiene un nombre de su tipo (el nombre ya cuenta qué es)', () => {
+  for (const seed of SEEDS) {
+    for (const c of generateMap(seed).cities) assert.ok(CITY_NAMES[c.type].includes(c.name), `${c.name} no es un nombre de ${c.type}`);
   }
 });
 

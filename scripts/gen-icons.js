@@ -14,7 +14,7 @@ const page = await browser.newPage();
 async function render(size, file, pad = 0) {
   await page.setViewportSize({ width: size, height: size });
   const inner = size - pad * 2;
-  const bg = pad ? '#f4e9d8' : 'transparent';
+  const bg = pad ? '#E7965A' : 'transparent';
   await page.setContent(`<html><body style="margin:0;background:${bg}"><div style="padding:${pad}px;width:${inner}px;height:${inner}px">${svg.replace('<svg ', `<svg width="${inner}" height="${inner}" `)}</div></body></html>`);
   await page.screenshot({ path: new URL(`../icons/${file}`, import.meta.url).pathname, omitBackground: !pad });
 }

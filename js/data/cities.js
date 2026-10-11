@@ -35,11 +35,15 @@ export function getCityType(id) {
   return CITY_TYPES_BY_ID[id];
 }
 
-/** Nombres inventados para las ciudades; el mapa toma los que necesita. */
-export const CITY_NAMES = [
-  'Kharsa', 'Zafira', 'Qadim', 'Ombar', 'Tamrit', 'Sahlil', 'Barqa', 'Dunmar',
-  'Ilsaf', 'Marrakh', 'Yazrin', 'Ghadal', 'Nefra', 'Sirtah', 'Awjal', 'Thamud',
-  'Rubal', 'Kefir', 'Hassa', 'Mirab', 'Zawra', 'Ubari', 'Selim', 'Tazar',
-  'Wadan', 'Jebal', 'Amrah', 'Dakhla', 'Fezzar', 'Ghurab',
-];
-
+/**
+ * Nombres de ciudades por tipo: el nombre ya da una pista de qué es
+ * (un puerto suena a mar, una minera a roca). Cada mapa toma los que necesita.
+ */
+export const CITY_NAMES = {
+  capital: ['Ciudad del Gremio', 'Alcázar Dorado', 'Gran Medina'],
+  puerto: ['Bahía de Ámbar', 'Puerto Coral', 'Ancla Turquesa', 'Muelle de las Velas', 'Rada del Ocaso', 'Puerto Sirena', 'Caleta Azul'],
+  oasis: ['Las Siete Palmas', 'Ojo de Agua', 'Fuente Escondida', 'Palmar del Eco', 'Oasis de la Luna', 'Laguna Verde', 'Pozo de los Dátiles'],
+  minera: ['Cerro del Hierro', 'Peña Salada', 'Socavón Rojo', 'Roca Herrumbre', 'Minas del Cobre', 'Barranco Gris', 'Salinas Blancas'],
+  santa: ['Santuario del Alba', 'Alminar Blanco', 'Ciudad de las Cúpulas', 'Templo del Viento'],
+  aldea: ['Villa Telares', 'Los Corrales', 'Aldea del Molino', 'Pastizales', 'Cuatro Pozos', 'Valle de la Lana', 'Cántaro Viejo'],
+};

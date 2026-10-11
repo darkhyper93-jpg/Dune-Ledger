@@ -3,7 +3,8 @@
  */
 
 import { h, openSheet } from './dom.js';
-import { LOGO_SVG, svgNode } from '../render/shapes.js';
+import { svgNode } from '../render/shapes.js';
+import { sceneSvg } from '../render/scenes.js';
 import { VERSION } from '../core/version.js';
 import { forceUpdate } from '../core/updates.js';
 import { setVolumes, playTap } from '../core/audio.js';
@@ -18,7 +19,8 @@ export function renderMenu(app) {
   const { game, profile } = app;
   const canContinue = game && !game.state.over;
   return h('div', { class: 'menu' },
-    h('div', { class: 'logo' }, svgNode(LOGO_SVG), h('h1', {}, 'Dune Ledger'), h('p', {}, 'Comprá barato, vendé caro y pagale al Gremio.')),
+    h('div', { class: 'cover' }, h('div', { class: 'scene' }, svgNode(sceneSvg('cover'))), h('h1', {}, 'Dune Ledger')),
+    h('p', { class: 'tagline' }, 'Comprá barato, vendé caro y pagale al Gremio antes del día 60.'),
     h('div', { class: 'stack' },
       canContinue ? h('button', { class: 'btn big primary', 'data-testid': 'continue', onclick: () => app.go('city') }, `Continuar (día ${game.state.day})`) : null,
       h('button', { class: `btn big ${canContinue ? '' : 'primary'}`, 'data-testid': 'new-season', onclick: () => {
@@ -33,7 +35,10 @@ export function renderMenu(app) {
       h('button', { class: 'btn big', 'data-testid': 'records', onclick: () => app.go('records') }, 'Logros y códice'),
       h('button', { class: 'btn big', 'data-testid': 'help', onclick: () => app.go('help') }, 'Cómo se juega'),
       h('button', { class: 'btn big', 'data-testid': 'settings', onclick: () => app.go('settings') }, 'Ajustes')),
-    h('p', { class: 'center muted small' }, `Sellos del Gremio: ${fmt(profile.seals)} · Temporadas: ${profile.seasons} · Ganadas: ${profile.wins}`));
+    h('div', { class: 'profile-strip' },
+      h('span', {}, h('b', {}, fmt(profile.seals)), ' sellos'),
+      h('span', {}, h('b', {}, String(profile.seasons)), ' temporadas'),
+      h('span', {}, h('b', {}, String(profile.wins)), ' ganadas')));
 }
 
 /**

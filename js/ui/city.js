@@ -10,7 +10,8 @@ import { renderTavern, guildContracts, deliverables } from './tavern.js';
 import { renderBank } from './bank.js';
 import { getCityType } from '../data/cities.js';
 import { RULES } from '../data/rules.js';
-import { citySvg, svgNode } from '../render/shapes.js';
+import { svgNode } from '../render/shapes.js';
+import { sceneSvg } from '../render/scenes.js';
 import { canPayHere, totalOwed, owedOn, nextInstallment } from '../game/debt.js';
 import { canFinish, rest, finishSeason } from '../game/season.js';
 import { buyProvision, buyCamel, sellCamel, payGuild } from '../game/actions.js';
@@ -33,11 +34,12 @@ export function renderCity(app, params = {}) {
   if (hasGuild) tabs.push(['gremio', 'Gremio']);
   const tab = tabs.some(([id]) => id === params.tab) ? params.tab : 'mercado';
 
-  const head = h('div', { class: 'city-head' }, svgNode(citySvg(city.type)),
-    h('div', { class: 'grow' },
+  const kind = city.type === 'capital' ? 'Capital, sede del Gremio' : `${getCityType(city.type).name}${city.guildPost ? ', con Puesto del Gremio' : ''}`;
+  const head = h('div', { class: 'city-head' },
+    h('div', { class: 'scene' }, svgNode(sceneSvg(city.type))),
+    h('div', { class: 'plaque' },
       h('h1', { 'data-testid': 'city-name' }, city.name),
-      h('div', { class: 'muted small' }, getCityType(city.type).name,
-        city.guildPost ? ' · Puesto del Gremio' : '', city.type === 'capital' ? ' · Sede del Gremio' : '')));
+      h('div', { class: 'kind' }, kind)));
 
   const tabBar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(([id, label]) =>
     h('button', { role: 'tab', 'aria-selected': String(id === tab), 'data-testid': `tab-${id}`, onclick: () => app.go('city', { tab: id }) }, label)));

@@ -12,6 +12,7 @@ import { zoneName } from '../game/reputation.js';
 import { fmt, plural } from '../core/text.js';
 import { playCoins } from '../core/audio.js';
 import { renderHires } from './crew.js';
+import { goodArt } from './art.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -42,7 +43,7 @@ export function contractCard(app, k, kind) {
     } }, have < k.qty ? `Te faltan ${k.qty - have}` : 'Entregar');
   }
   return h('div', { class: 'card contract', 'data-testid': `contract-${k.id}` },
-    h('div', { class: 'row between' }, h('b', {}, `${good.icon} ${k.qty} de ${good.name} → ${dest.name}`), h('b', { class: 'good' }, fmt(k.reward))),
+    h('div', { class: 'row' }, goodArt(k.goodId, 40), h('b', { class: 'grow' }, `${k.qty} de ${good.name} para ${dest.name}`), h('b', { class: 'good' }, fmt(k.reward))),
     h('div', { class: 'small muted' }, `Antes del día ${k.deadline} (${left >= 0 ? `faltan ${plural(left, 'día', 'días')}` : 'vencido'}) · zona ${zoneName(dest.zone)}`,
       kind === 'active' ? ` · llevás ${have}` : ''),
     action);

@@ -7,6 +7,7 @@
  */
 
 import { CITY_PATHS, FLAG_PATH } from './shapes.js';
+import { CAMEL_PATH } from './scenes.js';
 import { TERRAINS } from '../data/routes.js';
 import { hashUnit } from '../core/rng.js';
 
@@ -247,15 +248,21 @@ export function createMapView(canvas, opts) {
   function drawCaravan(pal, pos) {
     const s = view.scale;
     const dir = pos.dir ?? 1;
-    const baseX = sx(pos.x) + (pos.moving ? 0 : CITY_R * s + 6.5 * s);
-    const baseY = sy(pos.y) - (pos.moving ? 0 : CITY_R * s * 0.75);
+    const baseX = sx(pos.x) + (pos.moving ? 0 : CITY_R * s + 14 * s);
+    const baseY = sy(pos.y) - (pos.moving ? 0 : CITY_R * s * 0.9);
+    const k = 0.065 * s;
+    const body = pathFor('camel', CAMEL_PATH);
+    const pack = pathFor('pack', 'M-16 -4h22v-8h-22z');
+    const packs = [pal.accent, pal.teal, pal.gold];
     for (let i = 0; i < 3; i++) {
-      const cx = baseX - i * 2.4 * s * dir;
-      ctx.beginPath();
-      ctx.ellipse(cx, baseY, 1.15 * s, 0.75 * s, 0, 0, Math.PI * 2);
-      ctx.arc(cx + 0.9 * s * dir, baseY - 1 * s, 0.45 * s, 0, Math.PI * 2);
-      ctx.fillStyle = i === 0 ? pal.accent : pal.ink;
-      ctx.fill();
+      ctx.save();
+      ctx.translate(baseX - i * 5.4 * s * dir, baseY);
+      ctx.scale(k * dir, k);
+      ctx.fillStyle = pal.ink;
+      ctx.fill(body);
+      ctx.fillStyle = packs[i];
+      ctx.fill(pack);
+      ctx.restore();
     }
   }
 

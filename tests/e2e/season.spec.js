@@ -114,7 +114,7 @@ test('cerrar la temporada muestra el resumen y suma sellos', async ({ page }) =>
   const seals = Number((await page.getByTestId('final-seals').innerText()).split(' ')[0]);
   expect(seals).toBeGreaterThan(0);
   await page.getByText('Volver al menú').click();
-  await expect(page.getByText(`Sellos del Gremio: ${seals}`)).toBeVisible();
+  await expect(page.locator('.profile-strip')).toContainText(`${seals} sellos`);
 });
 
 test('Ajustes muestra la misma versión que package.json', async ({ page }) => {

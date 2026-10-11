@@ -13,6 +13,7 @@ import { fmt, plural } from '../core/text.js';
 import { ZONES } from '../game/reputation.js';
 import { contractCard } from './tavern.js';
 import { renderCamels, renderCrew } from './crew.js';
+import { goodArt } from './art.js';
 
 /**
  * Pantalla de la caravana.
@@ -42,7 +43,7 @@ export function renderCaravan(app) {
       ? h('div', { class: 'card' }, h('dl', { class: 'kv' }, cargo.map((id) => {
         const g = getGood(id);
         const fresh = g.decay ? ` · frescura ${Math.round((state.freshness[id] ?? 1) * 100)}%` : '';
-        return [h('dt', {}, `${g.icon} ${g.name}`), h('dd', {}, `${state.cargo[id]} (peso ${state.cargo[id] * g.weight})${fresh}`)];
+        return [h('dt', { class: 'row', style: 'gap:8px' }, goodArt(id, 28), g.name), h('dd', {}, `${state.cargo[id]} (peso ${state.cargo[id] * g.weight})${fresh}`)];
       })))
       : h('p', { class: 'muted' }, 'Los camellos van vacíos. Comprá algo barato en el Mercado.'),
     h('h2', {}, 'Contratos'),

@@ -7,6 +7,7 @@
 import { h, mount, openSheet, fmtPrice } from './dom.js';
 import { activeGoods, getGood } from '../data/goods.js';
 import { canTrade } from '../game/perks.js';
+import { goodArt } from './art.js';
 import { cityPrices, quote, cityMod } from '../game/market.js';
 import { buy, sell, undo, maxBuy } from '../game/actions.js';
 import { cargoFree } from '../game/caravan.js';
@@ -53,7 +54,7 @@ export function renderMarket(app) {
   for (const g of goods) {
     if (!canTrade(state, g.id, city.type)) {
       list.append(h('div', { class: 'good-row', style: 'cursor:default;opacity:.6' },
-        h('span', { class: 'gico', 'aria-hidden': 'true' }, g.icon),
+        goodArt(g.id, 44, 'gico'),
         h('span', { class: 'grow' }, h('div', { class: 'gname' }, g.name), h('div', { class: 'gsub' }, 'Prohibido en esta ciudad.')),
         h('span', {})));
       continue;
@@ -69,7 +70,7 @@ export function renderMarket(app) {
       hint = `Mejor visto: ${fmtPrice(best.price)} en ${map.cityById[best.cityId].name} (${ago(state.day, best.day)})${gain > 0 ? ` · +${fmtPrice(Math.round(gain * 10) / 10)} c/u` : ''}`;
     }
     list.append(h('button', { class: 'good-row', 'data-testid': `good-${g.id}`, onclick: () => openTrade(app, g.id, owned > 0 && mod >= 1 ? 'sell' : 'buy') },
-      h('span', { class: 'gico', 'aria-hidden': 'true' }, g.icon),
+      goodArt(g.id, 48, 'gico'),
       h('span', { class: 'grow' },
         h('div', { class: 'gname' }, g.name, owned > 0 ? h('span', { class: 'pill', style: 'margin-left:6px' }, `llevás ${owned}`) : null),
         h('div', { class: 'gsub' }, tag, tag ? ' · ' : '', nm !== 1 ? h('b', { class: nm > 1 ? 'tag-dear' : 'tag-cheap' }, `Noticia ×${nm === 2 ? '2' : '½'} · `) : null,
@@ -122,7 +123,7 @@ export function openTrade(app, goodId, startMode) {
       }
       const why = max === 0 ? (mode === 'buy' ? (cargoFree(state) < good.weight ? 'No te entra más carga.' : 'No te alcanza el oro.') : 'No llevás este bien.') : null;
       mount(body,
-        h('div', { class: 'row' }, h('span', { class: 'gico', style: 'font-size:28px' }, good.icon),
+        h('div', { class: 'row' }, goodArt(goodId, 64, 'gico'),
           h('div', { class: 'grow' }, h('h2', {}, good.name),
             h('div', { class: 'muted small' }, `Llevás ${state.cargo[goodId]} · lugar libre ${cargoFree(state)} · peso ${good.weight}`))),
         h('div', { class: 'seg', role: 'group', 'aria-label': 'Comprar o vender' },

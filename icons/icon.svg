@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#f4e9d8"/>
-  <circle cx="330" cy="190" r="70" fill="#b9532c"/>
-  <path d="M0 330c80-44 150-52 230-26s150 26 282-18v226H0z" fill="#d9a85b"/>
-  <path d="M0 384c94-34 188-34 266-8s136 18 246-8v144H0z" fill="#b9532c"/>
-  <g fill="#2b1d14">
-    <path d="M104 318c0-17 13-26 26-26 4-13 13-22 22-22s13 9 17 17c4-4 9-4 13 0l9-13h13l-4 17c-4 9-9 13-17 13v35h-9v-26h-30v26h-9v-26c-9 0-17-4-22-9l-4 35h-9z"/>
-    <path d="M216 310c0-13 9-22 22-22 4-9 9-17 17-17s13 9 13 13c4-4 9-4 13 0l4-9h13l-4 13c-4 9-9 13-13 13v30h-9v-22h-26v22h-9v-22c-4 0-13 0-17-4l-4 26h-9z"/>
-    <path d="M316 302c0-13 9-17 17-17 4-9 9-13 13-13s9 4 13 13l4-9h13l-4 13c-4 4-4 9-13 9v26h-6v-17h-22v17h-6v-17l-4 17h-6z"/>
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E5C9A"/><stop offset=".6" stop-color="#E7965A"/><stop offset="1" stop-color="#F6CF8A"/></linearGradient></defs>
+  <rect width="512" height="512" rx="104" fill="url(#s)"/>
+  <circle cx="356" cy="190" r="66" fill="#FBE3A6"/>
+  <path d="M0 330c80-40 160-46 250-24s170 20 262-20v226H0z" fill="#D9A15F"/>
+  <path d="M0 392c94-30 188-30 266-8s146 16 246-10v138H0z" fill="#C4813F"/>
+  <g fill="#2A2340" transform="translate(150 300) scale(2.6)">
+    <path d="M-30 6c0-8 6-12 12-12 3-9 8-13 13-13s8 5 10 11c3-5 6-7 10-7 5 0 7 6 10 12h4l5-14h10l-2 9-6 11c-2 4-6 6-11 6h-1v26h-5V14h-6v14h-5V14h-14v14h-5V14h-6v14h-5V14c-6-1-9-4-9-8z"/>
+    <path d="M-16 -4h22v-8h-22z" fill="#E2A42C" stroke="#2A2340" stroke-width="2"/>
   </g>
 </svg>

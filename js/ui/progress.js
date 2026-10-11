@@ -15,6 +15,7 @@ import { ROLES, TRAITS } from '../data/crew.js';
 import { buyMerchant, buyUpgrade, canBuyMerchant, encodeProgress, decodeProgress } from '../game/profile.js';
 import { fmt } from '../core/text.js';
 import { playCoins } from '../core/audio.js';
+import { goodArt } from './art.js';
 
 /** Títulos de los eventos para el códice. */
 const EVENT_NAMES = {
@@ -112,7 +113,9 @@ export function renderRecords(app) {
     h('div', { class: 'stack', style: 'gap:6px' }, ACHIEVEMENTS.map((a) => h('div', { class: `achievement${p.achievements[a.id] ? ' done' : ''}` },
       h('b', {}, `${p.achievements[a.id] ? '★' : '☆'} ${a.name}`), h('span', { class: 'small muted' }, a.desc)))),
     h('h2', {}, 'Códice'),
-    codexSection('Bienes', GOODS, p.codex.goods),
+    h('div', { class: 'card stack', style: 'gap:10px' },
+      h('div', { class: 'row between' }, h('h3', {}, 'Bienes'), h('span', { class: 'small muted' }, `${GOODS.filter((g) => p.codex.goods[g.id]).length}/${GOODS.length}`)),
+      h('div', { class: 'codex-goods' }, GOODS.map((g) => h('figure', { class: p.codex.goods[g.id] ? '' : 'locked' }, goodArt(g.id, 56), h('figcaption', {}, p.codex.goods[g.id] ? g.name : '???'))))),
     codexSection('Ciudades', CITY_TYPES, p.codex.cityTypes),
     codexSection('Eventos', named(Object.fromEntries(EVENTS.map((e) => [e.id, e])), EVENT_NAMES), p.codex.events),
     codexSection('Oficios', named(ROLES), p.codex.roles),

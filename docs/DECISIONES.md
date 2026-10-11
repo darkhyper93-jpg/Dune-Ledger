@@ -184,3 +184,19 @@ revisarlo más adelante.
   toca a mano o tiene claves peligrosas, se rechaza.
 - Los bots de las métricas juegan con el Aprendiz y sin mejoras: el balance
   base no cambia.
+
+## Rediseño visual (entre la etapa 4 y la 5)
+
+- **Dirección**: "el libro de cuentas de una caravana". Arena tostada,
+  papel de libro de cuentas y tinta índigo; turquesa para actuar, terracota
+  para la marca y azafrán para el oro. Se dejó el fondo crema y la serif de
+  alto contraste porque es el aspecto por defecto de muchas interfaces
+  generadas y se veía genérico.
+- **Tipografía**: Lilita One (gruesa, de juego) para títulos y números
+  grandes; Rubik para el texto, con cifras de ancho fijo.
+- **Ilustraciones propias en SVG** (sin imágenes externas): los 12 bienes
+  (`js/render/goods-art.js`), una escena por tipo de ciudad y la portada
+  (`js/render/scenes.js`) e íconos de interfaz (`js/render/ui-icons.js`).
+- **Botones tipo ficha**: se hunden al tocarlos (borde inferior de color).
+- **Nombres de ciudades** en castellano y según su tipo (puertos que suenan
+  a mar, mineras a roca), así el nombre ya da una pista.

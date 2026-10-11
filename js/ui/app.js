@@ -16,6 +16,8 @@ import { renderSummary } from './summary.js';
 import { renderMenu, renderSettings, renderHelp } from './menu.js';
 import { renderChoose, renderShop, renderRecords } from './progress.js';
 import { mergeSeen } from '../game/profile.js';
+import { iconSvg } from '../render/ui-icons.js';
+import { svgNode } from '../render/shapes.js';
 import { createSeason } from '../game/season.js';
 import { saveSeason, loadSeason, loadProfile, saveProfile, loadSettings, saveSettings } from '../core/save.js';
 import { setInMenu } from '../core/updates.js';
@@ -23,7 +25,7 @@ import { setVolumes, unlockAudio } from '../core/audio.js';
 
 /** Pantallas de juego que muestran barra superior y navegación. */
 const GAME_SCREENS = ['city', 'map', 'caravan', 'journal', 'travel'];
-const NAV = [['city', 'Ciudad', '⌂'], ['map', 'Mapa', '◈'], ['caravan', 'Caravana', '☰'], ['journal', 'Diario', '✎']];
+const NAV = [['city', 'Ciudad', 'city'], ['map', 'Mapa', 'map'], ['caravan', 'Caravana', 'camel'], ['journal', 'Diario', 'journal']];
 
 /**
  * Semilla nueva al azar (o la de la URL: ?semilla=abc, útil para pruebas).
@@ -129,7 +131,7 @@ export function createApp(els) {
         mount(els.nav, NAV.map(([id, label, ico]) => h('button', {
           'aria-current': id === screen ? 'page' : null, 'data-testid': `nav-${id}`,
           onclick: () => app.go(id),
-        }, h('span', { class: 'ico', 'aria-hidden': 'true' }, ico), label)));
+        }, svgNode(iconSvg(ico)), label)));
       }
       const view = {
         menu: () => renderMenu(app),

@@ -10,7 +10,7 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 6 — Desafío diario y modo libre** (ver `docs/DISENO.md`, "Plan por etapas").
+**Etapa 7 — Pulido** (el plan del documento de diseño está completo) (ver `docs/DISENO.md`, "Plan por etapas").
 
 Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
 
@@ -31,6 +31,10 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   Difícil con precios que cambian cada semana, y Pesadilla sin préstamos).
 - Etapa 6: desafío del día (mismo mapa para todos, con código de puntaje
   para compartir y comparar) y modo libre (sin deuda ni límite de días).
+- Etapa 7: tutorial de la primera temporada, música de caravana generada en
+  el momento, animaciones que responden a lo que hacés, accesibilidad
+  revisada con axe (modo claro y noche) y prueba de rendimiento con el
+  procesador 6 veces más lento.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

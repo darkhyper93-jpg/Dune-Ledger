@@ -255,3 +255,27 @@ revisarlo más adelante.
   logros ni temporadas; lo visto sí entra al códice.
 - **Partidas guardadas**: el formato pasa a la versión 4 (con el modo);
   las de las versiones 2 y 3 se migran solas (`js/game/migrate.js`).
+
+## Etapa 7 — Pulido
+
+- **Tutorial**: un consejo por vez en la ciudad o el mapa (comprar, cargar
+  provisiones y salir, elegir ruta, vender, la deuda). Avanza solo cuando
+  hacés lo que pide, se puede saltear y no vuelve a aparecer.
+- **Música**: generada con Web Audio, sin archivos: bordón grave, un laúd
+  que improvisa en escala hiyaz sobre re y pandero con ritmo maqsum a 84
+  por minuto. Se calla con la app en segundo plano y respeta su volumen.
+- **Animaciones** (sólo las que responden a algo que hiciste): fundido corto
+  al cambiar de pantalla, la carta del evento que se "reparte", cuánto
+  cambió el oro arriba y el sello "Saldado" al ganar. Con "reducir
+  movimiento" del sistema no se animan.
+- **Accesibilidad**: prueba con axe (WCAG 2.1 AA) de todas las pantallas
+  principales en modo claro y noche. Se oscureció el turquesa del modo claro
+  (#0B6E6C) para llegar a 4,5:1 de contraste en textos chicos.
+- **Rendimiento**: prueba con el procesador 6 veces más lento: abrir en
+  menos de 3 s, empezar una temporada (que genera todo el mapa) en menos de
+  600 ms y cualquier otro toque en menos de 400 ms. Los dibujos SVG se leen
+  una sola vez y se clonan; las filas fuera de pantalla no se dibujan hasta
+  verlas.
+- **Mapa**: el círculo de días de cada ruta se corre para no tapar nombres
+  ni ciudades, los nombres tienen un borde para leerse sobre las rutas y el
+  mapa no se acerca tanto con pocas ciudades conocidas.

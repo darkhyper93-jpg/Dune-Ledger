@@ -12,7 +12,55 @@ import { TERRAINS } from '../data/routes.js';
 import { routeDays } from '../game/travel.js';
 import { hashUnit } from '../core/rng.js';
 
-const CITY_R = 5.2;
+const CITY_R = 4.4;
+/** Alto del nombre de una ciudad y ancho aproximado por letra (en unidades del mapa). */
+const LABEL_H = 2.8;
+const LABEL_CHAR = 1.3;
+/** Puntos de la ruta donde puede ir el círculo de días, del medio hacia afuera. */
+const BADGE_SPOTS = [0.5, 0.42, 0.58, 0.35, 0.65, 0.28, 0.72];
+
+/**
+ * Rectángulo que ocupa el nombre de una ciudad, debajo del disco.
+ * @param {{x:number,y:number,name:string}} c
+ */
+function labelBox(c) {
+  const w = (c.name.length + 2) * LABEL_CHAR;
+  const top = c.y + CITY_R + 1.1;
+  return { x0: c.x - w / 2, x1: c.x + w / 2, y0: top, y1: top + LABEL_H };
+}
+
+/**
+ * Elige dónde poner el círculo de días de una ruta para no tapar nombres ni
+ * ciudades: el punto más cercano al medio que quede libre o, si la ruta es
+ * muy corta y ninguno lo está, el que menos tape.
+ * @param {{x:number,y:number}} a
+ * @param {{x:number,y:number}} b
+ * @param {{x0:number,x1:number,y0:number,y1:number}[]} boxes nombres
+ * @param {{x:number,y:number}[]} cities discos
+ * @param {number} r radio del círculo
+ */
+export function badgeSpot(a, b, boxes, cities, r) {
+  // Cuánto se mete el círculo en los nombres y en los discos (0 = nada).
+  const clash = (x, y) => {
+    let sum = 0;
+    for (const q of boxes) {
+      const dx = Math.min(x + r, q.x1) - Math.max(x - r, q.x0);
+      const dy = Math.min(y + r, q.y1) - Math.max(y - r, q.y0);
+      if (dx > 0 && dy > 0) sum += 2 * Math.min(dx, dy);
+    }
+    for (const c of cities) sum += 2 * Math.max(0, CITY_R + 1.8 + r - Math.hypot(c.x - x, c.y - y));
+    return sum;
+  };
+  let best = null;
+  for (const t of BADGE_SPOTS) {
+    const x = a.x + (b.x - a.x) * t;
+    const y = a.y + (b.y - a.y) * t;
+    const cost = clash(x, y);
+    if (cost === 0) return { x, y };
+    if (!best || cost < best.cost) best = { x, y, cost };
+  }
+  return { x: best.x, y: best.y };
+}
 const PATHS = {};
 
 /** Path2D de una silueta (se crea una vez y se reutiliza). */
@@ -68,11 +116,13 @@ export function createMapView(canvas, opts) {
       const extra = Math.max(0, min - (hi - lo)) / 2;
       return [lo - extra, hi + extra];
     };
-    [minX, maxX] = grow(minX, maxX, 50);
-    [minY, maxY] = grow(minY, maxY, 60);
+    // Con pocas ciudades conocidas, no acercar tanto: las rutas quedarían
+    // cortas al lado de los nombres.
+    [minX, maxX] = grow(minX, maxX, 60);
+    [minY, maxY] = grow(minY, maxY, 72);
     const top = 56;
     const bottom = 72;
-    const scale = Math.max(0.5, Math.min((w - 16) / (maxX - minX), (hgt - top - bottom) / (maxY - minY), 9));
+    const scale = Math.max(0.5, Math.min((w - 16) / (maxX - minX), (hgt - top - bottom) / (maxY - minY), 7));
     view.scale = scale;
     view.ox = w / 2 - ((minX + maxX) / 2) * scale;
     view.oy = top + (hgt - top - bottom) / 2 - ((minY + maxY) / 2) * scale;
@@ -100,6 +150,8 @@ export function createMapView(canvas, opts) {
     drawGround(pal, w, hgt, state.seed);
 
     const s = view.scale;
+    const shown = map.cities.filter((c) => state.known[c.id]);
+    const boxes = shown.map(labelBox);
     for (const r of map.routes) {
       if (!state.knownRoutes[r.id]) continue;
       const a = map.cityById[r.a];
@@ -127,7 +179,8 @@ export function createMapView(canvas, opts) {
       ctx.lineTo(sx(b.x), sy(b.y));
       ctx.stroke();
       ctx.restore();
-      drawDays(pal, (a.x + b.x) / 2, (a.y + b.y) / 2, routeDays(state, r.days), r.danger, picked);
+      const spot = badgeSpot(a, b, boxes, shown, picked ? 3.2 : 2.6);
+      drawDays(pal, spot.x, spot.y, routeDays(state, r.days), r.danger, picked);
     }
 
     const targets = new Set(state.contracts.active.map((k) => k.to));
@@ -251,6 +304,11 @@ export function createMapView(canvas, opts) {
     ctx.font = `${f.here ? 700 : 500} ${Math.max(11, Math.round(2.3 * s))}px Rubik, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+    // Un borde del color del suelo para que el nombre se lea sobre las rutas.
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = pal.bg;
+    ctx.strokeText(f.visited ? c.name : `${c.name} ?`, x, y + r + 1.1 * s);
     ctx.fillText(f.visited ? c.name : `${c.name} ?`, x, y + r + 1.1 * s);
     ctx.globalAlpha = 1;
   }
@@ -287,7 +345,8 @@ export function createMapView(canvas, opts) {
     const mx = (px - view.ox) / view.scale;
     const my = (py - view.oy) / view.scale;
     let best = null;
-    let bestD = CITY_R * 1.9;
+    // Al menos 26 px de radio para tocar con el dedo, aunque el mapa esté lejos.
+    let bestD = Math.max(CITY_R * 1.9, 26 / view.scale);
     for (const c of game.map.cities) {
       if (!game.state.known[c.id]) continue;
       const d = Math.hypot(c.x - mx, c.y - my);

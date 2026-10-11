@@ -62,6 +62,7 @@ export function renderSummary(app) {
   const where = free ? 'Modo libre: no da sellos ni logros.' : `${REGIONS_BY_ID[state.region].name} · ${DIFFICULTIES[state.difficulty].name}`;
   return h('div', { class: 'stack' },
     h('div', { class: `banner ${over.won || free ? 'win' : 'lose'}` },
+      over.won ? h('span', { class: 'stamp', 'aria-hidden': 'true' }, 'Saldado') : null,
       h('h1', {}, title),
       free ? null : h('p', { style: 'margin:6px 0 0' }, REASONS[over.reason]),
       h('p', { class: 'small', style: 'margin:4px 0 0;opacity:.85' }, where)),

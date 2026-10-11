@@ -24,6 +24,7 @@ import { createDaily } from '../game/daily.js';
 import { saveSeason, loadSeason, loadProfile, saveProfile, loadSettings, saveSettings } from '../core/save.js';
 import { setInMenu } from '../core/updates.js';
 import { setVolumes, unlockAudio } from '../core/audio.js';
+import { startMusic, stopMusic } from '../core/music.js';
 
 /** Pantallas de juego que muestran barra superior y navegación. */
 const GAME_SCREENS = ['city', 'map', 'caravan', 'journal', 'travel'];
@@ -99,9 +100,15 @@ export function createApp(els) {
      */
     go(screen, params = {}) {
       closeSheets();
+      const changed = screen !== app.screen;
       app.screen = screen;
       app.params = params;
       app.render();
+      // Al cambiar de pantalla (no de pestaña), un fundido corto. Con la
+      // API de animaciones no se fuerza un recálculo de la página.
+      if (changed && els.screen.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        els.screen.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+      }
       els.screen.scrollTop = 0;
     },
 
@@ -135,7 +142,8 @@ export function createApp(els) {
       app.game = game;
       saveSeason(app.game);
       app.go('city');
-      toast(message);
+      // En la primera temporada habla el tutorial; el aviso sobraría.
+      if (app.profile.tutorialDone) toast(message);
     },
 
     /**
@@ -189,7 +197,15 @@ export function createApp(els) {
   };
 
   setVolumes(app.settings);
-  document.addEventListener('pointerdown', unlockAudio, { once: true });
+  document.addEventListener('pointerdown', () => {
+    unlockAudio();
+    startMusic();
+  }, { once: true });
+  // Con la app en segundo plano, la música se calla (y vuelve al volver).
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopMusic();
+    else if (app.settings.music > 0) startMusic();
+  });
   app.render();
   return app;
 }

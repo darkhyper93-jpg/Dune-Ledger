@@ -1,7 +1,7 @@
 /**
  * Sonido generado con Web Audio (sin archivos): monedas al vender y viento
- * durante los viajes. Los volúmenes de efectos y música son separados;
- * la música llega en la etapa de pulido.
+ * durante los viajes. Los volúmenes de efectos y música son separados; la
+ * música en sí está en music.js y usa el mismo contexto de audio.
  *
  * El contexto de audio se crea recién con el primer toque del jugador,
  * como piden los navegadores.
@@ -9,6 +9,7 @@
 
 let ctx = null;
 let sfxGain = null;
+let musicGain = null;
 let volumes = { music: 0.5, sfx: 0.8 };
 let wind = null;
 
@@ -21,6 +22,9 @@ function ensure() {
     sfxGain = ctx.createGain();
     sfxGain.gain.value = volumes.sfx;
     sfxGain.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = volumes.music * 0.5;
+    musicGain.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
@@ -33,6 +37,16 @@ function ensure() {
 export function setVolumes(v) {
   volumes = { ...v };
   if (sfxGain) sfxGain.gain.value = volumes.sfx;
+  if (musicGain) musicGain.gain.setTargetAtTime(volumes.music * 0.5, ctx.currentTime, 0.1);
+}
+
+/**
+ * Contexto y salida para la música (null si no hay audio todavía).
+ * @returns {{ctx:AudioContext, out:GainNode, volume:number}|null}
+ */
+export function musicOutput() {
+  if (!ctx) return null;
+  return { ctx, out: musicGain, volume: volumes.music };
 }
 
 /** Desbloquea el audio con un gesto del jugador (llamar en un toque). */

@@ -8,6 +8,7 @@ import { sceneSvg } from '../render/scenes.js';
 import { VERSION } from '../core/version.js';
 import { forceUpdate } from '../core/updates.js';
 import { setVolumes, playTap } from '../core/audio.js';
+import { startMusic, stopMusic } from '../core/music.js';
 import { fmt } from '../core/text.js';
 import { progressCodeCard } from './progress.js';
 import { openDailySheet } from './modes.js';
@@ -47,6 +48,10 @@ function volume(app, key, label) {
       oninput: (e) => {
         app.settings[key] = Number(e.target.value);
         setVolumes(app.settings);
+        if (key === 'music') {
+          if (app.settings.music > 0) startMusic();
+          else stopMusic();
+        }
       },
       onchange: () => {
         app.saveAll();
@@ -61,8 +66,7 @@ function volume(app, key, label) {
 export function renderSettings(app) {
   return h('div', { class: 'stack' },
     h('h1', {}, 'Ajustes'),
-    h('div', { class: 'card stack' }, volume(app, 'music', 'Música'), volume(app, 'sfx', 'Efectos'),
-      h('p', { class: 'muted small', style: 'margin:0' }, 'La música llega en la etapa de pulido.')),
+    h('div', { class: 'card stack' }, volume(app, 'music', 'Música'), volume(app, 'sfx', 'Efectos')),
     h('div', { class: 'card stack' },
       h('div', { class: 'row between' }, h('span', {}, 'Versión'), h('b', { 'data-testid': 'version' }, VERSION)),
       h('button', { class: 'btn', 'data-testid': 'update', onclick: (e) => {
@@ -93,6 +97,8 @@ export function renderHelp(app) {
       p('Los camellos se cansan viajando y se recuperan descansando. En la Taberna podés contratar tripulación: cada rol ayuda en algo, pero cobran sueldo cada 7 días y, si la moral baja mucho, se van.'),
       p('En la Taberna hay rumores (¡algunos falsos!) y contratos que pagan bien si llegás a tiempo. Cumplir sube tu reputación en esa zona; fallar la baja.'),
       p('Al final, tu puntaje es el oro más la carga menos lo que debas. Con él ganás Sellos del Gremio.'),
-      p('Con los sellos, en el Gremio comprás mercaderes con habilidades especiales y mejoras que valen para todas las temporadas. Algunos mercaderes piden un logro.')),
+      p('Con los sellos, en el Gremio comprás mercaderes con habilidades especiales y mejoras que valen para todas las temporadas. Algunos mercaderes piden un logro.'),
+      p('Ganar una temporada abre la región siguiente: la Estepa (a caballo), la Costa (con barcos), las Montañas de Jade y el Reino del Sultán. Ganar en Difícil abre la Pesadilla.'),
+      p('El Desafío del día es el mismo mapa para todos: al terminar te da un código para comparar con tus amigos. El Modo libre no tiene deuda ni apuro, ideal para aprender.')),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
 }

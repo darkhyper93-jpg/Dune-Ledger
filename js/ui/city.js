@@ -19,6 +19,7 @@ import { camelPrice, camelResale, provisionPrices, provisionCap, perMount, mount
 import { dailyRation, canTravel } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
+import { coachCard } from './coach.js';
 
 /**
  * Arma la pantalla de la ciudad actual.
@@ -50,7 +51,7 @@ export function renderCity(app, params = {}) {
   else if (tab === 'gremio') content = renderGuild(app);
   else content = renderMarket(app);
 
-  return h('div', {}, head, endCard(app), deliverables(app), tabBar, content);
+  return h('div', {}, head, coachCard(app, 'city'), endCard(app), deliverables(app), tabBar, content);
 }
 
 /**

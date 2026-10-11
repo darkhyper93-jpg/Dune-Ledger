@@ -277,3 +277,18 @@ test('modo libre: sin deuda, se termina cuando quieras y no da sellos', async ({
   await expect(page.getByText('Fin del modo libre')).toBeVisible();
   await expect(page.getByTestId('final-seals')).toHaveCount(0);
 });
+
+test('tutorial: aconseja paso a paso y se puede saltear para siempre', async ({ page }) => {
+  await newSeason(page);
+  await expect(page.getByTestId('coach-comprar')).toBeVisible();
+  await page.getByTestId('nav-map').click();
+  // En el mapa todavía no hay consejo: primero hay que comprar.
+  await expect(page.getByTestId('coach-ruta')).toHaveCount(0);
+  await page.getByTestId('nav-city').click();
+  await page.getByTestId('coach-skip').click();
+  await expect(page.getByTestId('coach-comprar')).toHaveCount(0);
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await expect(page.getByTestId('city-name')).toBeVisible();
+  await expect(page.locator('.coach')).toHaveCount(0);
+});

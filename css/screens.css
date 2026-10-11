@@ -52,7 +52,7 @@ textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10
 .seg-btn b { font-size: 14px; }
 .seg-btn .tiny { color: var(--ink-2); }
 .seg-btn.chosen { background: var(--primary); color: var(--primary-ink); box-shadow: 0 2px 0 var(--primary-deep); }
-.seg-btn.chosen .tiny { color: var(--primary-soft); }
+.seg-btn.chosen .tiny { color: var(--primary-ink); }
 .seg-btn.locked { color: var(--ink-2); opacity: 0.7; }
 .seg-btn svg { width: 16px; height: 16px; }
 @media (max-width: 360px) {
@@ -67,3 +67,53 @@ textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10
 /* ---------- Desafío del día: código de puntaje ---------- */
 input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--font); font-variant-numeric: tabular-nums; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); }
 .score-code { width: 100%; text-align: center; font-size: 17px; letter-spacing: 0.03em; }
+
+/* ---------- Tutorial ---------- */
+.coach {
+  display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px;
+  padding: 12px 14px; border-radius: var(--radius);
+  background: var(--hud-bg); color: var(--hud-ink);
+  box-shadow: 0 3px 0 var(--gold-deep); border: 2px solid var(--gold);
+}
+.coach-badge { flex: 0 0 44px; width: 44px; height: 44px; }
+.coach-badge svg { display: block; width: 100%; height: 100%; }
+.coach-body { display: grid; gap: 8px; justify-items: start; }
+.coach-body p { margin: 0; font-size: 15px; line-height: 1.45; }
+.coach .btn { min-width: 140px; }
+.linkish {
+  min-height: 44px; padding: 0 2px; border: 0; background: none; cursor: pointer;
+  font: 500 14px var(--font); color: var(--hud-dim); text-decoration: underline; text-underline-offset: 3px;
+}
+.map-hint.coach-hint { background: var(--hud-bg); color: var(--hud-ink); border-color: var(--gold); box-shadow: 0 3px 0 var(--gold-deep); }
+
+/* ---------- Animaciones (todas responden a algo que hiciste) ---------- */
+/* (El fundido entre pantallas se hace con element.animate en app.js.) */
+
+/* Rendimiento: las filas que quedan fuera de la pantalla no se dibujan hasta verlas. */
+.good-row, .achievement, .merchant { content-visibility: auto; contain-intrinsic-size: auto 96px; }
+
+/* La carta del evento se "reparte" sobre la mesa. */
+.event-card { animation: deal 280ms cubic-bezier(.2, .9, .3, 1.2); transform-origin: 50% 80%; }
+@keyframes deal { from { opacity: 0; transform: translateY(28px) rotate(-3deg) scale(.95); } to { opacity: 1; transform: none; } }
+
+/* Cuánto cambió el oro: sube y se desvanece. */
+.hud-item { position: relative; }
+.hud-item .delta {
+  position: absolute; left: 26px; top: -2px; pointer-events: none;
+  font-weight: 700; font-size: 13px; padding: 1px 6px; border-radius: 999px;
+  animation: float-up 1100ms ease-out forwards;
+}
+.hud-item .delta.up { background: var(--gold); color: var(--hud-bg); }
+.hud-item .delta.down { background: #FF8F80; color: var(--hud-bg); }
+@keyframes float-up { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+
+/* Temporada ganada: el sello del Gremio cae sobre la cuenta. */
+.banner { position: relative; overflow: hidden; }
+.stamp {
+  display: inline-block; margin: 0 0 10px; padding: 4px 12px;
+  font-family: var(--font-display); font-size: 18px; letter-spacing: 0.04em;
+  color: var(--accent); border: 3px solid var(--accent); border-radius: 8px;
+  transform: rotate(-12deg); opacity: 0.85;
+  animation: stamp 420ms cubic-bezier(.3, 1.4, .5, 1) 200ms both;
+}
+@keyframes stamp { from { opacity: 0; transform: rotate(-12deg) scale(2.4); } to { opacity: 0.85; transform: rotate(-12deg) scale(1); } }

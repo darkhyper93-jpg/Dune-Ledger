@@ -17,12 +17,21 @@ export const CITY_PATHS = {
 /** Banderita del Gremio (para puestos). */
 export const FLAG_PATH = 'M5 22V3h1.6v1h11l-2.6 4 2.6 4h-11v10z';
 
+/** SVG ya leídos, por texto: leer con DOMParser es lento en celulares viejos. */
+const parsed = new Map();
+
 /**
- * Convierte un SVG fijo (de este archivo) en un nodo, sin usar innerHTML.
+ * Convierte un SVG fijo (de los dibujos del juego) en un nodo, sin usar
+ * innerHTML. Cada dibujo se lee una sola vez y después se clona.
  * @param {string} markup
  * @returns {SVGElement}
  */
 export function svgNode(markup) {
-  const doc = new DOMParser().parseFromString(markup, 'image/svg+xml');
-  return document.importNode(doc.documentElement, true);
+  let node = parsed.get(markup);
+  if (!node) {
+    const doc = new DOMParser().parseFromString(markup, 'image/svg+xml');
+    node = document.importNode(doc.documentElement, true);
+    parsed.set(markup, node);
+  }
+  return node.cloneNode(true);
 }

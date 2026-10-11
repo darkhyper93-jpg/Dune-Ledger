@@ -19,6 +19,7 @@ import { zoneName } from '../game/reputation.js';
 import { goodArt } from './art.js';
 import { ago } from './market.js';
 import { plural } from '../core/text.js';
+import { currentTip } from './coach.js';
 
 let current = null; // vista del mapa activa (una sola a la vez)
 
@@ -31,9 +32,10 @@ export function renderMap(app) {
   const { game } = app;
   const { state, map } = game;
   current?.destroy();
+  const tip = currentTip(app, 'map');
   const canvas = h('canvas', { 'aria-label': 'Mapa del desierto', role: 'img', 'data-testid': 'map-canvas' });
   const wrap = h('div', { class: 'map-wrap' }, canvas,
-    h('div', { class: 'map-hint' }, 'Tocá una ciudad vecina para ver la ruta.'));
+    h('div', { class: `map-hint${tip ? ' coach-hint' : ''}`, 'data-testid': tip ? `coach-${tip.id}` : null }, tip ? tip.text : 'Tocá una ciudad vecina para ver la ruta.'));
   let selected = null;
   const view = createMapView(canvas, {
     onPick: (id) => {

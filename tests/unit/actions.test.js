@@ -25,7 +25,7 @@ test('no se puede comprar sin oro, sin lugar o cantidades raras', () => {
   assert.equal(buy(g, 'sal', 21).ok, false); // 21 × 2 = 42 > 40
   assert.equal(buy(g, 'sal', 0).ok, false);
   assert.equal(buy(g, 'sal', 1.5).ok, false);
-  assert.equal(buy(g, 'perlas', 1).ok, false); // no está activo en la etapa 1
+  assert.equal(buy(g, 'jade', 1).ok, false); // no existe (llega con las regiones)
   assert.equal(buy(g, '__proto__', 1).ok, false);
 });
 

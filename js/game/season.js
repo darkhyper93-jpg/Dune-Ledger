@@ -11,25 +11,37 @@ import { RULES, getDifficulty } from '../data/rules.js';
 import { ACTIVE_GOODS } from '../data/goods.js';
 import { Rng } from '../core/rng.js';
 import { generateMap } from './map-gen.js';
-import { initialStock, quote } from './market.js';
-import { createDebt, totalOwed, settleInstallment, nextInstallment } from './debt.js';
+import { initialStock } from './market.js';
+import { createDebt, totalOwed, nextInstallment } from './debt.js';
 import { addLog, discoverAround, snapshotPrices } from './knowledge.js';
-import { travel as travelRoute, passDay, dailyRation } from './travel.js';
+import { passDay, dailyRation } from './travel.js';
+import { finishSeason } from './finish.js';
+import { startTrip, advanceTrip, chooseOption } from './trip.js';
+import { optionState } from './events.js';
+import { initialRep } from './reputation.js';
+import { initialNews } from './news.js';
+import { initialContracts, refreshOffers } from './contracts.js';
+
+export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
+export { startTrip, chooseOption } from './trip.js';
 
 /** Versión del formato de la partida guardada. */
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 /**
  * Crea una temporada nueva.
- * @param {{seed:string, difficulty?:string}} opts
- * @returns {{map:object,state:object}}
+ * `events` y `eventRate` son opciones del juego (no se guardan): sirven
+ * para pruebas que necesitan viajes sin sorpresas o con muchos eventos.
+ * @param {{seed:string, difficulty?:string, events?:boolean, eventRate?:number}} opts
+ * @returns {{map:object,state:object,options:object}}
  */
-export function createSeason({ seed, difficulty = 'normal' }) {
+export function createSeason({ seed, difficulty = 'normal', events = true, eventRate }) {
   getDifficulty(difficulty);
   const map = generateMap(seed);
   const rng = new Rng(`season:${seed}`);
   const starts = map.cities.filter((c) => c.type !== 'capital');
   const start = rng.pick(starts);
+  const news = initialNews(rng);
   const s = RULES.start;
   const state = {
     v: STATE_VERSION,
@@ -52,96 +64,64 @@ export function createSeason({ seed, difficulty = 'normal' }) {
     visited: {},
     prices: {},
     debt: createDebt(difficulty),
+    rep: initialRep(),
+    news,
+    trip: null,
+    contracts: initialContracts(),
     log: [],
     undo: [],
     stats: { trips: 0, bestSale: null, routeProfit: {}, earned: 0, spent: 0 },
     over: null,
   };
-  const game = { map, state };
+  const game = { map, state, options: { events, eventRate } };
   discoverAround(game, start.id);
   snapshotPrices(game, start.id);
+  refreshOffers(game, start.id);
   addLog(state, `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');
   return game;
 }
 
-/**
- * Valor de la carga si la vendieras toda acá, unidad por unidad.
- * @param {object} game
- * @returns {number}
- */
-export function cargoValueHere(game) {
-  const { state } = game;
-  let total = 0;
-  for (const [id, qty] of Object.entries(state.cargo)) {
-    if (qty > 0) total += quote(game, state.location, id, qty, 'sell').total;
-  }
-  return total;
+/** Primera opción que se puede elegir del evento en curso. */
+export function firstAvailable(game) {
+  for (let i = 0; i < 3; i++) if (optionState(game, i).available) return i;
+  return -1;
 }
 
 /**
- * Puntaje actual: oro + valor de la carga acá − deuda que queda.
+ * Sigue el viaje en curso hasta el próximo evento o la llegada. Si en el
+ * camino se pierde la temporada por deuda, la cierra.
  * @param {object} game
  */
-export function currentScore(game) {
-  return game.state.gold + cargoValueHere(game) - totalOwed(game.state.debt);
+export function advance(game) {
+  const res = advanceTrip(game);
+  if (res.status === 'lost') finishSeason(game, 'deuda');
+  return res;
 }
 
 /**
- * Sellos que da un puntaje según la dificultad.
- * @param {number} score
- * @param {string} difficulty
- */
-export function sealsFor(score, difficulty) {
-  return Math.floor((Math.max(0, score) / 100) * getDifficulty(difficulty).sealMult);
-}
-
-/**
- * Cierra la temporada y calcula el resumen final.
- * @param {object} game
- * @param {'fin'|'retiro'|'deuda'} reason
- */
-export function finishSeason(game, reason) {
-  const { state } = game;
-  if (state.over) return state.over;
-  // Al cierre, el Gremio cobra lo que quede (con el cobrador, si hace falta).
-  let lostByDebt = reason === 'deuda';
-  if (!lostByDebt) {
-    for (const inst of state.debt.installments) {
-      if (inst.amount - inst.paid > 0) {
-        const res = settleInstallment(state, inst);
-        if (res.kind === 'collected') addLog(state, `El Gremio cobró la cuota del día ${inst.day} con ${res.fee} de comisión.`, 'debt');
-        if (res.lost) lostByDebt = true;
-      }
-    }
-  }
-  const owed = totalOwed(state.debt);
-  const score = currentScore(game);
-  const won = !lostByDebt && owed === 0;
-  state.over = {
-    reason: lostByDebt ? 'deuda' : reason,
-    won,
-    score,
-    seals: sealsFor(score, state.difficulty),
-    day: state.day,
-    gold: state.gold,
-    owed,
-    /** Si ya se sumó al perfil (sellos, récords). Lo marca la interfaz. */
-    recorded: false,
-  };
-  state.undo = [];
-  addLog(state, won ? '¡Pagaste toda la deuda! Temporada ganada.' : 'Terminó la temporada sin saldar la deuda.', won ? 'good' : 'bad');
-  return state.over;
-}
-
-/**
- * Viaja por una ruta y, si en el camino se pierde por deuda, cierra la temporada.
+ * Viaja de punta a punta, resolviendo cada evento con `chooser` (bots y
+ * pruebas; la interfaz usa startTrip / advance / chooseOption).
  * @param {object} game
  * @param {string} routeId
+ * @param {(game:object)=>number} [chooser] devuelve el índice de la opción
+ * @returns {{ok:boolean, error?:string, arrived?:boolean, lost?:boolean, days?:number, to?:string, events?:number}}
  */
-export function travel(game, routeId) {
-  const res = travelRoute(game, routeId);
-  if (res.lost) finishSeason(game, 'deuda');
-  return res;
+export function travel(game, routeId, chooser = firstAvailable) {
+  const start = startTrip(game, routeId);
+  if (!start.ok) return start;
+  const startDay = game.state.day;
+  const to = game.state.trip.to;
+  let events = 0;
+  for (let guard = 0; guard < 50; guard++) {
+    const res = advance(game);
+    if (res.status === 'event') {
+      events++;
+      chooseOption(game, chooser(game));
+      continue;
+    }
+    return { ok: true, arrived: res.status === 'arrived', lost: res.status === 'lost', days: game.state.day - startDay, to, events };
+  }
+  throw new Error('El viaje no termina');
 }
 
 /**
@@ -152,6 +132,7 @@ export function travel(game, routeId) {
 export function rest(game) {
   const { state, map } = game;
   if (state.over) return { ok: false, error: 'La temporada terminó.' };
+  if (state.trip) return { ok: false, error: 'Estás viajando.' };
   if (state.day >= RULES.seasonDays) return { ok: false, error: 'Es el último día de la temporada.' };
   const ration = dailyRation(state);
   const res = passDay(game, { food: ration, water: ration }, `en ${map.cityById[state.location].name}`);
@@ -172,7 +153,7 @@ export function rest(game) {
  */
 export function canFinish(game) {
   const { state } = game;
-  return !state.over && (state.day >= RULES.seasonDays || totalOwed(state.debt) === 0);
+  return !state.over && !state.trip && (state.day >= RULES.seasonDays || totalOwed(state.debt) === 0);
 }
 
 /**

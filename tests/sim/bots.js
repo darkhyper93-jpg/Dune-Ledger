@@ -10,23 +10,100 @@
 
 import { Rng } from '../../js/core/rng.js';
 import { RULES } from '../../js/data/rules.js';
-import { getGood, ACTIVE_GOODS } from '../../js/data/goods.js';
+import { getGood, ACTIVE_GOODS, isTradedIn } from '../../js/data/goods.js';
 import { createSeason, travel, rest, finishSeason, canFinish } from '../../js/game/season.js';
 import { buy, sell, buyProvision, buyCamel, payGuild, maxBuy } from '../../js/game/actions.js';
-import { buyPriceAt } from '../../js/game/market.js';
+import { buyPriceAt, buyFactor, quote } from '../../js/game/market.js';
+import { offersHere, acceptContract, deliverContract } from '../../js/game/contracts.js';
+import { newsMult } from '../../js/game/news.js';
 import { tripNeeds, canTravel } from '../../js/game/travel.js';
 import { cargoFree, camelPrice, provisionPrices } from '../../js/game/caravan.js';
 import { canPayHere, nextInstallment, owedOn, totalOwed } from '../../js/game/debt.js';
 import { otherEnd } from '../../js/game/map-gen.js';
+import { optionState } from '../../js/game/events.js';
+import { EVENTS_BY_ID } from '../../js/data/events.js';
+
+/** Valor de la carga a precio base. */
+function cargoBase(state, goodId = null) {
+  let v = 0;
+  for (const [id, q] of Object.entries(state.cargo)) if (!goodId || id === goodId) v += q * getGood(id).base;
+  return v;
+}
+
+/**
+ * Valor en oro (aproximado) de un conjunto de efectos de evento.
+ */
+function effectValue(state, eff, params) {
+  const num = (v) => (typeof v === 'string' ? (v.startsWith('-$') ? -params[v.slice(2)] : params[v.slice(1)]) : v);
+  let v = 0;
+  if (eff.gold) v += num(eff.gold);
+  if (eff.loot) v += (eff.loot[0] + eff.loot[1]) / 2;
+  v += ((eff.food ?? 0) + (eff.water ?? 0)) * 2;
+  if (eff.cargoPct) v -= cargoBase(state) * eff.cargoPct;
+  if (eff.breakFragile) v -= cargoBase(state, 'ceramica') * eff.breakFragile;
+  if (eff.delay) v -= 25 * eff.delay;
+  if (eff.rep) v += 3 * eff.rep;
+  if (eff.give) v += getGood(num(eff.give.good)).base * num(eff.give.qty);
+  if (eff.takeAll) v -= cargoBase(state, num(eff.takeAll));
+  if (eff.inspect && state.cargo.armas > 0) v -= cargoBase(state, 'armas') + (params.fine ?? 30);
+  return v;
+}
+
+/**
+ * Elige la opción de un evento con mejor valor esperado (como un jugador
+ * que hace la cuenta con las probabilidades que muestra la carta).
+ */
+export function bestOption(game) {
+  const ev = game.state.trip.event;
+  const def = EVENTS_BY_ID[ev.id];
+  let best = -1;
+  let bestV = -Infinity;
+  def.options.forEach((opt, i) => {
+    const st = optionState(game, i);
+    if (!st.available) return;
+    const v = st.chance === null
+      ? effectValue(game.state, opt.effects, ev.params)
+      : st.chance * effectValue(game.state, opt.win, ev.params) + (1 - st.chance) * effectValue(game.state, opt.lose, ev.params);
+    if (v > bestV) {
+      bestV = v;
+      best = i;
+    }
+  });
+  return best;
+}
 
 /**
  * Vende toda la carga en la ciudad actual.
  */
 function sellAll(game) {
+  const reserved = {};
+  for (const k of game.state.contracts.active) reserved[k.goodId] = (reserved[k.goodId] ?? 0) + k.qty;
   for (const id of ACTIVE_GOODS) {
-    const qty = game.state.cargo[id];
+    const qty = game.state.cargo[id] - (reserved[id] ?? 0);
     if (qty > 0) sell(game, id, qty);
   }
+}
+
+/**
+ * Contratos: entrega los que se pueden entregar acá y acepta los que van
+ * a una ciudad vecina si la mercadería sale bastante menos que el pago.
+ * Devuelve un bonus por ciudad destino para elegir la ruta.
+ */
+function handleContracts(game) {
+  const { state, map } = game;
+  for (const k of state.contracts.active.slice()) if (k.to === state.location) deliverContract(game, k.id);
+  const neighbors = new Set(map.routesByCity[state.location].filter((r) => canTravel(game, r.id).ok).map((r) => otherEnd(r, state.location)));
+  for (const k of offersHere(game).slice()) {
+    if (!neighbors.has(k.to) || k.qty * getGood(k.goodId).weight > cargoFree(state)) continue;
+    const cost = quote(game, state.location, k.goodId, k.qty, 'buy').total;
+    if (cost > k.reward * 0.8 || cost > state.gold - 100) continue;
+    if (acceptContract(game, k.id).ok) buy(game, k.goodId, k.qty);
+  }
+  const bonus = {};
+  for (const k of state.contracts.active) {
+    if (state.cargo[k.goodId] >= k.qty) bonus[k.to] = (bonus[k.to] ?? 0) + k.reward;
+  }
+  return bonus;
 }
 
 /**
@@ -81,14 +158,17 @@ function planCargo(game, destId, budget) {
   const city = map.cityById[state.location];
   const stock = { ...state.stock[state.location] };
   const bought = Object.fromEntries(ACTIVE_GOODS.map((id) => [id, 0]));
+  const dest = map.cityById[destId];
+  const factor = buyFactor(game, city.id);
+  const goods = ACTIVE_GOODS.filter((id) => isTradedIn(id, city.type) && isTradedIn(id, dest.type));
   let space = cargoFree(state);
   let profit = 0;
   for (let guard = 0; guard < 400; guard++) {
     let best = null;
-    for (const id of ACTIVE_GOODS) {
+    for (const id of goods) {
       const good = getGood(id);
       if (good.weight > space) continue;
-      const price = buyPriceAt(state.seed, city, id, stock[id]);
+      const price = buyPriceAt(state.seed, city, id, stock[id], factor, newsMult(game, city.id, id));
       if (price > budget) continue;
       const gain = expectedSell(game, destId, id, bought[id]) - price;
       const score = gain / Math.max(1, good.weight);
@@ -121,6 +201,7 @@ function reserveFor(game, arrivalDay) {
  */
 function greedyTurn(game) {
   const { state, map } = game;
+  for (const k of state.contracts.active.slice()) if (k.to === state.location) deliverContract(game, k.id);
   sellAll(game);
   const here = map.cityById[state.location];
   const inst = nextInstallment(state.debt);
@@ -132,6 +213,7 @@ function greedyTurn(game) {
   const cp = camelPrice(state.seed, here);
   if (state.camels < RULES.maxCamels && state.day < 42 && state.gold > cp + 250 + debtLeft * 0.25) buyCamel(game);
 
+  const bonus = handleContracts(game);
   let best = null;
   for (const route of map.routesByCity[state.location]) {
     if (!canTravel(game, route.id).ok) continue;
@@ -139,7 +221,7 @@ function greedyTurn(game) {
     const budget = state.gold - provisionCost(game, route) - reserveFor(game, state.day + route.days);
     const plan = planCargo(game, dest, Math.max(0, budget));
     const explore = state.prices[dest] ? 0 : 15;
-    const value = (plan.profit + explore) / route.days;
+    const value = (plan.profit + explore + (bonus[dest] ?? 0)) / route.days;
     if (!best || value > best.value) best = { route, plan, value };
   }
   if (!best) return finishOrRest(game);
@@ -150,7 +232,7 @@ function greedyTurn(game) {
       if (n > 0) buy(game, id, n);
     }
   }
-  travel(game, best.route.id);
+  travel(game, best.route.id, bestOption);
 }
 
 /**
@@ -178,7 +260,10 @@ function randomTurn(game, rng) {
     const n = rng.int(0, maxBuy(game, id));
     if (n > 0) buy(game, id, n);
   }
-  travel(game, route.id);
+  travel(game, route.id, (g) => {
+    const ok = [0, 1, 2].filter((i) => optionState(g, i).available);
+    return rng.pick(ok);
+  });
 }
 
 /**

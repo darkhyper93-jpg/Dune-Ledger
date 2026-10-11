@@ -11,9 +11,10 @@
 
 import { Rng } from '../core/rng.js';
 import { CITY_TYPES, CITY_NAMES } from '../data/cities.js';
-import { ACTIVE_GOODS } from '../data/goods.js';
+import { ACTIVE_GOODS, isTradedIn } from '../data/goods.js';
 import { RULES } from '../data/rules.js';
 import { sellPriceAt, buyPriceAt } from './market.js';
+import { assignZones } from './reputation.js';
 
 const R = RULES.map;
 
@@ -165,6 +166,7 @@ export function bestNeighborMargin(map, seed, cityId) {
   for (const route of map.routesByCity[cityId]) {
     const to = map.cityById[route.a === cityId ? route.b : route.a];
     for (const g of ACTIVE_GOODS) {
+      if (!isTradedIn(g, from.type) || !isTradedIn(g, to.type)) continue;
       const margin = sellPriceAt(seed, to, g, RULES.market.stockNormal) / buyPriceAt(seed, from, g, RULES.market.stockNormal);
       if (margin > best) best = margin;
     }
@@ -206,7 +208,8 @@ function tryMap(rng, seed) {
   if (!isConnected(n, edges)) return null;
 
   const names = rng.shuffle(CITY_NAMES);
-  const cities = points.map((p, i) => ({ id: `c${i}`, name: names[i], type: types[i], x: p.x, y: p.y, guildPost: false }));
+  const cities = points.map((p, i) => ({ id: `c${i}`, name: names[i], type: types[i], x: p.x, y: p.y, guildPost: false, zone: '' }));
+  assignZones(cities);
   const dangerW = { bajo: 4, medio: 3, alto: 2 };
   const routes = edges.map(([a, b], i) => {
     const len = dist(points[a], points[b]);
@@ -256,4 +259,28 @@ export function generateMap(seed) {
  */
 export function otherEnd(route, fromId) {
   return route.a === fromId ? route.b : route.a;
+}
+
+/**
+ * Días de viaje desde una ciudad a todas las demás por el camino más corto
+ * (Dijkstra sobre todas las rutas, conocidas o no).
+ * @param {object} map
+ * @param {string} fromId
+ * @returns {Record<string, number>}
+ */
+export function travelDays(map, fromId) {
+  const dist = Object.fromEntries(map.cities.map((c) => [c.id, Infinity]));
+  dist[fromId] = 0;
+  const done = new Set();
+  while (done.size < map.cities.length) {
+    let cur = null;
+    for (const c of map.cities) if (!done.has(c.id) && (cur === null || dist[c.id] < dist[cur])) cur = c.id;
+    if (cur === null || dist[cur] === Infinity) break;
+    done.add(cur);
+    for (const r of map.routesByCity[cur]) {
+      const nb = otherEnd(r, cur);
+      if (dist[cur] + r.days < dist[nb]) dist[nb] = dist[cur] + r.days;
+    }
+  }
+  return dist;
 }

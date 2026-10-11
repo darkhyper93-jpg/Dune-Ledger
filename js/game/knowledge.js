@@ -17,7 +17,7 @@ export const LOG_LIMIT = 400;
  * @param {string} [kind='info'] info | trade | travel | debt | bad | good
  */
 export function addLog(state, text, kind = 'info') {
-  state.log.push({ day: state.day, text, kind });
+  state.log.push({ day: state.day, text: text.length > 300 ? `${text.slice(0, 297)}…` : text, kind });
   if (state.log.length > LOG_LIMIT) state.log.splice(0, state.log.length - LOG_LIMIT);
 }
 

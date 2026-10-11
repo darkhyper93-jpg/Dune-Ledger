@@ -13,6 +13,8 @@ import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
 import { RULES } from '../data/rules.js';
 import { hashUnit } from '../core/rng.js';
+import { repBuyFactor } from './reputation.js';
+import { newsMult } from './news.js';
 
 const M = RULES.market;
 
@@ -64,13 +66,14 @@ export function clampPrice(raw, base) {
 
 /**
  * Precio de venta (sin redondear ni limitar) con un stock dado.
- * @param {{seed:string,city:{id:string,type:string},goodId:string,stock:number}} p
+ * @param {{seed:string,city:{id:string,type:string},goodId:string,stock:number,mult?:number}} p
+ *   mult: multiplicador por noticias de mercado
  * @returns {number}
  */
-export function rawSellPrice({ seed, city, goodId, stock }) {
+export function rawSellPrice({ seed, city, goodId, stock, mult = 1 }) {
   const good = getGood(goodId);
   const s = Math.min(M.stockMax, Math.max(M.stockMin, stock));
-  return good.base * cityMod(city.type, goodId) * priceNoise(seed, city.id, goodId) * (1.5 - s / 100);
+  return good.base * cityMod(city.type, goodId) * priceNoise(seed, city.id, goodId) * (1.5 - s / 100) * mult;
 }
 
 /**
@@ -79,20 +82,33 @@ export function rawSellPrice({ seed, city, goodId, stock }) {
  * @param {{id:string,type:string}} city
  * @param {string} goodId
  * @param {number} stock
+ * @param {number} [mult=1] noticias de mercado
  */
-export function sellPriceAt(seed, city, goodId, stock) {
-  return clampPrice(rawSellPrice({ seed, city, goodId, stock }), getGood(goodId).base);
+export function sellPriceAt(seed, city, goodId, stock, mult = 1) {
+  return clampPrice(rawSellPrice({ seed, city, goodId, stock, mult }), getGood(goodId).base);
 }
 
 /**
- * Precio de compra de una unidad (a décimos): venta + 10%.
+ * Precio de compra de una unidad (a décimos): venta + 10%, por el factor
+ * de reputación de la zona.
  * @param {string} seed
  * @param {{id:string,type:string}} city
  * @param {string} goodId
  * @param {number} stock
+ * @param {number} [factor=1] reputación (ver reputation.js)
+ * @param {number} [mult=1] noticias de mercado
  */
-export function buyPriceAt(seed, city, goodId, stock) {
-  return clampPrice(rawSellPrice({ seed, city, goodId, stock }) * M.buyMarkup, getGood(goodId).base);
+export function buyPriceAt(seed, city, goodId, stock, factor = 1, mult = 1) {
+  return clampPrice(rawSellPrice({ seed, city, goodId, stock, mult }) * M.buyMarkup * factor, getGood(goodId).base);
+}
+
+/**
+ * Factor de compra en una ciudad según la reputación de su zona.
+ * @param {object} game
+ * @param {string} cityId
+ */
+export function buyFactor(game, cityId) {
+  return repBuyFactor(game.state.rep[game.map.cityById[cityId].zone]);
 }
 
 /**
@@ -120,13 +136,15 @@ export function quote(game, cityId, goodId, qty, side) {
   const good = getGood(goodId);
   let stock = state.stock[cityId][goodId];
   const fresh = side === 'sell' && good.decay ? (state.freshness[goodId] ?? 1) : 1;
+  const factor = buyFactor(game, cityId);
+  const mult = newsMult(game, cityId, goodId);
   const prices = [];
   for (let i = 0; i < qty; i++) {
     if (side === 'buy') {
-      prices.push(buyPriceAt(state.seed, city, goodId, stock));
+      prices.push(buyPriceAt(state.seed, city, goodId, stock, factor, mult));
       stock = moveStock(stock, -good.stockStep * M.stockImpact);
     } else {
-      prices.push(Math.max(0.1, roundPrice(sellPriceAt(state.seed, city, goodId, stock) * fresh)));
+      prices.push(Math.max(0.1, roundPrice(sellPriceAt(state.seed, city, goodId, stock, mult) * fresh)));
       stock = moveStock(stock, good.stockStep * M.stockImpact);
     }
   }
@@ -146,10 +164,12 @@ export function cityPrices(game, cityId, goodIds) {
   const city = map.cityById[cityId];
   const sell = {};
   const buy = {};
+  const factor = buyFactor(game, cityId);
   for (const id of goodIds) {
     const stock = state.stock[cityId][id];
-    sell[id] = sellPriceAt(state.seed, city, id, stock);
-    buy[id] = buyPriceAt(state.seed, city, id, stock);
+    const mult = newsMult(game, cityId, id);
+    sell[id] = sellPriceAt(state.seed, city, id, stock, mult);
+    buy[id] = buyPriceAt(state.seed, city, id, stock, factor, mult);
   }
   return { sell, buy };
 }

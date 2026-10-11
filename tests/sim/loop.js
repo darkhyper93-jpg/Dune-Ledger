@@ -6,7 +6,7 @@
 import { createSeason, travel } from '../../js/game/season.js';
 import { buy, sell, maxBuy } from '../../js/game/actions.js';
 import { quote } from '../../js/game/market.js';
-import { ACTIVE_GOODS, getGood } from '../../js/data/goods.js';
+import { ACTIVE_GOODS, getGood, isTradedIn } from '../../js/data/goods.js';
 import { buyPriceAt, sellPriceAt } from '../../js/game/market.js';
 
 /**
@@ -18,6 +18,7 @@ export function bestLoop(game) {
   for (const r of map.routes) {
     for (const [a, b] of [[r.a, r.b], [r.b, r.a]]) {
       for (const g of ACTIVE_GOODS) {
+        if (!isTradedIn(g, map.cityById[a].type) || !isTradedIn(g, map.cityById[b].type)) continue;
         const m = sellPriceAt(state.seed, map.cityById[b], g, 50) / buyPriceAt(state.seed, map.cityById[a], g, 50);
         if (!best || m > best.margin) best = { route: r, from: a, to: b, goodId: g, margin: m };
       }
@@ -52,7 +53,8 @@ function bestQty(game, loop, max) {
  * @param {number} camels tamaño de la caravana
  */
 export function runLoop(seed, times = 10, camels = 5) {
-  const game = createSeason({ seed });
+  // Sin eventos: esta prueba mide sólo cómo el stock agota el negocio.
+  const game = createSeason({ seed, events: false });
   const { state } = game;
   const loop = bestLoop(game);
   Object.assign(state, { location: loop.from, camels, gold: 100000, food: 200, water: 200 });

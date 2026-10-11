@@ -10,6 +10,7 @@ import { mount, toast, closeSheets, h } from './dom.js';
 import { renderHud } from './hud.js';
 import { renderCity } from './city.js';
 import { renderMap } from './map-screen.js';
+import { renderTravel } from './travel.js';
 import { renderCaravan, renderJournal } from './caravan.js';
 import { renderSummary } from './summary.js';
 import { renderMenu, renderSettings, renderHelp } from './menu.js';
@@ -19,7 +20,7 @@ import { setInMenu } from '../core/updates.js';
 import { setVolumes, unlockAudio } from '../core/audio.js';
 
 /** Pantallas de juego que muestran barra superior y navegación. */
-const GAME_SCREENS = ['city', 'map', 'caravan', 'journal'];
+const GAME_SCREENS = ['city', 'map', 'caravan', 'journal', 'travel'];
 const NAV = [['city', 'Ciudad', '⌂'], ['map', 'Mapa', '◈'], ['caravan', 'Caravana', '☰'], ['journal', 'Diario', '✎']];
 
 /**
@@ -43,7 +44,6 @@ export function createApp(els) {
     settings: loadSettings(),
     screen: 'menu',
     params: {},
-    navEnabled: true,
     toast,
 
     /** Guarda todo lo guardable. */
@@ -61,8 +61,21 @@ export function createApp(els) {
       const res = fn(app.game) ?? { ok: true };
       if (!res.ok && res.error) toast(res.error);
       saveSeason(app.game);
-      if (app.game.state.over && app.screen !== 'summary' && app.screen !== 'map') app.go('summary');
+      if (app.game.state.over && app.screen !== 'summary') app.go('summary');
       else app.render();
+      return res;
+    },
+
+    /**
+     * Como `act`, pero sin redibujar la pantalla (sólo la barra de arriba):
+     * lo usan el viaje y los eventos, que manejan su propia animación.
+     * @param {(game:object)=>object} fn
+     */
+    quiet(fn) {
+      const res = fn(app.game) ?? { ok: true };
+      if (res.ok === false && res.error) toast(res.error);
+      saveSeason(app.game);
+      if (!els.hud.hidden) renderHud(els.hud, app.game);
       return res;
     },
 
@@ -87,26 +100,22 @@ export function createApp(els) {
       toast('¡Arranca la temporada! Mirá el mercado y comprá algo barato.');
     },
 
-    /** Habilita o no la navegación (durante un viaje no se puede cambiar). */
-    setNavEnabled(on) {
-      app.navEnabled = on;
-      for (const b of els.nav.querySelectorAll('button')) b.disabled = !on;
-    },
-
     /** Redibuja la pantalla actual. */
     render() {
       let screen = app.screen;
       if (GAME_SCREENS.includes(screen) && (!app.game || app.game.state.over)) screen = app.game?.state.over ? 'summary' : 'menu';
+      // Con un viaje en curso, cualquier pantalla de juego vuelve al viaje.
+      if (app.game?.state.trip && !app.game.state.over && GAME_SCREENS.includes(screen)) screen = 'travel';
       app.screen = screen;
       setInMenu(screen === 'menu');
       const inGame = GAME_SCREENS.includes(screen);
       els.hud.hidden = !inGame;
-      els.nav.hidden = !inGame;
-      els.screen.classList.toggle('full', screen === 'map');
+      els.nav.hidden = !inGame || screen === 'travel';
+      els.screen.classList.toggle('full', screen === 'map' || screen === 'travel');
       if (inGame) {
         renderHud(els.hud, app.game);
         mount(els.nav, NAV.map(([id, label, ico]) => h('button', {
-          'aria-current': id === screen ? 'page' : null, 'data-testid': `nav-${id}`, disabled: !app.navEnabled,
+          'aria-current': id === screen ? 'page' : null, 'data-testid': `nav-${id}`,
           onclick: () => app.go(id),
         }, h('span', { class: 'ico', 'aria-hidden': 'true' }, ico), label)));
       }
@@ -116,6 +125,7 @@ export function createApp(els) {
         help: () => renderHelp(app),
         city: () => renderCity(app, app.params),
         map: () => renderMap(app),
+        travel: () => renderTravel(app),
         caravan: () => renderCaravan(app),
         journal: () => renderJournal(app),
         summary: () => renderSummary(app),

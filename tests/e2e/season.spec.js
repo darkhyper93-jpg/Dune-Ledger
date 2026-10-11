@@ -11,6 +11,22 @@ async function hudNumber(page, id) {
   return Number(text.split('/')[0].replace(/\./g, ''));
 }
 
+/**
+ * Termina el viaje en curso: si aparece un evento, elige la primera opción
+ * que se pueda y sigue, hasta llegar a una ciudad.
+ */
+async function finishTrip(page) {
+  for (let i = 0; i < 60; i++) {
+    if (await page.getByTestId('city-name').count()) return;
+    if (await page.getByTestId('event-card').count()) {
+      await page.locator('.event-opt:enabled').first().click();
+      await page.getByTestId('event-continue').click();
+    }
+    await page.waitForTimeout(150);
+  }
+  await expect(page.getByTestId('city-name')).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/?semilla=e2e');
   await page.evaluate(() => localStorage.clear());
@@ -43,15 +59,18 @@ test('una temporada: comprar, viajar, vender y seguir después de recargar', asy
   await expect(page.getByTestId('map-canvas')).toBeVisible();
   await page.locator('[data-testid^=dest-]').first().click();
   await page.getByTestId('travel').click();
+  await finishTrip(page);
   await expect(page.getByTestId('city-name')).not.toHaveText(startCity, { timeout: 15_000 });
   expect(await hudNumber(page, 'hud-day')).toBeGreaterThan(1);
 
-  // Vender lo que llevamos.
-  await page.locator('.good-row', { hasText: 'llevás' }).first().click();
-  await page.getByTestId('mode-sell').click();
-  await page.getByTestId('qty-max').click();
-  await page.getByTestId('trade-confirm').click();
-  expect(await hudNumber(page, 'hud-cargo')).toBe(0);
+  // Vender lo que llevamos (si un evento no nos dejó sin carga).
+  const owned = page.locator('.good-row', { hasText: 'llevás' });
+  if (await owned.count()) {
+    await owned.first().click();
+    await page.getByTestId('mode-sell').click();
+    await page.getByTestId('qty-max').click();
+    await page.getByTestId('trade-confirm').click();
+  }
 
   // Cargar provisiones.
   const food = await hudNumber(page, 'hud-food');
@@ -61,7 +80,7 @@ test('una temporada: comprar, viajar, vender y seguir después de recargar', asy
 
   // El diario anotó todo.
   await page.getByTestId('nav-journal').click();
-  await expect(page.getByTestId('journal')).toContainText('Vendiste');
+  await expect(page.getByTestId('journal')).toContainText('Llegaste');
 
   // Se guardó solo: recargar y continuar en el mismo día.
   const day = await hudNumber(page, 'hud-day');
@@ -119,4 +138,36 @@ test('funciona sin conexión después de la primera visita', async ({ page, cont
   await page.getByTestId('new-season').click();
   await expect(page.getByTestId('city-name')).toBeVisible();
   await context.setOffline(false);
+});
+
+test('contratos de la taberna y eventos que se retoman al recargar', async ({ page }) => {
+  await page.getByTestId('new-season').click();
+  await page.getByTestId('tab-taberna').click();
+  const accept = page.locator('[data-testid^=accept-]').first();
+  await accept.click();
+  await page.getByTestId('nav-caravan').click();
+  await expect(page.locator('[data-testid^=contract-]')).toHaveCount(1);
+
+  // Un viaje con un evento armado a mano: al recargar, la carta sigue ahí.
+  await page.evaluate(async () => {
+    const { loadSeason, saveSeason } = await import('./js/core/save.js');
+    const { startTrip } = await import('./js/game/season.js');
+    const { createEvent } = await import('./js/game/events.js');
+    const { Rng } = await import('./js/core/rng.js');
+    const game = loadSeason();
+    game.state.food = 100;
+    game.state.water = 100;
+    startTrip(game, game.map.routesByCity[game.state.location][0].id);
+    game.state.trip.rolled = 1;
+    game.state.trip.event = createEvent(game, 'tormenta', new Rng('e2e'));
+    saveSeason(game);
+  });
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await expect(page.getByTestId('event-card')).toBeVisible();
+  await expect(page.getByTestId('event-card')).toContainText('Tormenta de arena');
+  await expect(page.getByTestId('event-opt-1')).toContainText('60% de salir bien');
+  await page.getByTestId('event-opt-0').click();
+  await page.getByTestId('event-continue').click();
+  await finishTrip(page);
 });

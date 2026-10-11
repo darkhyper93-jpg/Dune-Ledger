@@ -8,7 +8,7 @@
  */
 
 import { RULES } from '../data/rules.js';
-import { getGood, ACTIVE_GOODS } from '../data/goods.js';
+import { getGood, ACTIVE_GOODS, isTradedIn } from '../data/goods.js';
 import { quote } from './market.js';
 import { cargoFree, camelPrice, camelResale, provisionPrices } from './caravan.js';
 import { addLog, snapshotPrices } from './knowledge.js';
@@ -30,6 +30,7 @@ function fail(error) {
  */
 function checkBasics(state, qty) {
   if (state.over) return 'La temporada terminó.';
+  if (state.trip) return 'Estás viajando.';
   if (!Number.isInteger(qty) || qty <= 0) return 'Cantidad inválida.';
   return null;
 }
@@ -61,7 +62,7 @@ function pushUndo(state, label) {
 export function undo(game) {
   const { state } = game;
   const snap = state.undo.pop();
-  if (!snap || state.over) return fail('No hay nada para deshacer.');
+  if (!snap || state.over || state.trip) return fail('No hay nada para deshacer.');
   Object.assign(state, {
     gold: snap.gold, food: snap.food, water: snap.water, camels: snap.camels,
     cargo: snap.cargo, freshness: snap.freshness, costBasis: snap.costBasis, stats: snap.stats,
@@ -100,6 +101,7 @@ export function buy(game, goodId, qty) {
   const err = checkBasics(state, qty);
   if (err) return fail(err);
   if (!ACTIVE_GOODS.includes(goodId)) return fail('Ese bien no se vende acá.');
+  if (!isTradedIn(goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
   const good = getGood(goodId);
   if (qty * good.weight > cargoFree(state)) return fail('No te entra en la carga.');
   const q = quote(game, state.location, goodId, qty, 'buy');
@@ -128,6 +130,7 @@ export function sell(game, goodId, qty) {
   const err = checkBasics(state, qty);
   if (err) return fail(err);
   if (!ACTIVE_GOODS.includes(goodId)) return fail('Ese bien no se compra acá.');
+  if (!isTradedIn(goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
   const good = getGood(goodId);
   if (qty > state.cargo[goodId]) return fail('No tenés tanto.');
   const q = quote(game, state.location, goodId, qty, 'sell');
@@ -189,7 +192,7 @@ export function buyProvision(game, kind, qty) {
  */
 export function buyCamel(game) {
   const { state, map } = game;
-  if (state.over) return fail('La temporada terminó.');
+  if (state.over || state.trip) return fail('Ahora no se puede.');
   if (state.camels >= RULES.maxCamels) return fail(`Ya tenés ${RULES.maxCamels} camellos.`);
   const price = camelPrice(state.seed, map.cityById[state.location]);
   if (price > state.gold) return fail('No te alcanza el oro.');
@@ -206,7 +209,7 @@ export function buyCamel(game) {
  */
 export function sellCamel(game) {
   const { state, map } = game;
-  if (state.over) return fail('La temporada terminó.');
+  if (state.over || state.trip) return fail('Ahora no se puede.');
   if (state.camels <= 1) return fail('Necesitás al menos un camello.');
   if (cargoFree(state) < RULES.camelCapacity) return fail('Primero liberá carga: no entraría en los demás camellos.');
   const price = camelResale(state.seed, map.cityById[state.location]);

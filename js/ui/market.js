@@ -5,11 +5,12 @@
  */
 
 import { h, mount, openSheet, fmtPrice } from './dom.js';
-import { activeGoods, getGood } from '../data/goods.js';
+import { activeGoods, getGood, isTradedIn } from '../data/goods.js';
 import { cityPrices, quote, cityMod } from '../game/market.js';
 import { buy, sell, undo, maxBuy } from '../game/actions.js';
 import { cargoFree } from '../game/caravan.js';
 import { bestKnownSell } from '../game/knowledge.js';
+import { newsMult } from '../game/news.js';
 import { fmt, plural } from '../core/text.js';
 import { playCoins, playTap } from '../core/audio.js';
 
@@ -49,7 +50,15 @@ export function renderMarket(app) {
   wrap.append(h('p', { class: 'muted small', style: 'margin:0' }, 'Tocá un bien para comprar o vender. Comprar mucho junto sube el precio.'));
   const list = h('div', { class: 'goods' });
   for (const g of goods) {
+    if (!isTradedIn(g.id, city.type)) {
+      list.append(h('div', { class: 'good-row', style: 'cursor:default;opacity:.6' },
+        h('span', { class: 'gico', 'aria-hidden': 'true' }, g.icon),
+        h('span', { class: 'grow' }, h('div', { class: 'gname' }, g.name), h('div', { class: 'gsub' }, 'Prohibido en esta ciudad.')),
+        h('span', {})));
+      continue;
+    }
     const mod = cityMod(city.type, g.id);
+    const nm = newsMult(game, city.id, g.id);
     const tag = mod < 1 ? h('span', { class: 'tag-cheap' }, 'Barato acá') : mod > 1 ? h('span', { class: 'tag-dear' }, 'Se paga bien acá') : null;
     const best = bestKnownSell(game, g.id);
     const owned = state.cargo[g.id];
@@ -62,7 +71,8 @@ export function renderMarket(app) {
       h('span', { class: 'gico', 'aria-hidden': 'true' }, g.icon),
       h('span', { class: 'grow' },
         h('div', { class: 'gname' }, g.name, owned > 0 ? h('span', { class: 'pill', style: 'margin-left:6px' }, `llevás ${owned}`) : null),
-        h('div', { class: 'gsub' }, tag, tag ? ' · ' : '', `peso ${g.weight}`, g.decay ? ' · se echan a perder' : ''),
+        h('div', { class: 'gsub' }, tag, tag ? ' · ' : '', nm !== 1 ? h('b', { class: nm > 1 ? 'tag-dear' : 'tag-cheap' }, `Noticia ×${nm === 2 ? '2' : '½'} · `) : null,
+          `peso ${g.weight}`, g.decay ? ' · se echan a perder' : '', g.id === 'perlas' ? ' · atraen bandidos' : '', g.id === 'ceramica' ? ' · frágil' : ''),
         h('div', { class: 'gsub tiny' }, hint)),
       h('span', { class: 'gprice' },
         h('div', {}, h('span', { class: 'muted tiny' }, 'Compra '), h('b', {}, fmtPrice(prices.buy[g.id]))),

@@ -14,6 +14,10 @@ import { STATE_VERSION } from './season.js';
 import { LOG_LIMIT } from './knowledge.js';
 import { UNDO_LIMIT } from './actions.js';
 import { cargoUsed, capacity } from './caravan.js';
+import { ZONES, REP_LIMIT } from './reputation.js';
+import { NEWS_BY_ID } from '../data/news.js';
+import { EVENTS_BY_ID } from '../data/events.js';
+import { CITY_TYPES_BY_ID } from '../data/cities.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
@@ -151,6 +155,10 @@ export function validateState(raw) {
         return { day: int(p.day, 1, RULES.seasonDays, w), sell: goodsRecord(p.sell, 0, 1e5, w), buy: goodsRecord(p.buy, 0, 1e5, w) };
       }, 'precios'),
       debt: debtPart(raw.debt, raw.difficulty),
+      rep: repPart(raw.rep),
+      news: newsPart(raw.news),
+      trip: tripPart(raw.trip, map, raw.location),
+      contracts: contractsPart(raw.contracts, map),
       log: logPart(raw.log),
       undo: undoPart(raw.undo, map, raw.location),
       stats: base.stats,
@@ -178,6 +186,73 @@ function debtPart(v, difficulty) {
       return { day: inst.day, amount, paid: int(inst.paid, 0, amount, 'cuota pagada') };
     }),
     strikes: int(v.strikes, 0, RULES.debt.maxStrikes, 'faltas'),
+  };
+}
+
+/** Valida la reputación: una entrada entera por zona, entre −100 y 100. */
+function repPart(v) {
+  const ids = ZONES.map((z) => z.id);
+  const out = record(v, (k) => ids.includes(k), (x, w) => int(x, -REP_LIMIT, REP_LIMIT, w), 'reputación');
+  for (const id of ids) need(Object.hasOwn(out, id), `reputación falta ${id}`);
+  return out;
+}
+
+/** Valida las noticias y rumores. */
+function newsPart(v) {
+  need(isObj(v) && Array.isArray(v.items) && v.items.length <= 20, 'noticias');
+  const zoneIds = ZONES.map((z) => z.id);
+  return {
+    next: int(v.next, 1, RULES.seasonDays + 20, 'próxima noticia'),
+    items: v.items.map((n) => {
+      need(isObj(n) && typeof n.tpl === 'string' && Object.hasOwn(NEWS_BY_ID, n.tpl), 'noticia');
+      need(Array.isArray(n.goods) && n.goods.length > 0 && n.goods.every((g) => ACTIVE_GOODS.includes(g)), 'bienes de la noticia');
+      need(n.mult === 2 || n.mult === 0.5, 'efecto de la noticia');
+      need((n.zone === null && Object.hasOwn(CITY_TYPES_BY_ID, n.cityType ?? '')) || (n.cityType === null && zoneIds.includes(n.zone)), 'alcance de la noticia');
+      need(typeof n.real === 'boolean', 'noticia');
+      const rumorDay = int(n.rumorDay, 1, RULES.seasonDays, 'noticia');
+      const startDay = int(n.startDay, rumorDay, RULES.seasonDays + 10, 'noticia');
+      return { tpl: n.tpl, goods: n.goods.slice(), mult: n.mult, cityType: n.cityType, zone: n.zone, rumorDay, startDay, endDay: int(n.endDay, startDay, RULES.seasonDays + 30, 'noticia'), real: n.real };
+    }),
+  };
+}
+
+/** Valida el viaje en curso (o null) y su evento pendiente. */
+function tripPart(v, map, location) {
+  if (v === null || v === undefined) return null;
+  need(isObj(v) && typeof v.routeId === 'string' && Object.hasOwn(map.routeById, v.routeId), 'viaje');
+  const r = map.routeById[v.routeId];
+  need(v.from === location && (r.a === v.from || r.b === v.from) && v.to === (r.a === v.from ? r.b : r.a), 'extremos del viaje');
+  const days = int(v.days, 1, 20, 'días del viaje');
+  const trip = { routeId: v.routeId, from: v.from, to: v.to, done: int(v.done, 0, days, 'viaje'), days, rolled: int(v.rolled, 0, days, 'viaje'), event: null };
+  if (v.event !== null) {
+    need(isObj(v.event) && typeof v.event.id === 'string' && Object.hasOwn(EVENTS_BY_ID, v.event.id), 'evento');
+    trip.event = { id: v.event.id, params: record(v.event.params, (k) => /^\w{1,20}$/.test(k), (x, w) => {
+      need(x === null || typeof x === 'boolean' || (typeof x === 'number' && Number.isFinite(x) && Math.abs(x) <= 1e7) || (typeof x === 'string' && x.length <= 120), w);
+      return x;
+    }, 'evento') };
+    need(Object.keys(trip.event.params).length <= 12, 'evento');
+  }
+  return trip;
+}
+
+/** Valida un contrato. */
+function contract(k, map) {
+  const cityOk = (id) => typeof id === 'string' && Object.hasOwn(map.cityById, id);
+  need(isObj(k) && typeof k.id === 'string' && /^k\d{1,6}$/.test(k.id) && isGoodId(k.goodId) && cityOk(k.from) && cityOk(k.to) && k.from !== k.to, 'contrato');
+  need(k.source === 'taberna' || k.source === 'gremio', 'contrato');
+  return { id: k.id, goodId: k.goodId, qty: int(k.qty, 1, 999, 'contrato'), from: k.from, to: k.to, deadline: int(k.deadline, 1, RULES.seasonDays, 'contrato'), reward: int(k.reward, 0, 1e6, 'contrato'), source: k.source };
+}
+
+/** Valida ofertas y contratos activos. */
+function contractsPart(v, map) {
+  need(isObj(v) && Array.isArray(v.active) && v.active.length <= 3, 'contratos');
+  return {
+    offers: record(v.offers, (k) => Object.hasOwn(map.cityById, k), (o, w) => {
+      need(isObj(o) && Array.isArray(o.list) && o.list.length <= 3, w);
+      return { day: int(o.day, 1, RULES.seasonDays, w), list: o.list.map((k) => contract(k, map)) };
+    }, 'ofertas'),
+    active: v.active.map((k) => contract(k, map)),
+    nextId: int(v.nextId, 1, 1e6, 'contratos'),
   };
 }
 

@@ -5,11 +5,12 @@ import { createSeason } from '../../js/game/season.js';
 
 /**
  * Crea una temporada de prueba con valores cómodos para testear.
+ * Sin eventos de viaje, para que los resultados sean exactos.
  * @param {object} [patch] campos del estado a pisar
  * @param {string} [seed]
  */
 export function testGame(patch = {}, seed = 'prueba') {
-  const game = createSeason({ seed });
+  const game = createSeason({ seed, events: false });
   Object.assign(game.state, patch);
   return game;
 }

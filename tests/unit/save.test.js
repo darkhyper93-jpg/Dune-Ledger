@@ -23,6 +23,14 @@ test('guardar y cargar devuelve la misma partida', () => {
   assert.deepEqual(loaded.map.cities, g.map.cities);
 });
 
+test('se guardan las noticias en curso', () => {
+  const g = testGame();
+  g.state.news.items.push({ tpl: 'sequia', goods: ['datiles'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: false });
+  const res = validateState(clone(g.state));
+  assert.ok(res.ok, res.error);
+  assert.deepEqual(res.game.state.news, g.state.news);
+});
+
 test('también se guarda una temporada terminada', () => {
   const g = testGame({ gold: 2000 });
   finishSeason(g, 'fin');
@@ -67,6 +75,14 @@ test('se rechazan valores fuera de rango o ids que no existen', () => {
     (s) => { s.v = 99; },
     (s) => { s.seed = ''; },
     (s) => { s.undo = 'nada'; },
+    (s) => { s.rep.norte = 500; },
+    (s) => { s.rep.oeste = 1; },
+    (s) => { delete s.rep.sur; },
+    (s) => { s.news.next = -3; },
+    (s) => { s.news.items = [{ tpl: 'sequia', goods: ['oro'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
+    (s) => { s.news.items = [{ tpl: 'sequia', goods: ['datiles'], mult: 3, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
+    (s) => { s.news.items = [{ tpl: 'sequia', goods: ['datiles'], mult: 2, cityType: null, zone: 'oeste', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
+    (s) => { s.news.items = [{ tpl: 'nada', goods: ['datiles'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
   ];
   for (const [i, mutate] of cases.entries()) {
     const s = clone(g.state);

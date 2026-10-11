@@ -118,9 +118,11 @@ export function createMapView(canvas, opts) {
       drawDays(pal, (a.x + b.x) / 2, (a.y + b.y) / 2, r.days, r.danger, picked);
     }
 
+    const targets = new Set(state.contracts.active.map((k) => k.to));
     for (const c of map.cities) {
       if (!state.known[c.id]) continue;
       drawCity(pal, c, {
+        target: targets.has(c.id),
         visited: !!state.visited[c.id],
         here: c.id === state.location && !extra.travel,
         selected: c.id === extra.selected,
@@ -188,6 +190,16 @@ export function createMapView(canvas, opts) {
     const x = sx(c.x);
     const y = sy(c.y);
     const r = CITY_R * s;
+    if (f.target) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r + 2.6 * s, 0, Math.PI * 2);
+      ctx.setLineDash([1.2 * s, 1 * s]);
+      ctx.strokeStyle = pal.gold;
+      ctx.lineWidth = 0.6 * s;
+      ctx.stroke();
+      ctx.restore();
+    }
     if (f.here || f.selected) {
       ctx.beginPath();
       ctx.arc(x, y, r + 1.4 * s, 0, Math.PI * 2);

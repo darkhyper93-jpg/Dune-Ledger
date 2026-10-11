@@ -4,6 +4,7 @@
  * Por cada día de viaje se gasta 1 de comida y 1 de agua por cada 2 seres
  * (personas + camellos), redondeando hacia arriba; el terreno multiplica
  * el agua. Si falta comida o agua, cada día se abandona un 10% de la carga.
+ * El recorrido día por día (con eventos) está en trip.js.
  */
 
 import { RULES } from '../data/rules.js';
@@ -11,9 +12,9 @@ import { TERRAINS } from '../data/routes.js';
 import { getGood } from '../data/goods.js';
 import { recoverStock } from './market.js';
 import { settleInstallment } from './debt.js';
-import { otherEnd } from './map-gen.js';
-import { addLog, discoverAround, snapshotPrices } from './knowledge.js';
-import { plural } from '../core/text.js';
+import { addLog } from './knowledge.js';
+import { tickNews } from './news.js';
+import { tickContracts } from './contracts.js';
 
 /** Parte de la carga que se pierde por cada día sin comida o sin agua. */
 export const SHORTAGE_LOSS = 0.1;
@@ -36,8 +37,11 @@ export function dailyRation(state) {
 
 /**
  * Agua que se gasta en total hasta el día k de una ruta (acumulado).
+ * @param {object} state
+ * @param {string} terrain
+ * @param {number} k
  */
-function waterUntil(state, terrain, k) {
+export function waterUntil(state, terrain, k) {
   return Math.ceil(k * dailyRation(state) * TERRAINS[terrain].water - 1e-9);
 }
 
@@ -62,6 +66,7 @@ export function tripNeeds(state, route) {
 export function canTravel(game, routeId) {
   const { map, state } = game;
   if (state.over) return { ok: false, error: 'La temporada terminó.' };
+  if (state.trip) return { ok: false, error: 'Ya estás viajando.' };
   const route = Object.hasOwn(map.routeById, routeId) ? map.routeById[routeId] : null;
   if (!route || (route.a !== state.location && route.b !== state.location)) {
     return { ok: false, error: 'No hay ruta directa a esa ciudad.' };
@@ -108,6 +113,8 @@ export function passDay(game, use, where) {
     addLog(state, `Sin ${what} ${where}: dejaste ${lost} unidades de carga.`, 'bad');
   }
   recoverStock(state.stock);
+  tickNews(game);
+  tickContracts(game);
   for (const id of Object.keys(state.freshness)) {
     const good = getGood(id);
     if (good.decay) state.freshness[id] = Math.max(0.05, state.freshness[id] * (1 - good.decay));
@@ -133,38 +140,3 @@ function logSettlement(state, inst, res) {
     addLog(state, `¡Cuota del día ${inst.day} impaga! El Gremio embargó ${what}. Pasan ${res.carried} a la próxima cuota.`, 'bad');
   }
 }
-
-/**
- * Recorre una ruta día por día y llega a destino (o termina la temporada
- * si en el camino vence una cuota que no se puede pagar por segunda vez:
- * en ese caso devuelve `lost: true` y season.js cierra la temporada).
- * @param {object} game
- * @param {string} routeId
- * @returns {{ok:boolean,error?:string,arrived?:boolean,lost?:boolean,days?:number,to?:string}}
- */
-export function travel(game, routeId) {
-  const check = canTravel(game, routeId);
-  if (!check.ok) return check;
-  const { map, state } = game;
-  const route = map.routeById[routeId];
-  const from = state.location;
-  const to = otherEnd(route, from);
-  addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(route.days, 'día', 'días')}).`, 'travel');
-  for (let k = 1; k <= route.days; k++) {
-    const use = {
-      food: dailyRation(state),
-      water: waterUntil(state, route.terrain, k) - waterUntil(state, route.terrain, k - 1),
-    };
-    const res = passDay(game, use, 'en el camino');
-    if (res.lost) return { ok: true, arrived: false, lost: true, days: k, to };
-  }
-  state.location = to;
-  state.lastFrom = from;
-  state.undo = [];
-  state.stats.trips += 1;
-  discoverAround(game, to);
-  snapshotPrices(game, to);
-  addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');
-  return { ok: true, arrived: true, days: route.days, to };
-}
-

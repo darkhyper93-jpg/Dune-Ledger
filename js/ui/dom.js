@@ -62,9 +62,10 @@ export function toast(text, ms = 2200) {
 
 /**
  * Abre una hoja inferior con contenido. Devuelve una función para cerrarla.
- * Tocar fuera o la tecla Escape la cierran.
+ * Tocar fuera o la tecla Escape la cierran, salvo que sea `modal` (por
+ * ejemplo, un evento de viaje que hay que resolver sí o sí).
  * @param {(close:Function)=>HTMLElement|HTMLElement[]} build arma el contenido
- * @param {{label?:string, onClose?:Function}} [opts]
+ * @param {{label?:string, onClose?:Function, modal?:boolean}} [opts]
  */
 export function openSheet(build, opts = {}) {
   const root = document.getElementById('sheet-root');
@@ -77,11 +78,11 @@ export function openSheet(build, opts = {}) {
     opts.onClose?.();
   };
   const onKey = (e) => {
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape' && !opts.modal) close();
   };
   const sheet = h('section', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': opts.label ?? 'Detalle' }, h('div', { class: 'grab' }));
   appendAll(sheet, [build(close)]);
-  mount(root, h('div', { class: 'sheet-backdrop', onclick: close }), sheet);
+  mount(root, h('div', { class: 'sheet-backdrop', onclick: opts.modal ? null : close }), sheet);
   document.addEventListener('keydown', onKey);
   sheet.querySelector('button:not([disabled])')?.focus({ preventScroll: true });
   return close;

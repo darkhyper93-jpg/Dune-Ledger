@@ -1,11 +1,12 @@
 /**
- * Pantalla de ciudad, con pestañas: Mercado, Provisiones y (en la Capital
- * o en un Puesto) Gremio. Arriba, el nombre y la silueta de la ciudad y,
+ * Pantalla de ciudad, con pestañas: Mercado, Provisiones, Taberna y (en la
+ * Capital o en un Puesto) Gremio. Arriba, el nombre y la silueta de la ciudad y,
  * cuando corresponde, el botón para cerrar la temporada.
  */
 
 import { h, openSheet } from './dom.js';
 import { renderMarket } from './market.js';
+import { renderTavern, guildContracts, deliverables } from './tavern.js';
 import { getCityType } from '../data/cities.js';
 import { RULES } from '../data/rules.js';
 import { citySvg, svgNode } from '../render/shapes.js';
@@ -27,7 +28,7 @@ export function renderCity(app, params = {}) {
   const { state, map } = game;
   const city = map.cityById[state.location];
   const hasGuild = canPayHere(city);
-  const tabs = [['mercado', 'Mercado'], ['provisiones', 'Provisiones']];
+  const tabs = [['mercado', 'Mercado'], ['provisiones', 'Provisiones'], ['taberna', 'Taberna']];
   if (hasGuild) tabs.push(['gremio', 'Gremio']);
   const tab = tabs.some(([id]) => id === params.tab) ? params.tab : 'mercado';
 
@@ -42,10 +43,11 @@ export function renderCity(app, params = {}) {
 
   let content;
   if (tab === 'provisiones') content = renderProvisions(app);
+  else if (tab === 'taberna') content = renderTavern(app);
   else if (tab === 'gremio') content = renderGuild(app);
   else content = renderMarket(app);
 
-  return h('div', {}, head, endCard(app), tabBar, content);
+  return h('div', {}, head, endCard(app), deliverables(app), tabBar, content);
 }
 
 /**
@@ -175,5 +177,6 @@ function renderGuild(app) {
     owed > 0 ? h('div', { class: 'btn-row' },
       next ? h('button', { class: 'btn primary', 'data-testid': 'pay-next', disabled: state.gold <= 0, onclick: () => pay(owedOn(next)) }, `Pagar cuota (${fmt(Math.min(owedOn(next), state.gold))})`) : null,
       h('button', { class: 'btn', 'data-testid': 'pay-all', disabled: state.gold <= 0, onclick: () => pay(owed) }, `Pagar todo (${fmt(Math.min(owed, state.gold))})`))
-      : h('p', { class: 'good center' }, '¡No le debés nada al Gremio!'));
+      : h('p', { class: 'good center' }, '¡No le debés nada al Gremio!'),
+    guildContracts(app));
 }

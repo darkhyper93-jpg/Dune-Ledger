@@ -83,3 +83,37 @@ revisarlo más adelante.
   con la lista de archivos y una versión que es el hash del contenido.
 - El repositorio estaba vacío, así que la rama de trabajo quedó como rama
   principal y GitHub Pages publica desde ahí.
+
+## Etapa 2 — Eventos y contratos
+
+- **Reputación por zona.** El mapa de cada temporada se divide en tres zonas
+  (Norte, Centro y Sur, por altura). Se llaman "zonas" para no confundirlas
+  con las 5 Regiones de la etapa 5. Efectos: comprar hasta 5% más barato con
+  +100 y hasta 10% más caro con −100; con 40 o más, los bandidos de la zona
+  te dejan pasar 4 de cada 10 veces; el soborno en controles depende de ella.
+- **Eventos**: probabilidad base 28% por día de viaje, ×0,7 en peligro bajo,
+  ×1,35 en alto (≈ uno cada 3 o 4 días). Los bandidos salen el doble en
+  rutas de peligro alto y más si llevás perlas. El viaje se frena hasta
+  elegir; si cerrás la app en medio de un evento, al volver sigue ahí.
+- **Pelear contra bandidos**: 45% + 8% por cada arma que llevás (tope 75%).
+  Los guardias se suman en la etapa 3 (ahí se mide "con 2 guardias pierde
+  menos del 30%").
+- **Opciones que suman días** (esperar la tormenta, desviarse) se desactivan
+  si te harían pasar del día 60.
+- **"Mandar al explorador"** en las ruinas llega con la tripulación (etapa 3).
+- **Cerámica**: además de la tormenta, en rutas de montaña cada pieza tiene
+  4% por día de romperse.
+- **Armas**: no se compran ni se venden en la ciudad santa; el control del
+  sultán las confisca y multa.
+- **Noticias**: una cada 7 a 10 días; 75% son verdad. El rumor aparece en la
+  taberna 3 a 5 días antes y dura 5 a 15 días. Multiplican el precio ×2 o ×½
+  (siempre dentro del 20%–300% del base).
+- **Contratos**: 2 en cada taberna y 1 más del Gremio (paga mejor) en la
+  Capital y los Puestos. Se renuevan cada 7 días. Pagan 1,3 a 1,6 veces lo
+  que valdría la mercadería en el destino. Máximo 3 activos. Cumplir da +10
+  de reputación en la zona del destino; vencerse, −15.
+- **Préstamos** siguen pendientes (no estaban en el plan de la etapa 2).
+- **Balance**: con eventos y contratos el bot codicioso (que acepta contratos
+  hacia ciudades vecinas) paga la deuda en ~72% de las temporadas.
+- Las partidas guardadas de la etapa 1 no se cargan en la etapa 2 (cambió el
+  formato); hay que empezar una temporada nueva.

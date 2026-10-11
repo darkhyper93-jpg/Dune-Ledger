@@ -10,10 +10,14 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 1 — El núcleo** (ver `docs/DISENO.md`, "Plan por etapas"): mapa
-generado por semilla con niebla, 8 bienes, mercado con stock, viajes con
-comida y agua, deuda con cuotas, cobrador y embargo, fin de temporada con
-puntaje y sellos. Bots codicioso y aleatorio para medir el balance.
+**Etapa 2 — Eventos y contratos** (ver `docs/DISENO.md`, "Plan por etapas").
+
+- Etapa 1: mapa generado por semilla con niebla, mercado con stock, viajes
+  con comida y agua, deuda con cuotas, cobrador y embargo, fin de temporada
+  con puntaje y sellos. Bots codicioso y aleatorio para medir el balance.
+- Etapa 2: los 12 bienes, eventos de viaje desde datos (`js/data/events.js`)
+  con probabilidades visibles, contratos de taberna y Gremio, reputación por
+  zona, rumores y noticias de mercado. Los bots viven los eventos.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

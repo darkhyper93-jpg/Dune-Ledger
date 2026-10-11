@@ -7,11 +7,10 @@
  * comerciada: los bienes caros mueven más el mercado, así no se puede
  * inundar una ciudad de seda sin que se note.
  *
- * La etapa 1 usa 8 de los 12 bienes (ver ACTIVE_GOODS); el resto ya está
- * cargado para las etapas siguientes.
+ * `banned` lista los tipos de ciudad donde el bien está prohibido.
  */
 
-/** @typedef {{id:string,name:string,base:number,weight:number,produces:string[],consumes:string[],stockStep:number,decay?:number,icon:string,note?:string}} Good */
+/** @typedef {{id:string,name:string,base:number,weight:number,produces:string[],consumes:string[],stockStep:number,decay?:number,banned?:string[],icon:string,note?:string}} Good */
 
 /** @type {Good[]} */
 export const GOODS = [
@@ -25,12 +24,12 @@ export const GOODS = [
   { id: 'especias', name: 'Especias', base: 35, weight: 1, produces: ['puerto'], consumes: ['capital'], stockStep: 3, icon: '✱' },
   { id: 'libros', name: 'Libros', base: 45, weight: 1, produces: ['santa'], consumes: ['capital'], stockStep: 3.6, icon: '▤' },
   { id: 'seda', name: 'Seda', base: 60, weight: 1, produces: ['puerto'], consumes: ['capital'], stockStep: 4.4, icon: '∿' },
-  { id: 'armas', name: 'Armas', base: 70, weight: 2, produces: ['minera'], consumes: ['aldea'], stockStep: 4.8, icon: '⚔', note: 'Ilegales en la ciudad santa' },
+  { id: 'armas', name: 'Armas', base: 70, weight: 2, produces: ['minera'], consumes: ['aldea'], stockStep: 4.8, banned: ['santa'], icon: '⚔', note: 'Ilegales en la ciudad santa' },
   { id: 'perlas', name: 'Perlas', base: 120, weight: 0, produces: ['puerto'], consumes: ['capital', 'santa'], stockStep: 6, icon: '○', note: 'No ocupan lugar, pero atraen bandidos' },
 ];
 
-/** Ids de los bienes que se juegan en la etapa actual. */
-export const ACTIVE_GOODS = ['sal', 'datiles', 'lana', 'te', 'metal', 'incienso', 'libros', 'seda'];
+/** Ids de los bienes que se juegan (desde la etapa 2, los 12). */
+export const ACTIVE_GOODS = GOODS.map((g) => g.id);
 
 /** Acceso rápido por id. */
 export const GOODS_BY_ID = Object.fromEntries(GOODS.map((g) => [g.id, g]));
@@ -61,4 +60,14 @@ export function isGoodId(id) {
  */
 export function activeGoods() {
   return GOODS.filter((g) => ACTIVE_GOODS.includes(g.id));
+}
+
+/**
+ * Dice si un bien se puede comprar y vender en un tipo de ciudad
+ * (las armas están prohibidas en la ciudad santa).
+ * @param {string} goodId
+ * @param {string} cityType
+ */
+export function isTradedIn(goodId, cityType) {
+  return !(getGood(goodId).banned ?? []).includes(cityType);
 }

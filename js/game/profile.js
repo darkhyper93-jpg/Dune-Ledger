@@ -31,7 +31,7 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], hardWin: false,
+    regions: ['desierto'], hardWin: false, daily: null,
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -60,6 +60,9 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (isObj(raw.daily) && typeof raw.daily.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.daily.date) && Number.isFinite(raw.daily.score)) {
+    out.daily = { date: raw.daily.date, score: Math.round(raw.daily.score) };
+  }
   if (isObj(raw.upgrades)) {
     for (const [id, lvl] of Object.entries(raw.upgrades)) {
       if (Object.hasOwn(UPGRADES_BY_ID, id) && Number.isInteger(lvl) && lvl > 0) out.upgrades[id] = Math.min(lvl, UPGRADES_BY_ID[id].costs.length);
@@ -146,6 +149,17 @@ export function recordSeason(profile, game) {
   const { state, map } = game;
   const over = state.over;
   if (!over || over.recorded) return { newAchievements: over?.newAchievements ?? [], unlocked: over?.unlocked ?? [] };
+  // El modo libre no cuenta; el desafío cuenta sólo la primera vez del día.
+  mergeSeen(profile, state.seen);
+  if (state.mode === 'diario') {
+    over.official = profile.daily?.date !== state.daily;
+    if (over.official) profile.daily = { date: state.daily, score: over.score };
+  }
+  if (state.mode === 'libre' || over.official === false) {
+    over.recorded = true;
+    over.unlocked = [];
+    return { newAchievements: [], unlocked: [] };
+  }
   profile.seasons += 1;
   const unlocked = [];
   if (over.won) {
@@ -155,7 +169,6 @@ export function recordSeason(profile, game) {
   profile.seals += over.seals;
   profile.totalSeals += over.seals;
   profile.bestScore = Math.max(profile.bestScore, Math.max(0, over.score));
-  mergeSeen(profile, state.seen);
   const ctx = { state, map, over, profile };
   const fresh = ACHIEVEMENTS.filter((a) => !profile.achievements[a.id] && a.check(ctx)).map((a) => a.id);
   for (const id of fresh) profile.achievements[id] = true;

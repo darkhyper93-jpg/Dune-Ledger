@@ -22,6 +22,7 @@ import { notePeaks } from './stats.js';
 import { tickContracts } from './contracts.js';
 import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels.js';
 import { mountName } from './caravan.js';
+import { lastDay } from './modes.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
 export const SHORTAGE_LOSS = 0.1;
@@ -94,8 +95,8 @@ export function canTravel(game, routeId) {
   if (!route || (route.a !== state.location && route.b !== state.location)) {
     return { ok: false, error: 'No hay ruta directa a esa ciudad.' };
   }
-  if (state.day + routeDays(state, route.days) > RULES.seasonDays) {
-    return { ok: false, error: `No llegás antes del día ${RULES.seasonDays}.` };
+  if (state.day + routeDays(state, route.days) > lastDay(state)) {
+    return { ok: false, error: `No llegás antes del día ${lastDay(state)}.` };
   }
   return { ok: true };
 }

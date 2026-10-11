@@ -7,7 +7,7 @@
  * una temporada entera se puede jugar en Node (pruebas y bots).
  */
 
-import { RULES, getDifficulty } from '../data/rules.js';
+import { getDifficulty } from '../data/rules.js';
 import { getRegion } from '../data/regions.js';
 import { ACTIVE_GOODS } from '../data/goods.js';
 import { Rng } from '../core/rng.js';
@@ -26,26 +26,30 @@ import { initialHire, refreshHires } from './crew.js';
 import { getMerchant, cleanUpgrades } from './perks.js';
 import { startingResources, applyStartPerks } from './start.js';
 import { initialStats, initialSeen, see, bump, notePeaks } from './stats.js';
+import { lastDay, isFree, MODES } from './modes.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
+export { lastDay } from './modes.js';
 
 /** Versión del formato de la partida guardada. */
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 /**
  * Crea una temporada nueva.
  * `events` y `eventRate` son opciones del juego (no se guardan): sirven
  * para pruebas que necesitan viajes sin sorpresas o con muchos eventos.
  * `merchant` y `upgrades` son el mercader elegido y las mejoras del Gremio;
- * `region` decide el mapa, la montura, los bienes y los eventos.
- * @param {{seed:string, region?:string, difficulty?:string, merchant?:string, upgrades?:Record<string,number>, events?:boolean, eventRate?:number}} opts
+ * `region` decide el mapa, la montura, los bienes y los eventos. `mode` es
+ * 'temporada', 'diario' (con `daily`, la fecha AAAA-MM-DD) o 'libre'.
+ * @param {{seed:string, mode?:string, daily?:string|null, region?:string, difficulty?:string, merchant?:string, upgrades?:Record<string,number>, events?:boolean, eventRate?:number}} opts
  * @returns {{map:object,state:object,options:object}}
  */
-export function createSeason({ seed, region = 'desierto', difficulty = 'normal', merchant = 'aprendiz', upgrades = {}, events = true, eventRate }) {
+export function createSeason({ seed, mode = 'temporada', daily = null, region = 'desierto', difficulty = 'normal', merchant = 'aprendiz', upgrades = {}, events = true, eventRate }) {
   getDifficulty(difficulty);
   getMerchant(merchant);
   getRegion(region);
+  if (!MODES.includes(mode)) throw new Error(`Modo desconocido: ${mode}`);
   const perks = { merchant, region, upgrades: cleanUpgrades(upgrades) };
   const s = startingResources(perks);
   const map = generateMap(seed, region);
@@ -56,6 +60,8 @@ export function createSeason({ seed, region = 'desierto', difficulty = 'normal',
   const state = {
     v: STATE_VERSION,
     seed: String(seed),
+    mode,
+    daily: mode === 'diario' ? daily : null,
     region,
     difficulty,
     merchant,
@@ -77,7 +83,7 @@ export function createSeason({ seed, region = 'desierto', difficulty = 'normal',
     knownRoutes: {},
     visited: {},
     prices: {},
-    debt: createDebt(difficulty, { mult: s.debtMult, delays: s.delays }),
+    debt: mode === 'libre' ? { installments: [], strikes: 0 } : createDebt(difficulty, { mult: s.debtMult, delays: s.delays }),
     loan: 0,
     deposit: 0,
     rep: initialRep(),
@@ -100,7 +106,9 @@ export function createSeason({ seed, region = 'desierto', difficulty = 'normal',
   refreshHires(game, start.id);
   see(state, 'cityTypes', start.type);
   notePeaks(state);
-  addLog(state, `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');
+  addLog(state, mode === 'libre'
+    ? `Empieza el modo libre en ${start.name}. Sin deuda ni apuro: probá rutas y aprendé los precios.`
+    : `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');
   return game;
 }
 
@@ -156,7 +164,7 @@ export function rest(game) {
   const { state, map } = game;
   if (state.over) return { ok: false, error: 'La temporada terminó.' };
   if (state.trip) return { ok: false, error: 'Estás viajando.' };
-  if (state.day >= RULES.seasonDays) return { ok: false, error: 'Es el último día de la temporada.' };
+  if (state.day >= lastDay(state)) return { ok: false, error: 'Es el último día de la temporada.' };
   const res = passDay(game, { food: dailyRation(state, 'food'), water: dailyRation(state) }, `en ${map.cityById[state.location].name}`, { rest: true });
   state.undo = [];
   if (res.lost) {
@@ -176,7 +184,7 @@ export function rest(game) {
  */
 export function canFinish(game) {
   const { state } = game;
-  return !state.over && !state.trip && (state.day >= RULES.seasonDays || (totalOwed(state.debt) === 0 && state.loan === 0));
+  return !state.over && !state.trip && (state.day >= lastDay(state) || isFree(state) || (totalOwed(state.debt) === 0 && state.loan === 0));
 }
 
 /**

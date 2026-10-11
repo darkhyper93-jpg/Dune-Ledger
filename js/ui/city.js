@@ -13,7 +13,7 @@ import { RULES } from '../data/rules.js';
 import { svgNode } from '../render/shapes.js';
 import { sceneSvg } from '../render/scenes.js';
 import { canPayHere, totalOwed, owedOn, nextInstallment } from '../game/debt.js';
-import { canFinish, rest, finishSeason } from '../game/season.js';
+import { canFinish, rest, finishSeason, lastDay } from '../game/season.js';
 import { buyProvision, buyCamel, sellCamel, payGuild } from '../game/actions.js';
 import { camelPrice, camelResale, provisionPrices, provisionCap, perMount, mountName } from '../game/caravan.js';
 import { dailyRation, canTravel } from '../game/travel.js';
@@ -63,10 +63,11 @@ function endCard(app) {
   if (!canFinish(game) && !stuck) return null;
   const owed = totalOwed(state.debt);
   let text = 'Ya pagaste toda la deuda. Podés retirarte ahora o seguir comerciando hasta el día 60.';
-  if (state.day >= RULES.seasonDays) text = 'Último día de la temporada: vendé lo que te convenga y cerrala.';
+  if (state.mode === 'libre') text = 'Modo libre: comerciá todo lo que quieras y cerrá cuando te canses. No da sellos ni logros.';
+  else if (state.day >= RULES.seasonDays) text = 'Último día de la temporada: vendé lo que te convenga y cerrala.';
   else if (stuck && owed > 0) text = `No te da el tiempo para otro viaje. Descansá hasta el día ${RULES.seasonDays} para cerrar.`;
   return h('div', { class: 'card stack', style: 'margin-bottom:12px' }, h('p', { style: 'margin:0' }, text),
-    canFinish(game) ? h('button', { class: 'btn big primary', 'data-testid': 'finish', onclick: () => confirmFinish(app) }, 'Cerrar temporada') : null);
+    canFinish(game) ? h('button', { class: `btn big${state.mode === 'libre' ? '' : ' primary'}`, 'data-testid': 'finish', onclick: () => confirmFinish(app) }, state.mode === 'libre' ? 'Terminar el modo libre' : 'Cerrar temporada') : null);
 }
 
 /**
@@ -146,7 +147,7 @@ function renderProvisions(app) {
     h('div', { class: 'card stack' },
       h('h3', {}, 'Descansar'),
       h('div', { class: 'small' }, `Pasás un día en ${city.name}: los ${mountName(state, 2)} recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),
-      h('button', { class: 'btn', 'data-testid': 'rest', disabled: state.day >= RULES.seasonDays, onclick: () => {
+      h('button', { class: 'btn', 'data-testid': 'rest', disabled: state.day >= lastDay(state), onclick: () => {
         app.act((g) => rest(g));
         if (app.game.state.over) app.go('summary');
         else app.toast(`Día ${app.game.state.day}.`);

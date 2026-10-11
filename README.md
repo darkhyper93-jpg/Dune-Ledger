@@ -10,7 +10,7 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 5 — Regiones y dificultades** (ver `docs/DISENO.md`, "Plan por etapas").
+**Etapa 6 — Desafío diario y modo libre** (ver `docs/DISENO.md`, "Plan por etapas").
 
 Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
 
@@ -29,6 +29,8 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   Montañas de Jade y Reino del Sultán) con mapa, bien estrella y eventos
   propios, que se abren ganando la anterior; 4 dificultades (Fácil, Normal,
   Difícil con precios que cambian cada semana, y Pesadilla sin préstamos).
+- Etapa 6: desafío del día (mismo mapa para todos, con código de puntaje
+  para compartir y comparar) y modo libre (sin deuda ni límite de días).
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

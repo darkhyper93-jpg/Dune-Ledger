@@ -122,6 +122,8 @@ test('una partida guardada antes de las regiones (versión 2) se sigue cargando'
   const old = JSON.parse(JSON.stringify(g.state));
   old.v = 2;
   delete old.region;
+  delete old.mode;
+  delete old.daily;
   delete old.cargo.jade;
   delete old.costBasis.jade;
   for (const row of Object.values(old.stock)) delete row.jade;
@@ -129,6 +131,7 @@ test('una partida guardada antes de las regiones (versión 2) se sigue cargando'
   const res = validateState(old);
   assert.ok(res.ok, res.error);
   assert.equal(res.game.state.region, 'desierto');
+  assert.equal(res.game.state.mode, 'temporada');
   assert.equal(res.game.state.cargo.jade, 0);
   assert.deepEqual(res.game.map.cities, g.map.cities);
   assert.equal(res.game.state.gold, g.state.gold);

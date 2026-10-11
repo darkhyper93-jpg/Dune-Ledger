@@ -6,7 +6,7 @@
  * instante (se puede cerrar la app en cualquier momento) y se redibuja.
  */
 
-import { mount, toast, closeSheets, h } from './dom.js';
+import { mount, toast, closeSheets, h, openSheet } from './dom.js';
 import { renderHud } from './hud.js';
 import { renderCity } from './city.js';
 import { renderMap } from './map-screen.js';
@@ -20,6 +20,7 @@ import { mergeSeen } from '../game/profile.js';
 import { iconSvg } from '../render/ui-icons.js';
 import { svgNode } from '../render/shapes.js';
 import { createSeason } from '../game/season.js';
+import { createDaily } from '../game/daily.js';
 import { saveSeason, loadSeason, loadProfile, saveProfile, loadSettings, saveSettings } from '../core/save.js';
 import { setInMenu } from '../core/updates.js';
 import { setVolumes, unlockAudio } from '../core/audio.js';
@@ -109,10 +110,45 @@ export function createApp(els) {
      * @param {{region?:string, difficulty?:string, merchant?:string}} [pick]
      */
     newSeason({ region = 'desierto', difficulty = 'normal', merchant = 'aprendiz' } = {}) {
-      app.game = createSeason({ seed: freshSeed(), region, difficulty, merchant, upgrades: app.profile.upgrades });
+      app.start(createSeason({ seed: freshSeed(), region, difficulty, merchant, upgrades: app.profile.upgrades }), '¡Arranca la temporada! Mirá el mercado y comprá algo barato.');
+    },
+
+    /**
+     * Empieza el desafío de una fecha (mismo mapa para todos).
+     * @param {string} date AAAA-MM-DD
+     */
+    newDaily(date) {
+      app.start(createDaily(date), '¡Desafío del día! Todos juegan este mismo mapa.');
+    },
+
+    /** Empieza el modo libre: sin deuda ni límite de días. */
+    newFree() {
+      app.start(createSeason({ seed: freshSeed(), mode: 'libre' }), 'Modo libre: sin deuda ni apuro. Explorá y aprendé los precios.');
+    },
+
+    /**
+     * Pone en juego una partida nueva, la guarda y va a la ciudad.
+     * @param {object} game
+     * @param {string} message
+     */
+    start(game, message) {
+      app.game = game;
       saveSeason(app.game);
       app.go('city');
-      toast('¡Arranca la temporada! Mirá el mercado y comprá algo barato.');
+      toast(message);
+    },
+
+    /**
+     * Si hay una partida empezada, pregunta antes de reemplazarla.
+     * @param {() => void} then
+     */
+    confirmReplace(then) {
+      if (!app.game || app.game.state.over) return then();
+      openSheet((close) => h('div', { class: 'stack' },
+        h('h2', {}, '¿Empezar de nuevo?'),
+        h('p', { class: 'muted' }, 'Vas a perder la partida que tenés empezada.'),
+        h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: close }, 'No'),
+          h('button', { class: 'btn primary', 'data-testid': 'confirm-new', onclick: () => { close(); then(); } }, 'Sí, nueva'))), { label: 'Empezar de nuevo' });
     },
 
     /** Redibuja la pantalla actual. */

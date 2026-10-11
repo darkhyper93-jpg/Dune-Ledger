@@ -31,7 +31,8 @@ export function renderHud(el, game) {
   const ration = dailyRation(state, 'food');
   const due = nextDue(state);
   const morale = state.crew.length ? Math.round(state.crew.reduce((sum, m) => sum + m.morale, 0) / state.crew.length) : 0;
-  let dueLine = h('div', { class: 'hud-due' }, h('span', { class: 'hico' }, svgNode(iconSvg('debt'))), h('span', { class: 'grow' }, '¡Deuda saldada! Podés retirarte cuando quieras.'));
+  const calm = state.mode === 'libre' ? 'Modo libre: sin deuda ni apuro. Cerrá cuando quieras.' : '¡Deuda saldada! Podés retirarte cuando quieras.';
+  let dueLine = h('div', { class: 'hud-due', 'data-testid': 'hud-due' }, h('span', { class: 'hico' }, svgNode(iconSvg('debt'))), h('span', { class: 'grow' }, calm));
   if (due) {
     const left = due.day - state.day;
     const urgent = left <= 5 && state.gold < due.owed;
@@ -41,7 +42,7 @@ export function renderHud(el, game) {
       h('span', {}, left > 0 ? `faltan ${plural(left, 'día', 'días')}` : 'vence hoy'));
   }
   mount(el,
-    item('day', 'Día', `${state.day}/${RULES.seasonDays}`, false, 'hud-day'),
+    item('day', 'Día', state.mode === 'libre' ? String(state.day) : `${state.day}/${RULES.seasonDays}`, false, 'hud-day'),
     item('gold', 'Oro', fmt(state.gold), false, 'hud-gold'),
     item('cargo', 'Carga', `${cargoUsed(state)}/${capacity(state)}`, false, 'hud-cargo'),
     item('food', 'Comida', String(state.food), state.food < ration * 2, 'hud-food'),

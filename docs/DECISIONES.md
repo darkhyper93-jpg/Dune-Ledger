@@ -236,3 +236,22 @@ revisarlo más adelante.
   carga en el Desierto (se le agrega el jade vacío y se descarta deshacer).
 - **Montura en los textos**: donde decía "camellos" ahora dice la montura
   de la región ("caballos" en la Estepa).
+
+## Etapa 6 — Desafío diario y modo libre
+
+- **Fecha del desafío**: el día local del celular (AAAA-MM-DD). La semilla
+  es `diario-<fecha>`; siempre en el Desierto, en Normal, con el Aprendiz
+  y sin mejoras.
+- **Una partida oficial por día**: la primera que se termina es la que
+  cuenta (suma sellos y logros y queda como tu resultado del día). Se puede
+  volver a jugar, pero esas partidas son de práctica: no suman nada ni
+  cambian el resultado. Así no se pueden juntar sellos repitiendo un mapa
+  conocido.
+- **Código de puntaje**: `DL-<fecha>-<puntaje>-<3 letras de control>`. Un
+  puntaje negativo se muestra como 0. En el menú del desafío se puede
+  pegar el código de un amigo: dice si es válido y quién ganó ese día.
+- **Modo libre**: sin cuotas ni préstamos, sin límite de días (tope técnico
+  de 999) y con un botón para terminar cuando quieras. No suma sellos,
+  logros ni temporadas; lo visto sí entra al códice.
+- **Partidas guardadas**: el formato pasa a la versión 4 (con el modo);
+  las de las versiones 2 y 3 se migran solas (`js/game/migrate.js`).

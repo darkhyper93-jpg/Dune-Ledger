@@ -5,7 +5,7 @@
  */
 
 import { EVENTS, EVENTS_BY_ID } from '../data/events.js';
-import { RULES, getDifficulty } from '../data/rules.js';
+import { getDifficulty } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { cargoFree, provisionCap } from './caravan.js';
 import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
@@ -14,6 +14,7 @@ import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { fmt, plural } from '../core/text.js';
+import { lastDay } from './modes.js';
 
 /** Probabilidad base de evento por día de viaje (≈ uno cada 3 o 4 días). */
 export const EVENT_RATE = 0.33;
@@ -170,7 +171,7 @@ export function optionState(game, idx) {
   if (opt.requires && (p[opt.requires] === null || p[opt.requires] === undefined)) reason = 'No tenés qué ofrecer.';
   if (opt.role && !state.crew.some((m) => m.role === opt.role)) reason = 'No tenés a nadie para eso.';
   if (opt.space && getGood(p.good).weight * p.qty > cargoFree(state)) reason = 'No te entra en la carga.';
-  if (opt.spareDays && state.day + (state.trip.days - state.trip.done) + opt.spareDays > RULES.seasonDays) reason = 'No te da el tiempo.';
+  if (opt.spareDays && state.day + (state.trip.days - state.trip.done) + opt.spareDays > lastDay(state)) reason = 'No te da el tiempo.';
   let chance = null;
   if (opt.chance !== undefined) chance = typeof opt.chance === 'number' ? opt.chance : CHANCES[opt.chance](game);
   return { available: reason === null, reason, chance, label };

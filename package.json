@@ -1,6 +1,6 @@
 {
   "name": "dune-ledger",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Juego de comercio con caravanas por turnos para el celular (PWA).",
   "private": true,
   "type": "module",

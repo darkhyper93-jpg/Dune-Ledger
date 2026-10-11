@@ -11,6 +11,8 @@ import { RULES, DIFFICULTIES } from '../data/rules.js';
 import { ACTIVE_GOODS, isGoodId } from '../data/goods.js';
 import { generateMap } from './map-gen.js';
 import { STATE_VERSION } from './season.js';
+import { MODES, FREE_DAYS, lastDay } from './modes.js';
+import { migrate } from './migrate.js';
 import { LOG_LIMIT } from './knowledge.js';
 import { UNDO_LIMIT } from './actions.js';
 import { cargoUsed, capacity } from './caravan.js';
@@ -31,6 +33,8 @@ import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
+// Los demás topes de días usan FREE_DAYS (el modo libre no tiene límite);
+// el día actual se controla contra el último día del modo.
 
 /** Error de validación con un mensaje que dice qué campo falló. */
 class SaveError extends Error {}
@@ -91,7 +95,7 @@ function stats(v, map) {
   if (v.bestSale !== null) {
     const b = v.bestSale;
     need(isObj(b) && isGoodId(b.goodId) && Object.hasOwn(map.cityById, b.cityId), 'mejor venta');
-    bestSale = { goodId: b.goodId, qty: int(b.qty, 0, 1e6, 'mejor venta'), profit: num(b.profit, -1e7, 1e7, 'mejor venta'), cityId: b.cityId, day: int(b.day, 1, RULES.seasonDays, 'mejor venta') };
+    bestSale = { goodId: b.goodId, qty: int(b.qty, 0, 1e6, 'mejor venta'), profit: num(b.profit, -1e7, 1e7, 'mejor venta'), cityId: b.cityId, day: int(b.day, 1, FREE_DAYS, 'mejor venta') };
   }
   const routeKey = (k) => {
     const [a, b] = k.split('>');
@@ -141,24 +145,6 @@ function marketPart(v, map, cityId) {
 }
 
 /**
- * Pasa una partida de la versión 2 (antes de las regiones) a la 3: se
- * jugaba en el Desierto y no existía el jade. Lo de deshacer se descarta.
- * Copia sólo lo que cambia; el resto se valida igual que siempre.
- * @param {Record<string, any>} raw
- */
-function migrateV2(raw) {
-  const withJade = (row, value) => (isObj(row) ? { ...row, jade: value } : row);
-  const out = { ...raw, v: STATE_VERSION, region: 'desierto', undo: [] };
-  out.cargo = withJade(raw.cargo, 0);
-  out.costBasis = withJade(raw.costBasis, 0);
-  if (isObj(raw.stock)) out.stock = Object.fromEntries(Object.entries(raw.stock).map(([k, row]) => [k, withJade(row, RULES.market.stockNormal)]));
-  if (isObj(raw.prices)) {
-    out.prices = Object.fromEntries(Object.entries(raw.prices).map(([k, p]) => [k, isObj(p) ? { ...p, sell: withJade(p.sell, 0), buy: withJade(p.buy, 0) } : p]));
-  }
-  return out;
-}
-
-/**
  * Valida y limpia una partida. Devuelve el juego listo ({ map, state }).
  * @param {unknown} input objeto leído del almacenamiento
  * @returns {{ok:true, game:{map:object,state:object}} | {ok:false, error:string}}
@@ -166,8 +152,10 @@ function migrateV2(raw) {
 export function validateState(input) {
   try {
     need(isObj(input), 'no es un objeto');
-    const raw = input.v === 2 ? migrateV2(input) : input;
+    const raw = migrate(input);
     need(raw.v === STATE_VERSION, 'versión');
+    need(MODES.includes(raw.mode), 'modo');
+    need(raw.mode === 'diario' ? typeof raw.daily === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.daily) : raw.daily === null, 'fecha del desafío');
     const seed = str(raw.seed, 64, 'semilla');
     need(seed.length > 0, 'semilla vacía');
     need(typeof raw.difficulty === 'string' && Object.hasOwn(DIFFICULTIES, raw.difficulty), 'dificultad');
@@ -187,9 +175,11 @@ export function validateState(input) {
     const state = {
       v: STATE_VERSION,
       seed,
+      mode: raw.mode,
+      daily: raw.daily,
       region: raw.region,
       difficulty: raw.difficulty,
-      day: int(raw.day, 1, RULES.seasonDays, 'día'),
+      day: int(raw.day, 1, lastDay(raw), 'día'),
       rng: raw.rng.map((n) => int(n, 0, 4294967295, 'azar')),
       location: raw.location,
       lastFrom: raw.lastFrom,
@@ -207,11 +197,11 @@ export function validateState(input) {
       visited: record(raw.visited, cityOk, (x, w) => { need(x === true, w); return true; }, 'visitadas'),
       prices: record(raw.prices, cityOk, (p, w) => {
         need(isObj(p), w);
-        return { day: int(p.day, 1, RULES.seasonDays, w), sell: goodsRecord(p.sell, 0, 1e5, w), buy: goodsRecord(p.buy, 0, 1e5, w) };
+        return { day: int(p.day, 1, FREE_DAYS, w), sell: goodsRecord(p.sell, 0, 1e5, w), buy: goodsRecord(p.buy, 0, 1e5, w) };
       }, 'precios'),
       merchant: perks.merchant,
       upgrades: perks.upgrades,
-      debt: debtPart(raw.debt, raw.difficulty, perks),
+      debt: debtPart(raw.debt, raw.difficulty, perks, raw.mode),
       loan: int(raw.loan, 0, 1e6, 'préstamo'),
       deposit: int(raw.deposit, 0, 1e8, 'depósito'),
       rep: repPart(raw.rep),
@@ -236,11 +226,11 @@ export function validateState(input) {
   }
 }
 
-/** Valida la deuda contra las cuotas de la dificultad. */
-function debtPart(v, difficulty, perks) {
+/** Valida la deuda contra las cuotas de la dificultad (sin cuotas en el modo libre). */
+function debtPart(v, difficulty, perks, mode) {
   need(isObj(v) && Array.isArray(v.installments), 'deuda');
   const s = startingResources(perks);
-  const plan = debtPlan(difficulty, { mult: s.debtMult, delays: s.delays });
+  const plan = mode === 'libre' ? [] : debtPlan(difficulty, { mult: s.debtMult, delays: s.delays });
   need(v.installments.length === plan.length, 'cuotas');
   return {
     installments: v.installments.map((inst, i) => {
@@ -265,16 +255,16 @@ function newsPart(v) {
   need(isObj(v) && Array.isArray(v.items) && v.items.length <= 20, 'noticias');
   const zoneIds = ZONES.map((z) => z.id);
   return {
-    next: int(v.next, 1, RULES.seasonDays + 20, 'próxima noticia'),
+    next: int(v.next, 1, FREE_DAYS + 20, 'próxima noticia'),
     items: v.items.map((n) => {
       need(isObj(n) && typeof n.tpl === 'string' && Object.hasOwn(NEWS_BY_ID, n.tpl), 'noticia');
       need(Array.isArray(n.goods) && n.goods.length > 0 && n.goods.every((g) => ACTIVE_GOODS.includes(g)), 'bienes de la noticia');
       need(n.mult === 2 || n.mult === 0.5, 'efecto de la noticia');
       need((n.zone === null && Object.hasOwn(CITY_TYPES_BY_ID, n.cityType ?? '')) || (n.cityType === null && zoneIds.includes(n.zone)), 'alcance de la noticia');
       need(typeof n.real === 'boolean', 'noticia');
-      const rumorDay = int(n.rumorDay, 1, RULES.seasonDays, 'noticia');
-      const startDay = int(n.startDay, rumorDay, RULES.seasonDays + 10, 'noticia');
-      return { tpl: n.tpl, goods: n.goods.slice(), mult: n.mult, cityType: n.cityType, zone: n.zone, rumorDay, startDay, endDay: int(n.endDay, startDay, RULES.seasonDays + 30, 'noticia'), real: n.real };
+      const rumorDay = int(n.rumorDay, 1, FREE_DAYS, 'noticia');
+      const startDay = int(n.startDay, rumorDay, FREE_DAYS + 10, 'noticia');
+      return { tpl: n.tpl, goods: n.goods.slice(), mult: n.mult, cityType: n.cityType, zone: n.zone, rumorDay, startDay, endDay: int(n.endDay, startDay, FREE_DAYS + 30, 'noticia'), real: n.real };
     }),
   };
 }
@@ -303,7 +293,7 @@ function contract(k, map) {
   const cityOk = (id) => typeof id === 'string' && Object.hasOwn(map.cityById, id);
   need(isObj(k) && typeof k.id === 'string' && /^k\d{1,6}$/.test(k.id) && isGoodId(k.goodId) && cityOk(k.from) && cityOk(k.to) && k.from !== k.to, 'contrato');
   need(k.source === 'taberna' || k.source === 'gremio', 'contrato');
-  return { id: k.id, goodId: k.goodId, qty: int(k.qty, 1, 999, 'contrato'), from: k.from, to: k.to, deadline: int(k.deadline, 1, RULES.seasonDays, 'contrato'), reward: int(k.reward, 0, 1e6, 'contrato'), source: k.source };
+  return { id: k.id, goodId: k.goodId, qty: int(k.qty, 1, 999, 'contrato'), from: k.from, to: k.to, deadline: int(k.deadline, 1, FREE_DAYS, 'contrato'), reward: int(k.reward, 0, 1e6, 'contrato'), source: k.source };
 }
 
 /** Valida ofertas y contratos activos. */
@@ -312,7 +302,7 @@ function contractsPart(v, map) {
   return {
     offers: record(v.offers, (k) => Object.hasOwn(map.cityById, k), (o, w) => {
       need(isObj(o) && Array.isArray(o.list) && o.list.length <= 3, w);
-      return { day: int(o.day, 1, RULES.seasonDays, w), list: o.list.map((k) => contract(k, map)) };
+      return { day: int(o.day, 1, FREE_DAYS, w), list: o.list.map((k) => contract(k, map)) };
     }, 'ofertas'),
     active: v.active.map((k) => contract(k, map)),
     nextId: int(v.nextId, 1, 1e6, 'contratos'),
@@ -335,7 +325,7 @@ function hirePart(v, map) {
   return {
     offers: record(v.offers, (k) => Object.hasOwn(map.cityById, k), (o, w) => {
       need(isObj(o), w);
-      return { day: int(o.day, 1, RULES.seasonDays, w), list: crewList(o.list, 3, w) };
+      return { day: int(o.day, 1, FREE_DAYS, w), list: crewList(o.list, 3, w) };
     }, 'contrataciones'),
     nextId: int(v.nextId, 1, 1e6, 'contrataciones'),
   };
@@ -346,7 +336,7 @@ function logPart(v) {
   need(Array.isArray(v) && v.length <= LOG_LIMIT, 'diario');
   return v.map((e) => {
     need(isObj(e) && LOG_KINDS.includes(e.kind), 'entrada del diario');
-    return { day: int(e.day, 1, RULES.seasonDays, 'diario'), text: str(e.text, 300, 'diario'), kind: e.kind };
+    return { day: int(e.day, 1, FREE_DAYS, 'diario'), text: str(e.text, 300, 'diario'), kind: e.kind };
   });
 }
 
@@ -375,11 +365,12 @@ function overPart(v) {
     won: v.won,
     score: num(v.score, -1e8, 1e8, 'puntaje'),
     seals: int(v.seals, 0, 1e6, 'sellos'),
-    day: int(v.day, 1, RULES.seasonDays, 'final'),
+    day: int(v.day, 1, FREE_DAYS, 'final'),
     gold: int(v.gold, 0, 1e8, 'final'),
     owed: int(v.owed, 0, 1e8, 'final'),
     recorded: v.recorded === true,
     newAchievements: Array.isArray(v.newAchievements) ? v.newAchievements.filter((id) => typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS_BY_ID, id)) : [],
+    official: typeof v.official === 'boolean' ? v.official : null,
     unlocked: Array.isArray(v.unlocked) ? v.unlocked.filter((id) => id === 'pesadilla' || (typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id))) : [],
   };
 }

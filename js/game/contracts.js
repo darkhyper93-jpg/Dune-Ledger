@@ -14,6 +14,7 @@ import { addLog } from './knowledge.js';
 import { withRng } from './random.js';
 import { fmt } from '../core/text.js';
 import { upgradeValue, regionId } from './perks.js';
+import { lastDay } from './modes.js';
 
 /** Contratos activos como máximo. */
 export const MAX_ACTIVE = 3;
@@ -45,14 +46,14 @@ function makeOffer(game, city, days, rng, source, taken) {
   for (let tries = 0; tries < 20; tries++) {
     const goodId = rng.pick(goods);
     const dests = map.cities.filter((c) => c.id !== city.id && isTradedIn(goodId, c.type) && cityMod(c.type, goodId) >= 1
-      && days[c.id] <= 8 && state.day + days[c.id] + 2 <= RULES.seasonDays && !taken.has(`${goodId}>${c.id}`));
+      && days[c.id] <= 8 && state.day + days[c.id] + 2 <= lastDay(state) && !taken.has(`${goodId}>${c.id}`));
     if (!dests.length) continue;
     const dest = rng.pick(dests);
     const w = getGood(goodId).weight;
     const qty = w > 0 ? Math.max(3, Math.round(rng.range(12, 26) / w)) : rng.int(2, 4);
     const market = sellPriceAt(state.seed, dest, goodId, RULES.market.stockNormal) * qty;
     const bonus = source === 'gremio' ? 1.6 : rng.range(1.3, 1.45);
-    const deadline = Math.min(RULES.seasonDays, state.day + Math.ceil(days[dest.id] * 1.5) + rng.int(3, 6));
+    const deadline = Math.min(lastDay(state), state.day + Math.ceil(days[dest.id] * 1.5) + rng.int(3, 6));
     taken.add(`${goodId}>${dest.id}`);
     return { id: `k${state.contracts.nextId++}`, goodId, qty, from: city.id, to: dest.id, deadline: Math.max(deadline, state.day + days[dest.id] + 2), reward: Math.round((market * bonus + 15) * (1 + upgradeValue(state, 'contactos'))), source };
   }

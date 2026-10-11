@@ -14,8 +14,8 @@ import { withRng } from './random.js';
 import { plural } from '../core/text.js';
 import { refreshOffers } from './contracts.js';
 import { scoutLevel, refreshHires, crewArrive } from './crew.js';
-import { RULES } from '../data/rules.js';
 import { bump, see, notePeaks } from './stats.js';
+import { lastDay } from './modes.js';
 
 /** Probabilidad por día de que se rompa cada cerámica en la montaña. */
 export const MOUNTAIN_BREAK = 0.04;
@@ -40,7 +40,7 @@ export function startTrip(game, routeId) {
   state.undo = [];
   addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(days, 'día', 'días')}).`, 'travel');
   const sleeper = state.crew.find((m) => m.trait === 'dormilon');
-  if (sleeper && state.day + days + 1 <= RULES.seasonDays && withRng(state, (rng) => rng.chance(0.1))) {
+  if (sleeper && state.day + days + 1 <= lastDay(state) && withRng(state, (rng) => rng.chance(0.1))) {
     days += 1;
     state.trip.days = days;
     addLog(state, `${sleeper.name} se quedó dormido: salieron tarde y el viaje dura un día más.`, 'bad');

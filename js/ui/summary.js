@@ -12,6 +12,7 @@ import { REGIONS_BY_ID } from '../data/regions.js';
 import { DIFFICULTIES } from '../data/rules.js';
 import { regionSvg } from '../render/regions-art.js';
 import { svgNode } from '../render/shapes.js';
+import { dailyResultCard } from './modes.js';
 
 /** Textos de cómo terminó la temporada. */
 const REASONS = {
@@ -55,16 +56,21 @@ export function renderSummary(app) {
   const topRoute = routes[0];
   const routeName = (key) => key.split('>').map((id) => map.cityById[id].name).join(' → ');
 
+  const free = state.mode === 'libre';
+  const counts = !free && over.official !== false;
+  const title = free ? 'Fin del modo libre' : over.won ? '¡Temporada ganada!' : 'Temporada perdida';
+  const where = free ? 'Modo libre: no da sellos ni logros.' : `${REGIONS_BY_ID[state.region].name} · ${DIFFICULTIES[state.difficulty].name}`;
   return h('div', { class: 'stack' },
-    h('div', { class: `banner ${over.won ? 'win' : 'lose'}` },
-      h('h1', {}, over.won ? '¡Temporada ganada!' : 'Temporada perdida'),
-      h('p', { style: 'margin:6px 0 0' }, REASONS[over.reason]),
-      h('p', { class: 'small', style: 'margin:4px 0 0;opacity:.85' }, `${REGIONS_BY_ID[state.region].name} · ${DIFFICULTIES[state.difficulty].name}`)),
+    h('div', { class: `banner ${over.won || free ? 'win' : 'lose'}` },
+      h('h1', {}, title),
+      free ? null : h('p', { style: 'margin:6px 0 0' }, REASONS[over.reason]),
+      h('p', { class: 'small', style: 'margin:4px 0 0;opacity:.85' }, where)),
     h('div', { class: 'card stack center' },
       h('div', { class: 'muted' }, 'Puntaje'),
       h('div', { class: 'score', 'data-testid': 'final-score' }, fmt(over.score)),
-      h('div', {}, 'Ganaste ', h('b', { 'data-testid': 'final-seals' }, `${over.seals} sellos del Gremio`)),
-      h('div', { class: 'muted small' }, 'Puntaje = oro + valor de la carga − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
+      counts ? h('div', {}, 'Ganaste ', h('b', { 'data-testid': 'final-seals' }, `${over.seals} sellos del Gremio`)) : null,
+      h('div', { class: 'muted small' }, free ? 'Puntaje = oro + valor de la carga.' : 'Puntaje = oro + valor de la carga − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
+    state.mode === 'diario' ? dailyResultCard(app) : null,
     h('div', { class: 'card' }, h('dl', { class: 'kv' },
       h('dt', {}, 'Oro final'), h('dd', {}, fmt(over.gold)),
       h('dt', {}, 'Deuda sin pagar'), h('dd', { class: over.owed ? 'bad' : 'good' }, fmt(over.owed)),

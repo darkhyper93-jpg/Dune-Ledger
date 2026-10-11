@@ -4,6 +4,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { dailyDate, scoreCode } from '../../js/game/daily.js';
 
 /** Número que muestra un dato de la barra superior. */
 async function hudNumber(page, id) {
@@ -245,4 +246,34 @@ test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a c
   await expect(page.getByTestId('hud-camels')).toContainText('Caballos');
   await page.getByTestId('tab-provisiones').click();
   await expect(page.getByText('Cada caballo lleva 12 de carga')).toBeVisible();
+});
+
+test('desafío del día: mismo mapa para todos y comparar el código de un amigo', async ({ page }) => {
+  await page.getByTestId('daily').click();
+  const today = dailyDate();
+  await page.getByTestId('compare-input').fill(scoreCode(today, 1500));
+  await page.getByTestId('compare-check').click();
+  await expect(page.getByTestId('compare-result')).toContainText('Código válido: 1.500 puntos');
+  await page.getByTestId('compare-input').fill(scoreCode(today, 1500).replace('1500', '9500'));
+  await page.getByTestId('compare-check').click();
+  await expect(page.getByTestId('compare-result')).toContainText('modificado');
+  await page.getByTestId('daily-play').click();
+  const city = await page.getByTestId('city-name').innerText();
+  await expect(page.getByTestId('hud-day')).toContainText('1/60');
+  // Otro jugador (otro almacenamiento) arranca en la misma ciudad.
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByTestId('daily').click();
+  await page.getByTestId('daily-play').click();
+  await expect(page.getByTestId('city-name')).toHaveText(city);
+});
+
+test('modo libre: sin deuda, se termina cuando quieras y no da sellos', async ({ page }) => {
+  await page.getByTestId('free').click();
+  await expect(page.getByTestId('hud-due')).toContainText('Modo libre');
+  await expect(page.getByTestId('hud-day')).not.toContainText('/60');
+  await page.getByTestId('finish').click();
+  await page.getByTestId('finish-confirm').click();
+  await expect(page.getByText('Fin del modo libre')).toBeVisible();
+  await expect(page.getByTestId('final-seals')).toHaveCount(0);
 });

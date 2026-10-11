@@ -2,7 +2,7 @@
  * Menú principal, Ajustes y "Cómo se juega".
  */
 
-import { h, openSheet } from './dom.js';
+import { h } from './dom.js';
 import { svgNode } from '../render/shapes.js';
 import { sceneSvg } from '../render/scenes.js';
 import { VERSION } from '../core/version.js';
@@ -10,6 +10,7 @@ import { forceUpdate } from '../core/updates.js';
 import { setVolumes, playTap } from '../core/audio.js';
 import { fmt } from '../core/text.js';
 import { progressCodeCard } from './progress.js';
+import { openDailySheet } from './modes.js';
 
 /**
  * Menú principal.
@@ -22,15 +23,11 @@ export function renderMenu(app) {
     h('div', { class: 'cover' }, h('div', { class: 'scene' }, svgNode(sceneSvg('cover'))), h('h1', {}, 'Dune Ledger')),
     h('p', { class: 'tagline' }, 'Comprá barato, vendé caro y pagale al Gremio antes del día 60.'),
     h('div', { class: 'stack' },
-      canContinue ? h('button', { class: 'btn big primary', 'data-testid': 'continue', onclick: () => app.go('city') }, `Continuar (día ${game.state.day})`) : null,
-      h('button', { class: `btn big ${canContinue ? '' : 'primary'}`, 'data-testid': 'new-season', onclick: () => {
-        if (!canContinue) return app.go('choose');
-        openSheet((close) => h('div', { class: 'stack' },
-          h('h2', {}, '¿Empezar de nuevo?'),
-          h('p', { class: 'muted' }, 'Vas a perder la temporada que tenés empezada.'),
-          h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: close }, 'No'),
-            h('button', { class: 'btn primary', 'data-testid': 'confirm-new', onclick: () => { close(); app.go('choose'); } }, 'Sí, nueva'))), { label: 'Nueva temporada' });
-      } }, 'Nueva temporada'),
+      canContinue ? h('button', { class: 'btn big primary', 'data-testid': 'continue', onclick: () => app.go('city') }, `Continuar${game.state.mode === 'diario' ? ' el desafío' : game.state.mode === 'libre' ? ' el modo libre' : ''} (día ${game.state.day})`) : null,
+      h('button', { class: `btn big ${canContinue ? '' : 'primary'}`, 'data-testid': 'new-season', onclick: () => app.confirmReplace(() => app.go('choose')) }, 'Nueva temporada'),
+      h('div', { class: 'btn-row' },
+        h('button', { class: 'btn', 'data-testid': 'daily', onclick: () => openDailySheet(app) }, 'Desafío del día'),
+        h('button', { class: 'btn', 'data-testid': 'free', onclick: () => app.confirmReplace(() => app.newFree()) }, 'Modo libre')),
       h('button', { class: 'btn big', 'data-testid': 'shop', onclick: () => app.go('shop') }, `Gremio (${fmt(profile.seals)} sellos)`),
       h('button', { class: 'btn big', 'data-testid': 'records', onclick: () => app.go('records') }, 'Logros y códice'),
       h('button', { class: 'btn big', 'data-testid': 'help', onclick: () => app.go('help') }, 'Cómo se juega'),

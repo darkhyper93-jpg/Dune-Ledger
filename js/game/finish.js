@@ -6,6 +6,7 @@ import { getDifficulty } from '../data/rules.js';
 import { quote } from './market.js';
 import { totalOwed, settleInstallment, spendFunds } from './debt.js';
 import { addLog } from './knowledge.js';
+import { isFree } from './modes.js';
 
 /**
  * Valor de la carga si la vendieras toda acá, unidad por unidad.
@@ -43,7 +44,7 @@ export function sealsFor(score, difficulty) {
 /**
  * Cierra la temporada y calcula el resumen final.
  * @param {object} game
- * @param {'fin'|'retiro'|'deuda'} reason
+ * @param {'fin'|'retiro'|'deuda'} reason (en el modo libre, 'fin' o 'retiro')
  */
 export function finishSeason(game, reason) {
   const { state } = game;
@@ -67,12 +68,13 @@ export function finishSeason(game, reason) {
   }
   const owed = totalOwed(state.debt) + state.loan;
   const score = currentScore(game);
-  const won = !lostByDebt && owed === 0;
+  const free = isFree(state);
+  const won = !free && !lostByDebt && owed === 0;
   state.over = {
     reason: lostByDebt ? 'deuda' : reason,
     won,
     score,
-    seals: sealsFor(score, state.difficulty),
+    seals: free ? 0 : sealsFor(score, state.difficulty),
     day: state.day,
     gold: state.gold,
     owed,
@@ -80,9 +82,12 @@ export function finishSeason(game, reason) {
     recorded: false,
     /** Logros que se ganaron al cerrar (los completa recordSeason). */
     newAchievements: [],
+    /** En el desafío: si fue la primera partida del día (la que cuenta). */
+    official: null,
   };
   state.undo = [];
-  addLog(state, won ? '¡Pagaste toda la deuda! Temporada ganada.' : 'Terminó la temporada sin saldar la deuda.', won ? 'good' : 'bad');
+  if (free) addLog(state, `Terminó el modo libre con ${score} de puntaje.`, 'info');
+  else addLog(state, won ? '¡Pagaste toda la deuda! Temporada ganada.' : 'Terminó la temporada sin saldar la deuda.', won ? 'good' : 'bad');
   return state.over;
 }
 

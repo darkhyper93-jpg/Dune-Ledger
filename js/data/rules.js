@@ -33,7 +33,7 @@ export const RULES = {
     /** Parte de la distancia al stock normal que se recupera por día. */
     stockRecovery: 0.03,
     /** Multiplica el `stockStep` de cada bien: más alto, mercados más chicos. */
-    stockImpact: 1,
+    stockImpact: 1.2,
     /** Comprar cuesta este factor sobre el precio de venta. */
     buyMarkup: 1.1,
     modProduces: 0.6,

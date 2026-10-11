@@ -87,6 +87,20 @@ function makeNews(state, rng) {
 }
 
 /**
+ * Rumor extra que trae un charlatán (la mitad de las veces es falso).
+ * @param {object} game
+ */
+export function extraRumor(game) {
+  const { state } = game;
+  withRng(state, (rng) => {
+    const item = makeNews(state, rng);
+    item.real = rng.chance(0.5);
+    state.news.items.push(item);
+  });
+  state.news.items = state.news.items.slice(-20);
+}
+
+/**
  * Paso diario de las noticias: sale un rumor nuevo si toca, se confirman
  * o desmienten los que llegan a su fecha, y se olvidan las muy viejas.
  * @param {object} game

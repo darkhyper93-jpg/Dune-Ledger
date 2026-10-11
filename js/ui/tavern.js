@@ -11,6 +11,7 @@ import { rumorsAt, activeNews, newsText } from '../game/news.js';
 import { zoneName } from '../game/reputation.js';
 import { fmt, plural } from '../core/text.js';
 import { playCoins } from '../core/audio.js';
+import { renderHires } from './crew.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -79,7 +80,8 @@ export function renderTavern(app) {
       : h('p', { class: 'muted small', style: 'margin:0' }, 'Ninguna por ahora.'),
     h('h3', {}, 'Contratos'),
     h('p', { class: 'muted small', style: 'margin:0' }, 'Pagan más que el mercado, pero tienen fecha. Si no cumplís, baja tu reputación en esa zona.'),
-    offers.length ? offers.map((k) => contractCard(app, k, 'offer')) : h('p', { class: 'muted small' }, 'No hay encargos nuevos. Volvé en unos días.'));
+    offers.length ? offers.map((k) => contractCard(app, k, 'offer')) : h('p', { class: 'muted small' }, 'No hay encargos nuevos. Volvé en unos días.'),
+    renderHires(app));
 }
 
 /**

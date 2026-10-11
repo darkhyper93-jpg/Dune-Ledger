@@ -15,6 +15,7 @@ import { RULES } from '../data/rules.js';
 import { hashUnit } from '../core/rng.js';
 import { repBuyFactor } from './reputation.js';
 import { newsMult } from './news.js';
+import { tradeBonus } from './crew.js';
 
 const M = RULES.market;
 
@@ -83,9 +84,10 @@ export function rawSellPrice({ seed, city, goodId, stock, mult = 1 }) {
  * @param {string} goodId
  * @param {number} stock
  * @param {number} [mult=1] noticias de mercado
+ * @param {number} [factor=1] contable
  */
-export function sellPriceAt(seed, city, goodId, stock, mult = 1) {
-  return clampPrice(rawSellPrice({ seed, city, goodId, stock, mult }), getGood(goodId).base);
+export function sellPriceAt(seed, city, goodId, stock, mult = 1, factor = 1) {
+  return clampPrice(rawSellPrice({ seed, city, goodId, stock, mult }) * factor, getGood(goodId).base);
 }
 
 /**
@@ -103,12 +105,20 @@ export function buyPriceAt(seed, city, goodId, stock, factor = 1, mult = 1) {
 }
 
 /**
- * Factor de compra en una ciudad según la reputación de su zona.
+ * Factor de compra en una ciudad: reputación de su zona y contable.
  * @param {object} game
  * @param {string} cityId
  */
 export function buyFactor(game, cityId) {
-  return repBuyFactor(game.state.rep[game.map.cityById[cityId].zone]);
+  return repBuyFactor(game.state.rep[game.map.cityById[cityId].zone]) * (1 - tradeBonus(game.state));
+}
+
+/**
+ * Factor de venta: el contable vende un poco más caro.
+ * @param {object} game
+ */
+export function sellFactor(game) {
+  return 1 + tradeBonus(game.state);
 }
 
 /**
@@ -136,6 +146,7 @@ export function quote(game, cityId, goodId, qty, side) {
   const good = getGood(goodId);
   let stock = state.stock[cityId][goodId];
   const fresh = side === 'sell' && good.decay ? (state.freshness[goodId] ?? 1) : 1;
+  const sf = sellFactor(game);
   const factor = buyFactor(game, cityId);
   const mult = newsMult(game, cityId, goodId);
   const prices = [];
@@ -144,7 +155,7 @@ export function quote(game, cityId, goodId, qty, side) {
       prices.push(buyPriceAt(state.seed, city, goodId, stock, factor, mult));
       stock = moveStock(stock, -good.stockStep * M.stockImpact);
     } else {
-      prices.push(Math.max(0.1, roundPrice(sellPriceAt(state.seed, city, goodId, stock, mult) * fresh)));
+      prices.push(Math.max(0.1, roundPrice(sellPriceAt(state.seed, city, goodId, stock, mult, sf) * fresh)));
       stock = moveStock(stock, good.stockStep * M.stockImpact);
     }
   }
@@ -168,7 +179,7 @@ export function cityPrices(game, cityId, goodIds) {
   for (const id of goodIds) {
     const stock = state.stock[cityId][id];
     const mult = newsMult(game, cityId, id);
-    sell[id] = sellPriceAt(state.seed, city, id, stock, mult);
+    sell[id] = sellPriceAt(state.seed, city, id, stock, mult, sellFactor(game));
     buy[id] = buyPriceAt(state.seed, city, id, stock, factor, mult);
   }
   return { sell, buy };

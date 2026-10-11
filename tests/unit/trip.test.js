@@ -73,7 +73,7 @@ test('la misma semilla y las mismas elecciones dan el mismo viaje', () => {
   assert.deepEqual(run(), run());
 });
 
-test('sale un evento cada 3 o 4 días, más en rutas peligrosas', () => {
+test('en rutas seguras casi no pasa nada; en las peligrosas, un evento cada 2 días', () => {
   const perDay = { bajo: [0, 0], alto: [0, 0] };
   for (let i = 0; i < 300; i++) {
     const g = game(`frecuencia-${i}`);
@@ -85,6 +85,6 @@ test('sale un evento cada 3 o 4 días, más en rutas peligrosas', () => {
   }
   const low = perDay.bajo[0] / perDay.bajo[1];
   const high = perDay.alto[0] / perDay.alto[1];
-  assert.ok(low > 0.1 && low < 0.3, `bajo ${low}`);
-  assert.ok(high > 0.28 && high < 0.5, `alto ${high}`);
+  assert.ok(low > 0.07 && low < 0.22, `bajo ${low}`);
+  assert.ok(high > 0.45 && high < 0.75, `alto ${high}`);
 });

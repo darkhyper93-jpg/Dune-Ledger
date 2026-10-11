@@ -10,7 +10,7 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 2 — Eventos y contratos** (ver `docs/DISENO.md`, "Plan por etapas").
+**Etapa 3 — Caravana viva** (ver `docs/DISENO.md`, "Plan por etapas").
 
 - Etapa 1: mapa generado por semilla con niebla, mercado con stock, viajes
   con comida y agua, deuda con cuotas, cobrador y embargo, fin de temporada
@@ -18,6 +18,9 @@ con un solo dedo. También se juega en la compu.
 - Etapa 2: los 12 bienes, eventos de viaje desde datos (`js/data/events.js`)
   con probabilidades visibles, contratos de taberna y Gremio, reputación por
   zona, rumores y noticias de mercado. Los bots viven los eventos.
+- Etapa 3: salud de cada camello, tripulación con roles (guía, guardia,
+  cocinero, contable, curandero, explorador), rasgos, sueldos semanales,
+  moral, deserciones y niveles. Bot prudente.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

@@ -18,6 +18,8 @@ import { ZONES, REP_LIMIT } from './reputation.js';
 import { NEWS_BY_ID } from '../data/news.js';
 import { EVENTS_BY_ID } from '../data/events.js';
 import { CITY_TYPES_BY_ID } from '../data/cities.js';
+import { ROLES, TRAITS } from '../data/crew.js';
+import { MAX_CREW } from './crew.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
@@ -96,6 +98,12 @@ function stats(v, map) {
   };
 }
 
+/** Salud de los camellos: un número de 1 a 100 por camello. */
+function camelHpPart(v, camels) {
+  need(Array.isArray(v) && v.length === camels, 'salud de los camellos');
+  return v.map((hp) => int(hp, 1, 100, 'salud de un camello'));
+}
+
 /** Valida lo que cambia una acción de mercado (también lo usa el deshacer). */
 function marketPart(v, map, cityId) {
   return {
@@ -103,6 +111,7 @@ function marketPart(v, map, cityId) {
     food: int(v.food, 0, RULES.provisionCap, 'comida'),
     water: int(v.water, 0, RULES.provisionCap, 'agua'),
     camels: int(v.camels, 1, RULES.maxCamels, 'camellos'),
+    camelHp: camelHpPart(v.camelHp, v.camels),
     cargo: goodsRecord(v.cargo, 0, 1e5, 'carga', true),
     freshness: record(v.freshness, (k) => k === 'datiles', (x, w) => num(x, 0, 1, w), 'frescura'),
     costBasis: goodsRecord(v.costBasis, 0, 1e5, 'costo'),
@@ -143,6 +152,7 @@ export function validateState(raw) {
       food: base.food,
       water: base.water,
       camels: base.camels,
+      camelHp: base.camelHp,
       cargo: base.cargo,
       freshness: base.freshness,
       costBasis: base.costBasis,
@@ -159,6 +169,8 @@ export function validateState(raw) {
       news: newsPart(raw.news),
       trip: tripPart(raw.trip, map, raw.location),
       contracts: contractsPart(raw.contracts, map),
+      crew: crewList(raw.crew, MAX_CREW, 'tripulación'),
+      hire: hirePart(raw.hire, map),
       log: logPart(raw.log),
       undo: undoPart(raw.undo, map, raw.location),
       stats: base.stats,
@@ -256,6 +268,28 @@ function contractsPart(v, map) {
   };
 }
 
+/** Valida una lista de tripulantes (o candidatos). */
+function crewList(v, max, what) {
+  need(Array.isArray(v) && v.length <= max, what);
+  return v.map((m) => {
+    need(isObj(m) && typeof m.id === 'string' && /^t\d{1,6}$/.test(m.id), what);
+    need(Object.hasOwn(ROLES, m.role) && Object.hasOwn(TRAITS, m.trait), what);
+    return { id: m.id, name: str(m.name, 30, what), role: m.role, trait: m.trait, xp: int(m.xp, 0, 999, what), morale: int(m.morale, 0, 100, what), wage: int(m.wage, 1, 1000, what) };
+  });
+}
+
+/** Valida los candidatos de cada taberna. */
+function hirePart(v, map) {
+  need(isObj(v), 'contrataciones');
+  return {
+    offers: record(v.offers, (k) => Object.hasOwn(map.cityById, k), (o, w) => {
+      need(isObj(o), w);
+      return { day: int(o.day, 1, RULES.seasonDays, w), list: crewList(o.list, 3, w) };
+    }, 'contrataciones'),
+    nextId: int(v.nextId, 1, 1e6, 'contrataciones'),
+  };
+}
+
 /** Valida el diario. */
 function logPart(v) {
   need(Array.isArray(v) && v.length <= LOG_LIMIT, 'diario');
@@ -273,7 +307,7 @@ function undoPart(v, map, cityId) {
     const p = marketPart(snap, map, cityId);
     return {
       label: str(snap.label, 80, 'deshacer'),
-      gold: p.gold, food: p.food, water: p.water, camels: p.camels,
+      gold: p.gold, food: p.food, water: p.water, camels: p.camels, camelHp: p.camelHp,
       cargo: p.cargo, freshness: p.freshness, costBasis: p.costBasis,
       stock: p.stockRow, stats: p.stats,
       logLen: int(snap.logLen, 0, LOG_LIMIT, 'deshacer'),

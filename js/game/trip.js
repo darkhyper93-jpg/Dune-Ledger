@@ -13,6 +13,8 @@ import { addLog, discoverAround, snapshotPrices } from './knowledge.js';
 import { withRng } from './random.js';
 import { plural } from '../core/text.js';
 import { refreshOffers } from './contracts.js';
+import { guideDays, scoutLevel, refreshHires, crewArrive } from './crew.js';
+import { RULES } from '../data/rules.js';
 
 /** Probabilidad por día de que se rompa cada cerámica en la montaña. */
 export const MOUNTAIN_BREAK = 0.04;
@@ -30,9 +32,16 @@ export function startTrip(game, routeId) {
   const route = map.routeById[routeId];
   const from = state.location;
   const to = otherEnd(route, from);
-  state.trip = { routeId, from, to, done: 0, days: route.days, rolled: 0, event: null };
+  let days = guideDays(state, route.days);
+  state.trip = { routeId, from, to, done: 0, days, rolled: 0, event: null };
   state.undo = [];
-  addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(route.days, 'día', 'días')}).`, 'travel');
+  addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(days, 'día', 'días')}).`, 'travel');
+  const sleeper = state.crew.find((m) => m.trait === 'dormilon');
+  if (sleeper && state.day + days + 1 <= RULES.seasonDays && withRng(state, (rng) => rng.chance(0.1))) {
+    days += 1;
+    state.trip.days = days;
+    addLog(state, `${sleeper.name} se quedó dormido: salieron tarde y el viaje dura un día más.`, 'bad');
+  }
   return { ok: true };
 }
 
@@ -60,7 +69,12 @@ function arrive(game) {
   state.stats.trips += 1;
   discoverAround(game, to);
   snapshotPrices(game, to);
+  if (scoutLevel(state)) {
+    for (const r of map.routesByCity[to]) snapshotPrices(game, otherEnd(r, to));
+  }
   refreshOffers(game, to);
+  refreshHires(game, to);
+  crewArrive(game);
   addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');
   return { status: 'arrived', from, to, days };
 }
@@ -88,8 +102,8 @@ export function advanceTrip(game) {
         }
       }
     }
-    const use = { food: dailyRation(state), water: waterUntil(state, route.terrain, k) - waterUntil(state, route.terrain, k - 1) };
-    const res = passDay(game, use, 'en el camino');
+    const use = { food: dailyRation(state, 'food'), water: waterUntil(state, route.terrain, k) - waterUntil(state, route.terrain, k - 1) };
+    const res = passDay(game, use, 'en el camino', { terrain: route.terrain });
     trip.done = k;
     if (route.terrain === 'montana' && state.cargo.ceramica > 0) withRng(state, (rng) => mountainBreaks(state, rng));
     if (res.lost) {

@@ -8,14 +8,16 @@ import { EVENTS, EVENTS_BY_ID } from '../data/events.js';
 import { RULES } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { cargoFree } from './caravan.js';
+import { tireCamels } from './camels.js';
+import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { fmt } from '../core/text.js';
 
 /** Probabilidad base de evento por día de viaje (≈ uno cada 3 o 4 días). */
-export const EVENT_RATE = 0.28;
+export const EVENT_RATE = 0.33;
 /** Cómo cambia esa probabilidad según el peligro de la ruta. */
-export const DANGER_RATE = { bajo: 0.7, medio: 1, alto: 1.35 };
+export const DANGER_RATE = { bajo: 0.4, medio: 1.2, alto: 1.8 };
 /** Reputación desde la que los bandidos de la zona a veces te dejan pasar. */
 export const FRIENDLY_REP = 40;
 
@@ -32,12 +34,16 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
  * Reciben el juego (con un viaje en curso) y devuelven un número de 0 a 1.
  */
 export const CHANCES = {
-  /** Pelear: mejor con armas en la carga (los guardias llegan en la etapa 3). */
-  fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08), 0.05, 0.95),
+  /** Pelear: mejor con armas en la carga y con guardias (y valientes). */
+  fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08) + fightBonus(game.state), 0.05, 0.95),
   /** Huir: más difícil en rutas de peligro alto. */
   flee: (game) => (tripInfo(game).route.danger === 'alto' ? 0.45 : 0.6),
   /** Cavar en un oasis seco. */
   dig: () => 0.55,
+  /** Seguir en una tormenta de arena. */
+  storm: (game) => clamp(0.6 + stormBonus(game.state), 0, 0.95),
+  /** Mandar al explorador a las ruinas. */
+  scout: (game) => (scoutLevel(game.state) >= 3 ? 0.95 : 0.85),
   /** Sobornar: depende de tu reputación en la zona. */
   bribe: (game) => clamp(0.7 + game.state.rep[tripInfo(game).zone] / 400, 0.3, 0.95),
 };
@@ -96,7 +102,7 @@ export function rollEvent(game, route, rng) {
     if (e.when?.terrain && !e.when.terrain.includes(route.terrain)) continue;
     let w = e.weight;
     if (e.id === 'bandidos') {
-      if (route.danger === 'alto') w *= 2;
+      if (route.danger === 'alto') w *= 3;
       w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos
     }
     weights[e.id] = w;
@@ -124,6 +130,7 @@ export function optionState(game, idx) {
   if (opt.cost?.gold !== undefined && state.gold < val(opt.cost.gold, p)) reason = 'No te alcanza el oro.';
   if (opt.needs && (state.food < (opt.needs.food ?? 0) || state.water < (opt.needs.water ?? 0))) reason = 'No te alcanzan las provisiones.';
   if (opt.requires && (p[opt.requires] === null || p[opt.requires] === undefined)) reason = 'No tenés qué ofrecer.';
+  if (opt.role && !state.crew.some((m) => m.role === opt.role)) reason = 'No tenés a nadie para eso.';
   if (opt.space && getGood(p.good).weight * p.qty > cargoFree(state)) reason = 'No te entra en la carga.';
   if (opt.spareDays && state.day + (state.trip.days - state.trip.done) + opt.spareDays > RULES.seasonDays) reason = 'No te da el tiempo.';
   let chance = null;
@@ -184,6 +191,14 @@ function applyEffects(game, eff, params, rng) {
     } else {
       lines.push('Revisaron todo: estaba en orden');
     }
+  }
+  if (eff.camelHp) {
+    lines.push(`Los camellos pierden ${Math.abs(eff.camelHp)} de salud`);
+    lines.push(...tireCamels(state, -eff.camelHp));
+  }
+  if (eff.morale && state.crew.length) {
+    changeMorale(state, eff.morale);
+    lines.push(`${eff.morale > 0 ? '+' : '−'}${Math.abs(eff.morale)} de moral`);
   }
   if (eff.delay) {
     state.trip.days += eff.delay;

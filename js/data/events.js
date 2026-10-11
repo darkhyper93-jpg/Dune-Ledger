@@ -12,6 +12,7 @@
  * - cost: { gold } que hace falta tener; needs: { food, water } idem.
  * - spareDays: días extra que la opción puede sumar sin pasar del día 60.
  * - requires: clave de setup que tiene que existir (no ser null).
+ * - role: rol de tripulante que hace falta (por ejemplo, 'explorador').
  * - effects: lo que pasa sí o sí. Con `chance` (número o nombre de una
  *   función de js/game/events.js) hay `win` y `lose`.
  *
@@ -19,7 +20,8 @@
  * pierde), breakFragile (parte de la cerámica que se rompe), delay (días),
  * rep (reputación en la zona de destino), loot [mín, máx] de oro,
  * give { good, qty }, takeAll (bien que se pierde entero), inspect
- * (revisión: multa y confiscación de armas) y reveal (dato de precios).
+ * (revisión: multa y confiscación de armas), reveal (dato de precios) y
+ * camelHp (salud que pierde cada camello) y morale (moral de la tripulación).
  */
 
 import { getGood } from './goods.js';
@@ -37,12 +39,12 @@ export const EVENTS = [
     when: { danger: ['medio', 'alto'] },
     weight: 3,
     text: 'Una banda de bandidos te corta el paso. El jefe pide $toll de oro para dejarte seguir.',
-    setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.1 + 10)) }),
+    setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
     options: [
       { label: 'Pagar $toll de oro', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
-      { label: 'Pelear', chance: 'fight', win: { rep: 5, loot: [20, 70] }, lose: { cargoPct: 0.3 },
+      { label: 'Pelear', chance: 'fight', win: { rep: 5, loot: [20, 70], morale: 10 }, lose: { cargoPct: 0.4, camelHp: -15, morale: -10 },
         winText: '¡Los espantaste! Hasta dejaron algo de oro.', loseText: 'Te ganaron: se llevaron parte de la carga.' },
-      { label: 'Huir', chance: 'flee', win: {}, lose: { cargoPct: 0.15 },
+      { label: 'Huir', chance: 'flee', win: {}, lose: { cargoPct: 0.25 },
         winText: 'Te escapaste por un atajo.', loseText: 'Te alcanzaron y tuviste que soltar carga.' },
     ],
   },
@@ -59,7 +61,7 @@ export const EVENTS = [
     text: 'Se levanta una tormenta de arena. No se ve nada.',
     options: [
       { label: 'Esperar a que pase (+1 día)', spareDays: 1, effects: { delay: 1 } },
-      { label: 'Seguir igual', chance: 0.6, win: {}, lose: { cargoPct: 0.15, breakFragile: 0.5 },
+      { label: 'Seguir igual', chance: 'storm', win: {}, lose: { cargoPct: 0.15, breakFragile: 0.5, camelHp: -20 },
         winText: 'Pasaste la tormenta sin problemas.', loseText: 'El viento se llevó parte de la carga.' },
     ],
   },
@@ -69,7 +71,7 @@ export const EVENTS = [
     weight: 1,
     text: 'Llegás a un oasis que estaba en el mapa… pero está seco.',
     options: [
-      { label: 'Cavar buscando agua', spareDays: 1, chance: 'dig', win: { water: 15 }, lose: { delay: 1 },
+      { label: 'Cavar buscando agua', spareDays: 1, chance: 'dig', win: { water: 15, camelHp: -5 }, lose: { delay: 1, camelHp: -10 },
         winText: '¡Encontraste agua! Llenaste los odres.', loseText: 'Cavaste todo el día y nada.' },
       { label: 'Seguir con lo que hay', effects: {} },
     ],
@@ -101,6 +103,8 @@ export const EVENTS = [
     options: [
       { label: 'Explorar', spareDays: 1, chance: 0.5, win: { loot: [40, 140] }, lose: { cargoPct: 0.1, delay: 1 },
         winText: '¡Encontraste monedas antiguas!', loseText: 'Era una trampa: perdiste un día y algo de carga.' },
+      { label: 'Mandar al explorador', role: 'explorador', chance: 'scout', win: { loot: [40, 140] }, lose: {},
+        winText: 'Tu explorador volvió con monedas antiguas.', loseText: 'Tu explorador no encontró nada, pero volvió sano.' },
       { label: 'Ignorarlas', effects: {} },
     ],
   },

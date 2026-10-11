@@ -210,7 +210,7 @@ function tryMap(rng, seed) {
   const names = rng.shuffle(CITY_NAMES);
   const cities = points.map((p, i) => ({ id: `c${i}`, name: names[i], type: types[i], x: p.x, y: p.y, guildPost: false, zone: '' }));
   assignZones(cities);
-  const dangerW = { bajo: 4, medio: 3, alto: 2 };
+  const dangerW = { bajo: 7, medio: 2, alto: 1.5 };
   const routes = edges.map(([a, b], i) => {
     const len = dist(points[a], points[b]);
     return {

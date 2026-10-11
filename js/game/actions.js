@@ -45,6 +45,7 @@ function pushUndo(state, label) {
     food: state.food,
     water: state.water,
     camels: state.camels,
+    camelHp: state.camelHp.slice(),
     cargo: { ...state.cargo },
     freshness: { ...state.freshness },
     costBasis: { ...state.costBasis },
@@ -64,7 +65,7 @@ export function undo(game) {
   const snap = state.undo.pop();
   if (!snap || state.over || state.trip) return fail('No hay nada para deshacer.');
   Object.assign(state, {
-    gold: snap.gold, food: snap.food, water: snap.water, camels: snap.camels,
+    gold: snap.gold, food: snap.food, water: snap.water, camels: snap.camels, camelHp: snap.camelHp,
     cargo: snap.cargo, freshness: snap.freshness, costBasis: snap.costBasis, stats: snap.stats,
   });
   state.stock[state.location] = snap.stock;
@@ -199,12 +200,13 @@ export function buyCamel(game) {
   pushUndo(state, 'compra de camello');
   state.gold -= price;
   state.camels += 1;
+  state.camelHp.push(100);
   addLog(state, `Compraste un camello por ${price}.`, 'trade');
   return { ok: true, total: price };
 }
 
 /**
- * Vende un camello en la ciudad actual (si la carga entra en los demás).
+ * Vende el camello más cansado (si la carga entra en los demás).
  * @param {object} game
  */
 export function sellCamel(game) {
@@ -212,10 +214,12 @@ export function sellCamel(game) {
   if (state.over || state.trip) return fail('Ahora no se puede.');
   if (state.camels <= 1) return fail('Necesitás al menos un camello.');
   if (cargoFree(state) < RULES.camelCapacity) return fail('Primero liberá carga: no entraría en los demás camellos.');
-  const price = camelResale(state.seed, map.cityById[state.location]);
+  const weakest = state.camelHp.indexOf(Math.min(...state.camelHp));
+  const price = camelResale(state.seed, map.cityById[state.location], state.camelHp[weakest]);
   pushUndo(state, 'venta de camello');
   state.gold += price;
   state.camels -= 1;
+  state.camelHp.splice(weakest, 1);
   addLog(state, `Vendiste un camello por ${price}.`, 'trade');
   return { ok: true, total: price };
 }

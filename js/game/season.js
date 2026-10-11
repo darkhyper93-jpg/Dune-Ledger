@@ -21,6 +21,7 @@ import { optionState } from './events.js';
 import { initialRep } from './reputation.js';
 import { initialNews } from './news.js';
 import { initialContracts, refreshOffers } from './contracts.js';
+import { initialHire, refreshHires } from './crew.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -55,6 +56,7 @@ export function createSeason({ seed, difficulty = 'normal', events = true, event
     food: s.food,
     water: s.water,
     camels: s.camels,
+    camelHp: Array.from({ length: s.camels }, () => 100),
     cargo: Object.fromEntries(ACTIVE_GOODS.map((id) => [id, 0])),
     freshness: { datiles: 1 },
     costBasis: Object.fromEntries(ACTIVE_GOODS.map((id) => [id, 0])),
@@ -68,6 +70,8 @@ export function createSeason({ seed, difficulty = 'normal', events = true, event
     news,
     trip: null,
     contracts: initialContracts(),
+    crew: [],
+    hire: initialHire(),
     log: [],
     undo: [],
     stats: { trips: 0, bestSale: null, routeProfit: {}, earned: 0, spent: 0 },
@@ -77,6 +81,7 @@ export function createSeason({ seed, difficulty = 'normal', events = true, event
   discoverAround(game, start.id);
   snapshotPrices(game, start.id);
   refreshOffers(game, start.id);
+  refreshHires(game, start.id);
   addLog(state, `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');
   return game;
 }
@@ -134,8 +139,7 @@ export function rest(game) {
   if (state.over) return { ok: false, error: 'La temporada terminó.' };
   if (state.trip) return { ok: false, error: 'Estás viajando.' };
   if (state.day >= RULES.seasonDays) return { ok: false, error: 'Es el último día de la temporada.' };
-  const ration = dailyRation(state);
-  const res = passDay(game, { food: ration, water: ration }, `en ${map.cityById[state.location].name}`);
+  const res = passDay(game, { food: dailyRation(state, 'food'), water: dailyRation(state) }, `en ${map.cityById[state.location].name}`, { rest: true });
   state.undo = [];
   if (res.lost) {
     finishSeason(game, 'deuda');

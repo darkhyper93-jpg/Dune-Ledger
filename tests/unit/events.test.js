@@ -45,7 +45,8 @@ test('ningún efecto de ningún evento deja valores imposibles (recorre todos)',
   for (let i = 0; i < 25; i++) {
     for (const def of EVENTS) {
       for (let k = 0; k < def.options.length; k++) {
-        const g = testGame({ gold: i * 37 % 400, food: i % 7, water: (i * 3) % 9, camels: 1 + (i % 3) });
+        const camels = 1 + (i % 3);
+        const g = testGame({ gold: i * 37 % 400, food: i % 7, water: (i * 3) % 9, camels, camelHp: Array.from({ length: camels }, (_, c) => 5 + ((i + c) * 23) % 96) });
         g.state.cargo.te = i % 5;
         g.state.cargo.ceramica = i % 4;
         g.state.cargo.armas = i % 2;
@@ -119,4 +120,19 @@ test('el control descubre armas y las confisca', () => {
   resolveOption(g, 0, new Rng('x'));
   assert.equal(g.state.cargo.armas, 0);
   assert.ok(g.state.gold < 500);
+});
+
+test('seguir en la tormenta y perder cansa a los camellos', () => {
+  const g = testGame();
+  onTrip(g);
+  g.state.trip.event = createEvent(g, 'tormenta', new Rng('x'));
+  // Buscamos una semilla en la que "Seguir igual" salga mal.
+  for (let i = 0; i < 50; i++) {
+    const rng = new Rng(`tormenta-${i}`);
+    if (rng.next() >= 0.6) {
+      resolveOption(g, 1, new Rng(`tormenta-${i}`));
+      break;
+    }
+  }
+  assert.ok(g.state.camelHp.every((hp) => hp < 100));
 });

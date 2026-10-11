@@ -1,5 +1,6 @@
 /**
- * Pantallas Caravana (camellos, carga, deuda) y Diario (lo que pasó cada día).
+ * Pantallas Caravana (camellos, tripulación, carga, contratos, reputación)
+ * y Diario (lo que pasó cada día).
  */
 
 import { h } from './dom.js';
@@ -11,6 +12,7 @@ import { totalOwed } from '../game/debt.js';
 import { fmt, plural } from '../core/text.js';
 import { ZONES } from '../game/reputation.js';
 import { contractCard } from './tavern.js';
+import { renderCamels, renderCrew } from './crew.js';
 
 /**
  * Pantalla de la caravana.
@@ -18,7 +20,8 @@ import { contractCard } from './tavern.js';
  */
 export function renderCaravan(app) {
   const { state } = app.game;
-  const ration = dailyRation(state);
+  const ration = dailyRation(state, 'food');
+  const water = dailyRation(state);
   const cargo = ACTIVE_GOODS.filter((id) => state.cargo[id] > 0);
   return h('div', { class: 'stack' },
     h('h1', {}, 'Tu caravana'),
@@ -26,11 +29,14 @@ export function renderCaravan(app) {
       h('dl', { class: 'kv' },
         h('dt', {}, 'Camellos'), h('dd', {}, `${state.camels} (lleva ${RULES.camelCapacity} c/u)`),
         h('dt', {}, 'Carga'), h('dd', {}, `${cargoUsed(state)} de ${capacity(state)}`),
-        h('dt', {}, 'Gasto por día'), h('dd', {}, `${ration} de comida y ${ration} de agua`),
+        h('dt', {}, 'Gasto por día'), h('dd', {}, `${ration} de comida y ${water} de agua`),
         h('dt', {}, 'Comida alcanza'), h('dd', {}, plural(Math.floor(state.food / ration), 'día', 'días')),
-        h('dt', {}, 'Agua alcanza'), h('dd', {}, `${plural(Math.floor(state.water / ration), 'día', 'días')} (en piedra)`),
+        h('dt', {}, 'Agua alcanza'), h('dd', {}, `${plural(Math.floor(state.water / water), 'día', 'días')} (en piedra)`),
         h('dt', {}, 'Deuda que queda'), h('dd', {}, fmt(totalOwed(state.debt))),
         h('dt', {}, 'Faltas con el Gremio'), h('dd', { class: state.debt.strikes ? 'bad' : '' }, `${state.debt.strikes} de ${RULES.debt.maxStrikes}`))),
+    renderCamels(app),
+    h('h2', {}, 'Tripulación'),
+    renderCrew(app),
     h('h2', {}, 'Carga'),
     cargo.length
       ? h('div', { class: 'card' }, h('dl', { class: 'kv' }, cargo.map((id) => {
@@ -46,7 +52,7 @@ export function renderCaravan(app) {
     h('h2', {}, 'Reputación'),
     h('div', { class: 'card stack' }, ZONES.map((z) => repRow(z, state.rep[z.id])),
       h('p', { class: 'muted small', style: 'margin:0' }, 'Con buena reputación comprás más barato y los bandidos de la zona a veces te dejan pasar. Con mala, todo cuesta más.')),
-    h('p', { class: 'muted small' }, 'Tripulación, salud de los camellos y moral llegan en la etapa 3.'));
+  );
 }
 
 /**

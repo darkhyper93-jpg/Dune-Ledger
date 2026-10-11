@@ -6,6 +6,7 @@
 import { createSeason, travel } from '../../js/game/season.js';
 import { buy, sell, maxBuy } from '../../js/game/actions.js';
 import { quote } from '../../js/game/market.js';
+import { provisionPrices } from '../../js/game/caravan.js';
 import { ACTIVE_GOODS, getGood, isTradedIn } from '../../js/data/goods.js';
 import { buyPriceAt, sellPriceAt } from '../../js/game/market.js';
 
@@ -47,7 +48,8 @@ function bestQty(game, loop, max) {
 }
 
 /**
- * Repite el bucle `times` veces y devuelve la ganancia de cada viaje (proporción).
+ * Repite el bucle `times` veces y devuelve la ganancia neta de cada viaje
+ * (proporción sobre lo invertido, descontando comida y agua de ida y vuelta).
  * @param {string} seed
  * @param {number} times
  * @param {number} camels tamaño de la caravana
@@ -57,13 +59,18 @@ export function runLoop(seed, times = 10, camels = 5) {
   const game = createSeason({ seed, events: false });
   const { state } = game;
   const loop = bestLoop(game);
-  Object.assign(state, { location: loop.from, camels, gold: 100000, food: 200, water: 200 });
+  Object.assign(state, { location: loop.from, camels, camelHp: Array(camels).fill(100), gold: 100000, food: 200, water: 200 });
+  const prov = provisionPrices(game.map.cityById[loop.from]);
   state.debt.installments.forEach((i) => { i.paid = i.amount; });
+  // Sin noticias de mercado: sólo cuenta cómo se agota el stock.
+  state.news = { next: 999, items: [] };
   const profits = [];
   for (let k = 0; k < times; k++) {
     state.day = 2; // que la temporada no termine durante la prueba
+    state.news.next = 999;
     state.food = 200;
     state.water = 200;
+    state.camelHp = Array(camels).fill(100);
     const qty = bestQty(game, loop, maxBuy(game, loop.goodId));
     if (qty === 0) {
       profits.push(0);
@@ -74,8 +81,10 @@ export function runLoop(seed, times = 10, camels = 5) {
     const cost = buy(game, loop.goodId, qty).total;
     travel(game, loop.route.id);
     const income = sell(game, loop.goodId, qty).total;
-    profits.push((income - cost) / cost);
     travel(game, loop.route.id);
+    // La ganancia del viaje descuenta la comida y el agua de ida y vuelta.
+    const supplies = (200 - state.food) * prov.food + (200 - state.water) * prov.water;
+    profits.push((income - cost - supplies) / cost);
   }
   return { loop, profits };
 }

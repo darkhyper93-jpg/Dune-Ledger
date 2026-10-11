@@ -1,6 +1,6 @@
 /**
- * Barra fija de arriba: día, oro, carga, comida, agua, camellos y la
- * próxima cuota del Gremio. Lo que está por faltar se pinta en rojo.
+ * Barra fija de arriba: día, oro, carga, comida, agua, camellos (con su
+ * salud), moral de la tripulación y la próxima cuota del Gremio. Lo que está por faltar se pinta en rojo.
  */
 
 import { h, mount } from './dom.js';
@@ -8,6 +8,7 @@ import { RULES } from '../data/rules.js';
 import { cargoUsed, capacity } from '../game/caravan.js';
 import { nextDue } from '../game/season.js';
 import { dailyRation } from '../game/travel.js';
+import { avgHealth } from '../game/camels.js';
 import { fmt, plural } from '../core/text.js';
 
 /**
@@ -24,8 +25,9 @@ function item(label, value, warn = false, testId = null) {
  */
 export function renderHud(el, game) {
   const { state } = game;
-  const ration = dailyRation(state);
+  const ration = dailyRation(state, 'food');
   const due = nextDue(state);
+  const morale = state.crew.length ? Math.round(state.crew.reduce((sum, m) => sum + m.morale, 0) / state.crew.length) : 0;
   let dueLine = h('div', { class: 'hud-due' }, h('span', {}, '¡Deuda saldada! Podés retirarte cuando quieras.'));
   if (due) {
     const left = due.day - state.day;
@@ -40,6 +42,7 @@ export function renderHud(el, game) {
     item('Carga', `${cargoUsed(state)}/${capacity(state)}`, false, 'hud-cargo'),
     item('Comida', String(state.food), state.food < ration * 2, 'hud-food'),
     item('Agua', String(state.water), state.water < ration * 2, 'hud-water'),
-    item('Camellos', String(state.camels), false, 'hud-camels'),
+    item('Camellos', `${state.camels} · ${avgHealth(state)}%`, avgHealth(state) < 30, 'hud-camels'),
+    state.crew.length ? item('Moral', String(morale), morale < 35, 'hud-morale') : null,
     dueLine);
 }

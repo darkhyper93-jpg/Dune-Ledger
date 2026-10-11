@@ -117,3 +117,41 @@ revisarlo más adelante.
   hacia ciudades vecinas) paga la deuda en ~72% de las temporadas.
 - Las partidas guardadas de la etapa 1 no se cargan en la etapa 2 (cambió el
   formato); hay que empezar una temporada nueva.
+
+## Etapa 3 — Caravana viva
+
+- **Salud de los camellos**: −3 por día de viaje (×1,6 en montaña, ×0,8 por
+  el río), −15 extra por día sin agua y −5 sin comida; +25 por día de
+  descanso (×2 con curandero, ×2,5 en nivel 3). A 0 el camello muere y se deja
+  la carga que no entra (primero lo más barato por lugar). El último camello
+  nunca muere. Al vender, se va el más cansado y vale menos.
+- **Hambre y sed** cambian respecto de la etapa 1: sin agua los camellos
+  sufren y se deja un 10% de la carga por día; sin comida baja la moral de la
+  tripulación (−15 por día) y los camellos se cansan un poco.
+- **Tripulación**: hasta 5. Se contrata en la taberna (2 o 3 candidatos que
+  se renuevan cada 7 días) pagando la primera semana; después, sueldo cada 7
+  días (si no alcanza, −20 de moral). Comen y toman agua como todos.
+- **Roles** (nivel 1 → nivel 3): guía −1 día por ruta y +15% → +25% en
+  tormentas; guardia +15% → +20% en peleas; cocinero −25% → −40% de comida;
+  contable 5% → 8% en compras y ventas; curandero ×2 → ×2,5 al descansar;
+  explorador trae los precios de las vecinas al llegar y puede explorar ruinas
+  (85% → 95%, sin riesgo).
+- **Niveles**: nivel 2 a los 8 días de viaje, nivel 3 a los 20. Si hay dos
+  del mismo rol cuenta el mejor, salvo los guardias, que se suman.
+- **Rasgos**: valiente (+5% en peleas, 5% de chance de pagar 15 de multa al
+  llegar); codicioso (cobra 50% más y con moral < 30 roba un 5% del oro el día
+  de pago); charlatán (un rumor extra por semana, mitad falsos); dormilón (10%
+  de chance de salir un día tarde); leal (nunca se va).
+- **Moral**: +5 por día de descanso, +10 al ganar una pelea, −10 al perderla.
+  Con menos de 25, la persona se va al llegar a una ciudad (salvo los leales).
+- **Balance**: para que jugar seguro "funcione pero gane menos", las rutas
+  peligrosas tienen mucho más riesgo: probabilidad de evento por día 33% ×
+  (0,4 bajo, 1,2 medio, 1,8 alto), bandidos el triple en peligro alto, peaje
+  del 15% del valor de la carga y pelea perdida −40% de carga. Hay más rutas de
+  peligro bajo (mitad o más) y el mercado es un poco más chico (stock ×1,2 por
+  unidad). El contador cobra 22 por semana.
+  Resultado (300 temporadas): codicioso ~74%, prudente ~46%, aleatorio 0%;
+  con 2 guardias se pierde la pelea un 25% de las veces.
+- **Ruta en bucle**: la ganancia por viaje ahora descuenta la comida y el agua
+  de ida y vuelta (un viaje cuesta provisiones) y se mide sin noticias de
+  mercado, que son externas al bucle.

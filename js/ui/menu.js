@@ -84,6 +84,7 @@ export function renderHelp(app) {
       p('Antes de viajar mirá cuánta comida y agua hace falta. Sin provisiones vas a dejar carga en el camino.'),
       p('Pagá en la Capital o en un Puesto del Gremio (banderita). Si una cuota vence sin pagar, el cobrador te cobra 15% extra o te embarga la carga.'),
       p('En el camino pasan cosas: bandidos, tormentas, mercaderes nómadas… Cada opción muestra su probabilidad de salir bien. Las rutas de peligro alto tienen más sorpresas.'),
+      p('Los camellos se cansan viajando y se recuperan descansando. En la Taberna podés contratar tripulación: cada rol ayuda en algo, pero cobran sueldo cada 7 días y, si la moral baja mucho, se van.'),
       p('En la Taberna hay rumores (¡algunos falsos!) y contratos que pagan bien si llegás a tiempo. Cumplir sube tu reputación en esa zona; fallar la baja.'),
       p('Al final, tu puntaje es el oro más la carga menos lo que debas. Con él ganás Sellos del Gremio.')),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));

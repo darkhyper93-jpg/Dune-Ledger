@@ -171,3 +171,15 @@ test('contratos de la taberna y eventos que se retoman al recargar', async ({ pa
   await page.getByTestId('event-continue').click();
   await finishTrip(page);
 });
+
+test('caravana viva: contratar tripulación y ver la salud de los camellos', async ({ page }) => {
+  await page.getByTestId('new-season').click();
+  await page.getByTestId('tab-taberna').click();
+  const hireBtn = page.locator('[data-testid^=hire-t]').first();
+  await hireBtn.click();
+  await expect(page.getByTestId('hud-morale')).toBeVisible();
+  await page.getByTestId('nav-caravan').click();
+  await expect(page.getByTestId('crew')).toBeVisible();
+  await expect(page.getByTestId('camels')).toContainText('Camello 2');
+  await expect(page.getByTestId('hud-camels')).toContainText('100%');
+});

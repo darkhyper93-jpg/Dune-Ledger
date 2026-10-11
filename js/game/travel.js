@@ -3,7 +3,8 @@
  *
  * Por cada día de viaje se gasta 1 de comida y 1 de agua por cada 2 seres
  * (personas + camellos), redondeando hacia arriba; el terreno multiplica
- * el agua. Si falta comida o agua, cada día se abandona un 10% de la carga.
+ * el agua. Sin agua, los camellos sufren mucho y se deja un 10% de la carga
+ * por día; sin comida, la tripulación pierde moral y los camellos se cansan.
  * El recorrido día por día (con eventos) está en trip.js.
  */
 
@@ -13,26 +14,32 @@ import { getGood } from '../data/goods.js';
 import { recoverStock } from './market.js';
 import { settleInstallment } from './debt.js';
 import { addLog } from './knowledge.js';
-import { tickNews } from './news.js';
+import { tickNews, extraRumor } from './news.js';
+import { crewDay, foodFactor, guideDays, healMult } from './crew.js';
 import { tickContracts } from './contracts.js';
+import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels.js';
 
-/** Parte de la carga que se pierde por cada día sin comida o sin agua. */
+/** Parte de la carga que se pierde por cada día sin agua. */
 export const SHORTAGE_LOSS = 0.1;
+/** Salud que pierde cada camello por día sin comida. */
+export const HUNGER_HP = 5;
 
 /**
- * Cuántos seres comen y toman agua: personas más camellos.
+ * Cuántos seres comen y toman agua: vos, la tripulación y los camellos.
  * @param {object} state
  */
 export function mouths(state) {
-  return RULES.people + state.camels;
+  return RULES.people + state.crew.length + state.camels;
 }
 
 /**
- * Raciones de comida (y de agua base) por día.
+ * Raciones por día: 1 cada 2 seres; la comida, menos si hay cocinero.
  * @param {object} state
+ * @param {'food'|'water'} [kind='water']
  */
-export function dailyRation(state) {
-  return Math.ceil(mouths(state) / 2);
+export function dailyRation(state, kind = 'water') {
+  const base = Math.ceil(mouths(state) / 2);
+  return kind === 'food' ? Math.ceil(base * foodFactor(state)) : base;
 }
 
 /**
@@ -52,9 +59,10 @@ export function waterUntil(state, terrain, k) {
  * @returns {{days:number,food:number,water:number,enoughFood:boolean,enoughWater:boolean}}
  */
 export function tripNeeds(state, route) {
-  const food = route.days * dailyRation(state);
-  const water = waterUntil(state, route.terrain, route.days);
-  return { days: route.days, food, water, enoughFood: state.food >= food, enoughWater: state.water >= water };
+  const days = guideDays(state, route.days);
+  const food = days * dailyRation(state, 'food');
+  const water = waterUntil(state, route.terrain, days);
+  return { days, food, water, enoughFood: state.food >= food, enoughWater: state.water >= water };
 }
 
 /**
@@ -71,7 +79,7 @@ export function canTravel(game, routeId) {
   if (!route || (route.a !== state.location && route.b !== state.location)) {
     return { ok: false, error: 'No hay ruta directa a esa ciudad.' };
   }
-  if (state.day + route.days > RULES.seasonDays) {
+  if (state.day + guideDays(state, route.days) > RULES.seasonDays) {
     return { ok: false, error: `No llegás antes del día ${RULES.seasonDays}.` };
   }
   return { ok: true };
@@ -98,22 +106,31 @@ function loseCargo(state, part) {
  * @param {object} game
  * @param {{food:number,water:number}} use lo que se gasta ese día
  * @param {string} where texto para el diario ("en el camino", "en Kharsa")
+ * @param {{terrain?:string, rest?:boolean}} [mode] día de viaje (cansa a los
+ *   camellos según el terreno) o de descanso (los recupera)
  * @returns {{lost:boolean}} lost: la temporada terminó por la deuda
  */
-export function passDay(game, use, where) {
+export function passDay(game, use, where, mode = {}) {
   const { state } = game;
   const hungry = state.food < use.food;
   const thirsty = state.water < use.water;
   state.food = Math.max(0, state.food - use.food);
   state.water = Math.max(0, state.water - use.water);
   state.day += 1;
-  if (hungry || thirsty) {
+  if (thirsty) {
     const lost = loseCargo(state, SHORTAGE_LOSS);
-    const what = hungry && thirsty ? 'comida ni agua' : hungry ? 'comida' : 'agua';
-    addLog(state, `Sin ${what} ${where}: dejaste ${lost} unidades de carga.`, 'bad');
+    addLog(state, `Sin agua ${where}: los camellos sufren y dejaste ${lost} unidades de carga.`, 'bad');
   }
+  if (hungry) addLog(state, `Sin comida ${where}: la caravana pasa hambre.`, 'bad');
+  if (mode.terrain || thirsty || hungry) {
+    const fatigue = (mode.terrain ? dayFatigue(mode.terrain) : 0) + (thirsty ? THIRST_HP : 0) + (hungry ? HUNGER_HP : 0);
+    for (const line of tireCamels(state, fatigue)) addLog(state, `${line}.`, 'bad');
+  }
+  if (mode.rest && !thirsty && !hungry) healCamels(state, Math.round(REST_HP * healMult(state)));
+  const crew = crewDay(game, { travel: !!mode.terrain, rest: !!mode.rest, hungry, thirsty });
   recoverStock(state.stock);
   tickNews(game);
+  if (crew.extraRumor) extraRumor(game);
   tickContracts(game);
   for (const id of Object.keys(state.freshness)) {
     const good = getGood(id);

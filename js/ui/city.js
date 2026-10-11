@@ -93,7 +93,7 @@ function confirmFinish(app) {
  */
 function provisionCard(app, kind, label, price) {
   const { state } = app.game;
-  const ration = dailyRation(state);
+  const ration = dailyRation(state, kind);
   const have = state[kind];
   const buyDays = (days) => {
     const qty = Math.min(days * ration, RULES.provisionCap - have);
@@ -123,9 +123,9 @@ function renderProvisions(app) {
   const p = provisionPrices(city);
   const price = camelPrice(state.seed, city);
   const resale = camelResale(state.seed, city);
-  const ration = dailyRation(state);
+  const ration = dailyRation(state, 'food');
   return h('div', { class: 'stack' },
-    h('p', { class: 'muted small', style: 'margin:0' }, 'Por día de viaje se gasta 1 de comida y 1 de agua cada 2 (vos y tus camellos). La arena gasta más agua; el río, casi nada.'),
+    h('p', { class: 'muted small', style: 'margin:0' }, 'Por día de viaje se gasta 1 de comida y 1 de agua cada 2 (vos, la tripulación y los camellos). La arena gasta más agua; el río, casi nada.'),
     provisionCard(app, 'food', 'Comida', p.food),
     provisionCard(app, 'water', 'Agua', p.water),
     h('div', { class: 'card stack' },
@@ -142,7 +142,7 @@ function renderProvisions(app) {
         } }, `Vender (${fmt(resale)})`))),
     h('div', { class: 'card stack' },
       h('h3', {}, 'Descansar'),
-      h('div', { class: 'small' }, `Pasás un día en ${city.name} y los mercados se recuperan un poco. Gastás ${ration} de comida y ${ration} de agua.`),
+      h('div', { class: 'small' }, `Pasás un día en ${city.name}: los camellos recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),
       h('button', { class: 'btn', 'data-testid': 'rest', disabled: state.day >= RULES.seasonDays, onclick: () => {
         app.act((g) => rest(g));
         if (app.game.state.over) app.go('summary');

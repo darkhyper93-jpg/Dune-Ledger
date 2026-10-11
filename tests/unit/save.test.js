@@ -23,6 +23,15 @@ test('guardar y cargar devuelve la misma partida', () => {
   assert.deepEqual(loaded.map.cities, g.map.cities);
 });
 
+test('se guarda la tripulación', () => {
+  const g = testGame({ gold: 1000 });
+  g.state.crew.push({ id: 't9', name: 'Amira', role: 'guardia', trait: 'valiente', xp: 9, morale: 55, wage: 12 });
+  const res = validateState(clone(g.state));
+  assert.ok(res.ok, res.error);
+  assert.deepEqual(res.game.state.crew, g.state.crew);
+  assert.deepEqual(res.game.state.hire, g.state.hire);
+});
+
 test('se guardan las noticias en curso', () => {
   const g = testGame();
   g.state.news.items.push({ tpl: 'sequia', goods: ['datiles'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: false });
@@ -79,6 +88,13 @@ test('se rechazan valores fuera de rango o ids que no existen', () => {
     (s) => { s.rep.oeste = 1; },
     (s) => { delete s.rep.sur; },
     (s) => { s.news.next = -3; },
+    (s) => { s.camelHp = [100]; },
+    (s) => { s.crew = [{ id: 't1', name: 'X', role: 'mago', trait: 'leal', xp: 0, morale: 70, wage: 12 }]; },
+    (s) => { s.crew = [{ id: 't1', name: 'X', role: 'guia', trait: 'leal', xp: 0, morale: 170, wage: 12 }]; },
+    (s) => { s.crew = Array.from({ length: 6 }, (_, i) => ({ id: `t${i}`, name: 'X', role: 'guia', trait: 'leal', xp: 0, morale: 70, wage: 12 })); },
+    (s) => { s.hire.nextId = 0; },
+    (s) => { s.camelHp = [100, 0]; },
+    (s) => { s.camelHp = [100, 150]; },
     (s) => { s.news.items = [{ tpl: 'sequia', goods: ['oro'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
     (s) => { s.news.items = [{ tpl: 'sequia', goods: ['datiles'], mult: 3, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },
     (s) => { s.news.items = [{ tpl: 'sequia', goods: ['datiles'], mult: 2, cityType: null, zone: 'oeste', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },

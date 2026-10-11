@@ -5,6 +5,8 @@
  * que la caravana sabe (precios vistos, ciudades descubiertas), y viven
  * los mismos viajes, cuotas y embargos.
  *  - greedy (codicioso): siempre va por el negocio de más ganancia por día que conoce.
+ *  - prudent (prudente): como el codicioso, pero sólo por rutas de peligro bajo
+ *    y con provisiones de sobra.
  *  - random (aleatorio): compra y viaja al azar, pero carga las provisiones del viaje.
  */
 
@@ -21,56 +23,11 @@ import { cargoFree, camelPrice, provisionPrices } from '../../js/game/caravan.js
 import { canPayHere, nextInstallment, owedOn, totalOwed } from '../../js/game/debt.js';
 import { otherEnd } from '../../js/game/map-gen.js';
 import { optionState } from '../../js/game/events.js';
-import { EVENTS_BY_ID } from '../../js/data/events.js';
+import { bestOption } from './bot-choices.js';
+import { avgHealth } from '../../js/game/camels.js';
+import { hiresHere, hire } from '../../js/game/crew.js';
 
-/** Valor de la carga a precio base. */
-function cargoBase(state, goodId = null) {
-  let v = 0;
-  for (const [id, q] of Object.entries(state.cargo)) if (!goodId || id === goodId) v += q * getGood(id).base;
-  return v;
-}
-
-/**
- * Valor en oro (aproximado) de un conjunto de efectos de evento.
- */
-function effectValue(state, eff, params) {
-  const num = (v) => (typeof v === 'string' ? (v.startsWith('-$') ? -params[v.slice(2)] : params[v.slice(1)]) : v);
-  let v = 0;
-  if (eff.gold) v += num(eff.gold);
-  if (eff.loot) v += (eff.loot[0] + eff.loot[1]) / 2;
-  v += ((eff.food ?? 0) + (eff.water ?? 0)) * 2;
-  if (eff.cargoPct) v -= cargoBase(state) * eff.cargoPct;
-  if (eff.breakFragile) v -= cargoBase(state, 'ceramica') * eff.breakFragile;
-  if (eff.delay) v -= 25 * eff.delay;
-  if (eff.rep) v += 3 * eff.rep;
-  if (eff.give) v += getGood(num(eff.give.good)).base * num(eff.give.qty);
-  if (eff.takeAll) v -= cargoBase(state, num(eff.takeAll));
-  if (eff.inspect && state.cargo.armas > 0) v -= cargoBase(state, 'armas') + (params.fine ?? 30);
-  return v;
-}
-
-/**
- * Elige la opción de un evento con mejor valor esperado (como un jugador
- * que hace la cuenta con las probabilidades que muestra la carta).
- */
-export function bestOption(game) {
-  const ev = game.state.trip.event;
-  const def = EVENTS_BY_ID[ev.id];
-  let best = -1;
-  let bestV = -Infinity;
-  def.options.forEach((opt, i) => {
-    const st = optionState(game, i);
-    if (!st.available) return;
-    const v = st.chance === null
-      ? effectValue(game.state, opt.effects, ev.params)
-      : st.chance * effectValue(game.state, opt.win, ev.params) + (1 - st.chance) * effectValue(game.state, opt.lose, ev.params);
-    if (v > bestV) {
-      bestV = v;
-      best = i;
-    }
-  });
-  return best;
-}
+export { bestOption };
 
 /**
  * Vende toda la carga en la ciudad actual.
@@ -195,11 +152,36 @@ function reserveFor(game, arrivalDay) {
   return arrivalDay > inst.day ? Math.ceil(owedOn(inst) * (1 + RULES.debt.collectorFee)) : 0;
 }
 
+/** Cómo juega cada bot "pensante". */
+export const PROFILES = {
+  /** Codicioso: cualquier ruta, provisiones justas, descansa poco. */
+  greedy: { maxDanger: 2, extraDays: 1, restBelow: 35, hire: ['contable'] },
+  /** Prudente: sólo rutas de peligro bajo, provisiones de sobra, camellos descansados. */
+  prudent: { maxDanger: 0, extraDays: 2, restBelow: 40, hire: ['guardia'] },
+};
+
+const DANGER_LEVEL = { bajo: 0, medio: 1, alto: 2 };
+
 /**
- * Un turno del bot codicioso en la ciudad actual: vende, paga, mejora la
- * caravana, elige el mejor negocio conocido y viaja.
+ * Contrata a alguien con el rol buscado si sobra el oro.
  */
-function greedyTurn(game) {
+function maybeHire(game, roles) {
+  const { state } = game;
+  if (state.crew.length >= roles.length || state.gold < 500) return;
+  for (const c of hiresHere(game)) {
+    if (roles.includes(c.role) && !state.crew.some((m) => m.role === c.role) && c.trait !== 'codicioso') {
+      hire(game, c.id);
+      return;
+    }
+  }
+}
+
+/**
+ * Un turno del bot codicioso (o prudente, según el perfil) en la ciudad
+ * actual: vende, paga, mejora la caravana, elige el mejor negocio conocido
+ * entre las rutas que acepta y viaja.
+ */
+function greedyTurn(game, profile = PROFILES.greedy) {
   const { state, map } = game;
   for (const k of state.contracts.active.slice()) if (k.to === state.location) deliverContract(game, k.id);
   sellAll(game);
@@ -213,10 +195,20 @@ function greedyTurn(game) {
   const cp = camelPrice(state.seed, here);
   if (state.camels < RULES.maxCamels && state.day < 42 && state.gold > cp + 250 + debtLeft * 0.25) buyCamel(game);
 
+  maybeHire(game, profile.hire);
+  if (avgHealth(state) < profile.restBelow && state.day < RULES.seasonDays - 2) {
+    const ration = { days: 1, terrain: 'piedra' };
+    stockUp(game, ration, 0);
+    if (rest(game).ok) return;
+  }
+
   const bonus = handleContracts(game);
+  const usable = map.routesByCity[state.location].filter((r) => canTravel(game, r.id).ok);
+  const minDanger = Math.min(...usable.map((r) => DANGER_LEVEL[r.danger]));
+  const allowed = Math.max(profile.maxDanger, minDanger);
   let best = null;
-  for (const route of map.routesByCity[state.location]) {
-    if (!canTravel(game, route.id).ok) continue;
+  for (const route of usable) {
+    if (DANGER_LEVEL[route.danger] > allowed) continue;
     const dest = otherEnd(route, state.location);
     const budget = state.gold - provisionCost(game, route) - reserveFor(game, state.day + route.days);
     const plan = planCargo(game, dest, Math.max(0, budget));
@@ -225,7 +217,7 @@ function greedyTurn(game) {
     if (!best || value > best.value) best = { route, plan, value };
   }
   if (!best) return finishOrRest(game);
-  if (!stockUp(game, best.route)) return finishOrRest(game);
+  if (!stockUp(game, best.route, profile.extraDays)) return finishOrRest(game);
   for (const [id, qty] of Object.entries(best.plan.buys)) {
     if (qty > 0) {
       const n = Math.min(qty, maxBuy(game, id));
@@ -268,7 +260,7 @@ function randomTurn(game, rng) {
 
 /**
  * Juega una temporada completa con un bot.
- * @param {'greedy'|'random'} kind
+ * @param {'greedy'|'prudent'|'random'} kind
  * @param {string} seed
  * @param {{difficulty?:string, onTurn?:Function}} [opts] onTurn se llama después de cada turno
  * @returns {{won:boolean, score:number, game:object}}
@@ -277,8 +269,8 @@ export function playSeason(kind, seed, opts = {}) {
   const game = createSeason({ seed, difficulty: opts.difficulty ?? 'normal' });
   const rng = new Rng(`bot:${kind}:${seed}`);
   for (let turn = 0; turn < 500 && !game.state.over; turn++) {
-    if (kind === 'greedy') greedyTurn(game);
-    else randomTurn(game, rng);
+    if (kind === 'random') randomTurn(game, rng);
+    else greedyTurn(game, PROFILES[kind]);
     if (opts.onTurn) opts.onTurn(game);
   }
   if (!game.state.over) finishSeason(game, 'fin');
@@ -287,7 +279,7 @@ export function playSeason(kind, seed, opts = {}) {
 
 /**
  * Juega muchas temporadas y devuelve la tasa de victorias y estadísticas.
- * @param {'greedy'|'random'} kind
+ * @param {'greedy'|'prudent'|'random'} kind
  * @param {number} n
  * @param {string} [prefix='sim']
  */

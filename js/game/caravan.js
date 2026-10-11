@@ -44,12 +44,13 @@ export function camelPrice(seed, city) {
 }
 
 /**
- * Lo que te dan por vender un camello en esa ciudad.
+ * Lo que te dan por vender un camello en esa ciudad (menos si está cansado).
  * @param {string} seed
  * @param {{id:string,type:string}} city
+ * @param {number} [hp=100] salud del camello
  */
-export function camelResale(seed, city) {
-  return Math.floor(camelPrice(seed, city) * RULES.camelResale);
+export function camelResale(seed, city, hp = 100) {
+  return Math.floor(camelPrice(seed, city) * RULES.camelResale * (0.4 + 0.6 * hp / 100));
 }
 
 /**

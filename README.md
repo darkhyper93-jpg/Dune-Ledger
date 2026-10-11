@@ -1,0 +1,62 @@
+# Dune Ledger
+
+Juego de comercio con caravanas para el celular. Guiás una caravana por el
+desierto: comprás barato en un pueblo, vendés caro en otro y tenés 60 días
+para pagarle tu deuda al Gremio de Mercaderes. Todo es por turnos: gana el que
+mejor piensa.
+
+Es una página web instalable (PWA) que funciona sin internet, en vertical y
+con un solo dedo. También se juega en la compu.
+
+## Estado
+
+**Etapa 1 — El núcleo** (ver `docs/DISENO.md`, "Plan por etapas"): mapa
+generado por semilla con niebla, 8 bienes, mercado con stock, viajes con
+comida y agua, deuda con cuotas, cobrador y embargo, fin de temporada con
+puntaje y sellos. Bots codicioso y aleatorio para medir el balance.
+
+Las decisiones tomadas donde el diseño dejaba algo abierto están en
+`docs/DECISIONES.md`.
+
+## Cómo correrlo
+
+Necesitás Node 20 o más nuevo.
+
+```sh
+npm install
+npm run build     # arma el sitio en _site/ (con el service worker)
+npm run serve     # http://localhost:4173
+```
+
+## Pruebas
+
+```sh
+npm run lint      # ESLint
+npm test          # unitarias (node:test)
+npm run test:sim  # métricas de balance con bots (cientos de temporadas)
+npm run test:e2e  # navegador con Playwright (Android, iPhone y WebKit)
+npm run balance   # informe rápido de balance: npm run balance -- 500
+```
+
+En local, si sólo tenés Chromium: `npx playwright test --project=android`.
+
+## Estructura
+
+```
+index.html  manifest.webmanifest
+css/        estilos (paleta arena / terracota / turquesa, modo noche)
+fonts/      letras alojadas en el sitio (Rubik y Fraunces, licencia OFL)
+icons/      íconos de la app
+js/
+  main.js   entrada en el navegador
+  core/     azar con semilla, guardado, sonido, actualizaciones, textos
+  data/     contenido: bienes, ciudades, rutas, reglas y dificultades
+  game/     la simulación (no toca el DOM: corre igual en Node)
+  render/   dibujo del mapa en canvas y siluetas
+  ui/       pantallas: menú, ciudad, mercado, mapa, caravana, resumen
+scripts/    build del sitio, service worker, servidor local, íconos, balance
+tests/      unit/ (lógica), sim/ (bots y balance), e2e/ (navegador)
+```
+
+La integración continua (`.github/workflows/ci.yml`) corre lint, pruebas
+unitarias, bots y navegador, y sólo si todo pasa publica en GitHub Pages.

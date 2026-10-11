@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dune Ledger</title>
+  <meta name="description" content="Guiá una caravana por el desierto: comprá barato, vendé caro y pagale tu deuda al Gremio en 60 días.">
+  <meta name="theme-color" content="#f4e9d8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1a2e" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preload" href="fonts/rubik-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div id="app">
+    <header id="hud" class="hud" hidden></header>
+    <main id="screen" class="screen" tabindex="-1"></main>
+    <nav id="nav" class="nav" hidden aria-label="Secciones"></nav>
+  </div>
+  <div id="sheet-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">Dune Ledger necesita JavaScript para funcionar.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

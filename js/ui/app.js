@@ -14,6 +14,8 @@ import { renderTravel } from './travel.js';
 import { renderCaravan, renderJournal } from './caravan.js';
 import { renderSummary } from './summary.js';
 import { renderMenu, renderSettings, renderHelp } from './menu.js';
+import { renderChoose, renderShop, renderRecords } from './progress.js';
+import { mergeSeen } from '../game/profile.js';
 import { createSeason } from '../game/season.js';
 import { saveSeason, loadSeason, loadProfile, saveProfile, loadSettings, saveSettings } from '../core/save.js';
 import { setInMenu } from '../core/updates.js';
@@ -46,6 +48,13 @@ export function createApp(els) {
     params: {},
     toast,
 
+    /** Guarda la temporada y pasa al códice lo que se vio. */
+    saveGame() {
+      saveSeason(app.game);
+      mergeSeen(app.profile, app.game.state.seen);
+      saveProfile(app.profile);
+    },
+
     /** Guarda todo lo guardable. */
     saveAll() {
       if (app.game) saveSeason(app.game);
@@ -60,7 +69,7 @@ export function createApp(els) {
     act(fn) {
       const res = fn(app.game) ?? { ok: true };
       if (!res.ok && res.error) toast(res.error);
-      saveSeason(app.game);
+      app.saveGame();
       if (app.game.state.over && app.screen !== 'summary') app.go('summary');
       else app.render();
       return res;
@@ -74,7 +83,7 @@ export function createApp(els) {
     quiet(fn) {
       const res = fn(app.game) ?? { ok: true };
       if (res.ok === false && res.error) toast(res.error);
-      saveSeason(app.game);
+      app.saveGame();
       if (!els.hud.hidden) renderHud(els.hud, app.game);
       return res;
     },
@@ -92,9 +101,12 @@ export function createApp(els) {
       els.screen.scrollTop = 0;
     },
 
-    /** Empieza una temporada nueva. */
-    newSeason() {
-      app.game = createSeason({ seed: freshSeed(), difficulty: 'normal' });
+    /**
+     * Empieza una temporada nueva con el mercader elegido y las mejoras del perfil.
+     * @param {string} [merchant='aprendiz']
+     */
+    newSeason(merchant = 'aprendiz') {
+      app.game = createSeason({ seed: freshSeed(), difficulty: 'normal', merchant, upgrades: app.profile.upgrades });
       saveSeason(app.game);
       app.go('city');
       toast('¡Arranca la temporada! Mirá el mercado y comprá algo barato.');
@@ -123,6 +135,9 @@ export function createApp(els) {
         menu: () => renderMenu(app),
         settings: () => renderSettings(app),
         help: () => renderHelp(app),
+        choose: () => renderChoose(app),
+        shop: () => renderShop(app),
+        records: () => renderRecords(app),
         city: () => renderCity(app, app.params),
         map: () => renderMap(app),
         travel: () => renderTravel(app),

@@ -15,6 +15,7 @@ import { plural } from '../core/text.js';
 import { refreshOffers } from './contracts.js';
 import { guideDays, scoutLevel, refreshHires, crewArrive } from './crew.js';
 import { RULES } from '../data/rules.js';
+import { bump, see, notePeaks } from './stats.js';
 
 /** Probabilidad por día de que se rompa cada cerámica en la montaña. */
 export const MOUNTAIN_BREAK = 0.04;
@@ -33,6 +34,8 @@ export function startTrip(game, routeId) {
   const from = state.location;
   const to = otherEnd(route, from);
   let days = guideDays(state, route.days);
+  if (route.danger !== 'bajo') bump(state, 'riskyTrips');
+  if (route.danger === 'alto') bump(state, 'highTrips');
   state.trip = { routeId, from, to, done: 0, days, rolled: 0, event: null };
   state.undo = [];
   addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(days, 'día', 'días')}).`, 'travel');
@@ -75,6 +78,8 @@ function arrive(game) {
   refreshOffers(game, to);
   refreshHires(game, to);
   crewArrive(game);
+  see(state, 'cityTypes', map.cityById[to].type);
+  notePeaks(state);
   addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');
   return { status: 'arrived', from, to, days };
 }

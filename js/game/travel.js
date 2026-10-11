@@ -16,6 +16,9 @@ import { settleInstallment } from './debt.js';
 import { addLog } from './knowledge.js';
 import { tickNews, extraRumor } from './news.js';
 import { crewDay, foodFactor, guideDays, healMult } from './crew.js';
+import { hasPerk } from './perks.js';
+import { tickBank } from './bank.js';
+import { notePeaks } from './stats.js';
 import { tickContracts } from './contracts.js';
 import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels.js';
 
@@ -39,7 +42,8 @@ export function mouths(state) {
  */
 export function dailyRation(state, kind = 'water') {
   const base = Math.ceil(mouths(state) / 2);
-  return kind === 'food' ? Math.ceil(base * foodFactor(state)) : base;
+  if (kind === 'food') return Math.ceil(base * foodFactor(state));
+  return hasPerk(state, 'nomada') ? Math.ceil(base / 2) : base;
 }
 
 /**
@@ -121,14 +125,16 @@ export function passDay(game, use, where, mode = {}) {
     const lost = loseCargo(state, SHORTAGE_LOSS);
     addLog(state, `Sin agua ${where}: los camellos sufren y dejaste ${lost} unidades de carga.`, 'bad');
   }
+  if (hungry || thirsty) state.stats.shortageDays += 1;
   if (hungry) addLog(state, `Sin comida ${where}: la caravana pasa hambre.`, 'bad');
   if (mode.terrain || thirsty || hungry) {
     const fatigue = (mode.terrain ? dayFatigue(mode.terrain) : 0) + (thirsty ? THIRST_HP : 0) + (hungry ? HUNGER_HP : 0);
     for (const line of tireCamels(state, fatigue)) addLog(state, `${line}.`, 'bad');
   }
   if (mode.rest && !thirsty && !hungry) healCamels(state, Math.round(REST_HP * healMult(state)));
+  notePeaks(state);
   const crew = crewDay(game, { travel: !!mode.terrain, rest: !!mode.rest, hungry, thirsty });
-  recoverStock(state.stock);
+  recoverStock(state.stock, RULES.market.stockRecovery * (hasPerk(state, 'negociante') ? 1.5 : 1));
   tickNews(game);
   if (crew.extraRumor) extraRumor(game);
   tickContracts(game);
@@ -136,13 +142,16 @@ export function passDay(game, use, where, mode = {}) {
     const good = getGood(id);
     if (good.decay) state.freshness[id] = Math.max(0.05, state.freshness[id] * (1 - good.decay));
   }
+  let dueDay = false;
   for (const inst of state.debt.installments) {
     if (inst.day === state.day - 1) {
+      dueDay = true;
       const res = settleInstallment(state, inst);
       logSettlement(state, inst, res);
       if (res.lost) return { lost: true };
     }
   }
+  tickBank(state, dueDay);
   return { lost: false };
 }
 

@@ -44,5 +44,6 @@ export function renderHud(el, game) {
     item('Agua', String(state.water), state.water < ration * 2, 'hud-water'),
     item('Camellos', `${state.camels} · ${avgHealth(state)}%`, avgHealth(state) < 30, 'hud-camels'),
     state.crew.length ? item('Moral', String(morale), morale < 35, 'hud-morale') : null,
+    state.loan ? item('Préstamo', fmt(state.loan), true, 'hud-loan') : null,
     dueLine);
 }

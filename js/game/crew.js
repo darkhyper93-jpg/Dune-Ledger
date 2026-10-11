@@ -7,6 +7,7 @@ import { ROLES, TRAITS, CREW_NAMES } from '../data/crew.js';
 import { addLog } from './knowledge.js';
 import { withRng } from './random.js';
 import { fmt } from '../core/text.js';
+import { upgradeValue } from './perks.js';
 
 /** Máximo de tripulantes. */
 export const MAX_CREW = 5;
@@ -105,7 +106,9 @@ export function refreshHires(game, cityId) {
   const list = withRng(state, (rng) => Array.from({ length: rng.int(2, 3) }, () => {
     const role = rng.pick(Object.keys(ROLES));
     const trait = rng.pick(Object.keys(TRAITS));
-    const wage = trait === 'codicioso' ? Math.round(ROLES[role].wage * 1.5) : ROLES[role].wage;
+    const base = trait === 'codicioso' ? ROLES[role].wage * 1.5 : ROLES[role].wage;
+    const cheap = (1 - upgradeValue(state, 'taberna')) * (role === 'guardia' ? 1 - upgradeValue(state, 'guardias') : 1);
+    const wage = Math.max(1, Math.round(Math.round(base) * cheap));
     return { id: `t${state.hire.nextId++}`, name: rng.pick(CREW_NAMES), role, trait, xp: 0, morale: START_MORALE, wage };
   }));
   state.hire.offers[cityId] = { day: state.day, list };
@@ -127,6 +130,9 @@ export function hire(game, id) {
   state.gold -= c.wage;
   list.splice(list.indexOf(c), 1);
   state.crew.push(c);
+  state.seen.roles[c.role] = true;
+  state.seen.traits[c.trait] = true;
+  state.stats.maxCrew = Math.max(state.stats.maxCrew, state.crew.length);
   state.undo = [];
   addLog(state, `Contrataste a ${c.name} (${ROLES[c.role].name}, ${TRAITS[c.trait].name.toLowerCase()}) por ${c.wage} por semana.`, 'info');
   return { ok: true, total: c.wage };

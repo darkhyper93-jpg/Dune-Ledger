@@ -50,14 +50,15 @@ test('vender suma oro y anota la ganancia', () => {
 
 test('deshacer vuelve exacto, stock incluido', () => {
   const g = testGame();
-  const before = JSON.stringify({ ...g.state, prices: null, undo: null });
+  // Lo visto para el códice no se deshace: es memoria del jugador, no del juego.
+  const before = JSON.stringify({ ...g.state, prices: null, undo: null, seen: null });
   buy(g, 'te', 3);
   buy(g, 'sal', 2);
   sell(g, 'sal', 1);
   undo(g);
   undo(g);
   undo(g);
-  assert.equal(JSON.stringify({ ...g.state, prices: null, undo: null }), before);
+  assert.equal(JSON.stringify({ ...g.state, prices: null, undo: null, seen: null }), before);
   assert.equal(undo(g).ok, false);
 });
 

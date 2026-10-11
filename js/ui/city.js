@@ -7,13 +7,14 @@
 import { h, openSheet } from './dom.js';
 import { renderMarket } from './market.js';
 import { renderTavern, guildContracts, deliverables } from './tavern.js';
+import { renderBank } from './bank.js';
 import { getCityType } from '../data/cities.js';
 import { RULES } from '../data/rules.js';
 import { citySvg, svgNode } from '../render/shapes.js';
 import { canPayHere, totalOwed, owedOn, nextInstallment } from '../game/debt.js';
 import { canFinish, rest, finishSeason } from '../game/season.js';
 import { buyProvision, buyCamel, sellCamel, payGuild } from '../game/actions.js';
-import { camelPrice, camelResale, provisionPrices } from '../game/caravan.js';
+import { camelPrice, camelResale, provisionPrices, provisionCap } from '../game/caravan.js';
 import { dailyRation, canTravel } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
@@ -96,8 +97,8 @@ function provisionCard(app, kind, label, price) {
   const ration = dailyRation(state, kind);
   const have = state[kind];
   const buyDays = (days) => {
-    const qty = Math.min(days * ration, RULES.provisionCap - have);
-    if (qty <= 0) return app.toast(`Podés llevar hasta ${RULES.provisionCap}.`);
+    const qty = Math.min(days * ration, provisionCap(state) - have);
+    if (qty <= 0) return app.toast(`Podés llevar hasta ${provisionCap(state)}.`);
     const res = app.act((g) => buyProvision(g, kind, qty));
     if (res.ok) {
       playTap();
@@ -178,5 +179,6 @@ function renderGuild(app) {
       next ? h('button', { class: 'btn primary', 'data-testid': 'pay-next', disabled: state.gold <= 0, onclick: () => pay(owedOn(next)) }, `Pagar cuota (${fmt(Math.min(owedOn(next), state.gold))})`) : null,
       h('button', { class: 'btn', 'data-testid': 'pay-all', disabled: state.gold <= 0, onclick: () => pay(owed) }, `Pagar todo (${fmt(Math.min(owed, state.gold))})`))
       : h('p', { class: 'good center' }, '¡No le debés nada al Gremio!'),
+    renderBank(app),
     guildContracts(app));
 }

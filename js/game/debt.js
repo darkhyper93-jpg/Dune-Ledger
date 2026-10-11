@@ -18,13 +18,27 @@ const D = RULES.debt;
 /**
  * Crea el estado de la deuda según la dificultad.
  * @param {string} difficultyId
+ * @param {{mult?:number, delays?:number}} [opts] ver debtPlan
  */
-export function createDebt(difficultyId) {
+export function createDebt(difficultyId, opts = {}) {
+  return { installments: debtPlan(difficultyId, opts), strikes: 0 };
+}
+
+/**
+ * Cuotas de una dificultad, con el multiplicador del mercader (el Viejo
+ * Sultán debe el doble) y la prórroga del Gremio (5 días más para las
+ * primeras `delays` cuotas, sin pasar del último día).
+ * @param {string} difficultyId
+ * @param {{mult?:number, delays?:number}} [opts]
+ */
+export function debtPlan(difficultyId, { mult = 1, delays = 0 } = {}) {
   const diff = getDifficulty(difficultyId);
-  return {
-    installments: diff.installments.map((i) => ({ day: i.day, amount: i.amount, paid: 0 })),
-    strikes: 0,
-  };
+  const last = diff.installments[diff.installments.length - 1].day;
+  return diff.installments.map((i, k) => ({
+    day: k < delays && i.day < last ? Math.min(last, i.day + 5) : i.day,
+    amount: Math.round(i.amount * mult),
+    paid: 0,
+  }));
 }
 
 /**
@@ -95,6 +109,17 @@ export function mostValuableCargo(cargo) {
 }
 
 /**
+ * Paga con el oro de la bolsa y, si no alcanza, con el guardado en el Gremio.
+ * @param {object} state
+ * @param {number} amount no mayor que lo disponible
+ */
+export function spendFunds(state, amount) {
+  const fromGold = Math.min(state.gold, amount);
+  state.gold -= fromGold;
+  state.deposit = (state.deposit ?? 0) - (amount - fromGold);
+}
+
+/**
  * Procesa una cuota que vence hoy. Devuelve un resumen para el diario.
  * @param {object} state se modifica
  * @param {{day:number,amount:number,paid:number}} inst
@@ -104,9 +129,10 @@ export function settleInstallment(state, inst) {
   const owed = owedOn(inst);
   if (owed <= 0) return { kind: 'paid', lost: false };
 
-  if (state.gold >= owed) {
-    const fee = Math.min(state.gold - owed, Math.ceil(owed * D.collectorFee));
-    state.gold -= owed + fee;
+  const funds = state.gold + (state.deposit ?? 0);
+  if (funds >= owed) {
+    const fee = Math.min(funds - owed, Math.ceil(owed * D.collectorFee));
+    spendFunds(state, owed + fee);
     inst.paid = inst.amount;
     return { kind: 'collected', fee, lost: false };
   }

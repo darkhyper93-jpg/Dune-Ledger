@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { saveSeason, loadSeason, safeParse, KEYS, loadProfile, saveProfile, defaultProfile, loadSettings, clearSeason } from '../../js/core/save.js';
 import { validateState } from '../../js/game/validate.js';
 import { buy } from '../../js/game/actions.js';
-import { travel, finishSeason } from '../../js/game/season.js';
+import { travel, finishSeason, createSeason } from '../../js/game/season.js';
 import { testGame, MemoryStorage } from './helpers.js';
 
 /** Copia profunda de un estado vía JSON, como lo guardaría el navegador. */
@@ -21,6 +21,13 @@ test('guardar y cargar devuelve la misma partida', () => {
   assert.ok(loaded);
   assert.deepEqual(loaded.state, g.state);
   assert.deepEqual(loaded.map.cities, g.map.cities);
+});
+
+test('se guarda una temporada con mercader y mejoras', () => {
+  const g = createSeason({ seed: 'perfil-guardado', merchant: 'sultan', upgrades: { plazo: 1, oro: 2 }, events: false });
+  const res = validateState(clone(g.state));
+  assert.ok(res.ok, res.error);
+  assert.deepEqual(res.game.state, g.state);
 });
 
 test('se guarda la tripulación', () => {
@@ -93,6 +100,11 @@ test('se rechazan valores fuera de rango o ids que no existen', () => {
     (s) => { s.crew = [{ id: 't1', name: 'X', role: 'guia', trait: 'leal', xp: 0, morale: 170, wage: 12 }]; },
     (s) => { s.crew = Array.from({ length: 6 }, (_, i) => ({ id: `t${i}`, name: 'X', role: 'guia', trait: 'leal', xp: 0, morale: 70, wage: 12 })); },
     (s) => { s.hire.nextId = 0; },
+    (s) => { s.merchant = 'dragon'; },
+    (s) => { s.upgrades = { oro: 2, magia: 1 }; },
+    (s) => { s.loan = -5; },
+    (s) => { s.deposit = 1.5; },
+    (s) => { s.upgrades = { plazo: 1 }; }, // las cuotas guardadas no tienen la prórroga
     (s) => { s.camelHp = [100, 0]; },
     (s) => { s.camelHp = [100, 150]; },
     (s) => { s.news.items = [{ tpl: 'sequia', goods: ['oro'], mult: 2, cityType: null, zone: 'norte', rumorDay: 1, startDay: 4, endDay: 9, real: true }]; },

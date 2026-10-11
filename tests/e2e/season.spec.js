@@ -27,6 +27,12 @@ async function finishTrip(page) {
   await expect(page.getByTestId('city-name')).toBeVisible();
 }
 
+/** Empieza una temporada con el Aprendiz. */
+async function newSeason(page) {
+  await page.getByTestId('new-season').click();
+  await page.getByTestId('start-season').click();
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/?semilla=e2e');
   await page.evaluate(() => localStorage.clear());
@@ -34,7 +40,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('una temporada: comprar, viajar, vender y seguir después de recargar', async ({ page }) => {
-  await page.getByTestId('new-season').click();
+  await newSeason(page);
   const startCity = await page.getByTestId('city-name').innerText();
   expect(await hudNumber(page, 'hud-gold')).toBe(300);
 
@@ -135,13 +141,13 @@ test('funciona sin conexión después de la primera visita', async ({ page, cont
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByTestId('new-season')).toBeVisible();
-  await page.getByTestId('new-season').click();
+  await newSeason(page);
   await expect(page.getByTestId('city-name')).toBeVisible();
   await context.setOffline(false);
 });
 
 test('contratos de la taberna y eventos que se retoman al recargar', async ({ page }) => {
-  await page.getByTestId('new-season').click();
+  await newSeason(page);
   await page.getByTestId('tab-taberna').click();
   const accept = page.locator('[data-testid^=accept-]').first();
   await accept.click();
@@ -173,7 +179,7 @@ test('contratos de la taberna y eventos que se retoman al recargar', async ({ pa
 });
 
 test('caravana viva: contratar tripulación y ver la salud de los camellos', async ({ page }) => {
-  await page.getByTestId('new-season').click();
+  await newSeason(page);
   await page.getByTestId('tab-taberna').click();
   const hireBtn = page.locator('[data-testid^=hire-t]').first();
   await hireBtn.click();
@@ -182,4 +188,41 @@ test('caravana viva: contratar tripulación y ver la salud de los camellos', asy
   await expect(page.getByTestId('crew')).toBeVisible();
   await expect(page.getByTestId('camels')).toContainText('Camello 2');
   await expect(page.getByTestId('hud-camels')).toContainText('100%');
+});
+
+test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('dune-ledger:perfil', JSON.stringify({ seals: 200, totalSeals: 200, seasons: 3, wins: 2, bestScore: 900, tutorialDone: false, merchants: ['aprendiz'], upgrades: {}, achievements: {}, codex: {} }));
+  });
+  await page.reload();
+  await page.getByTestId('shop').click();
+  await expect(page.getByTestId('shop-seals')).toHaveText('200');
+  await page.getByTestId('shop-nomada').getByRole('button').click();
+  await expect(page.getByTestId('shop-seals')).toHaveText('140');
+  await page.getByTestId('upgrade-oro').getByRole('button').click();
+  await expect(page.getByTestId('shop-seals')).toHaveText('130');
+  await page.getByText('Volver').click();
+
+  await page.getByTestId('new-season').click();
+  await page.getByTestId('merchant-nomada').click();
+  await page.getByTestId('start-season').click();
+  await expect(page.getByTestId('hud-gold')).toContainText('350');
+
+  // El código de progreso: se copia, se borra todo y se vuelve a cargar.
+  await page.getByTestId('nav-city').click();
+  await page.goto('/?semilla=e2e');
+  await page.getByTestId('settings').click();
+  await page.getByTestId('show-code').click();
+  const code = await page.getByTestId('progress-code').inputValue();
+  expect(code).toMatch(/^DL1-/);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByTestId('settings').click();
+  await page.getByTestId('load-code').click();
+  await page.getByTestId('progress-input').fill(code);
+  await page.getByTestId('progress-load').click();
+  await page.getByText('Volver').click();
+  await expect(page.getByTestId('shop')).toContainText('130 sellos');
+  await page.getByTestId('records').click();
+  await expect(page.getByTestId('achievements-count')).toContainText('/30');
 });

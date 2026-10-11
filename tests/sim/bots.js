@@ -19,7 +19,7 @@ import { buyPriceAt, buyFactor, quote } from '../../js/game/market.js';
 import { offersHere, acceptContract, deliverContract } from '../../js/game/contracts.js';
 import { newsMult } from '../../js/game/news.js';
 import { tripNeeds, canTravel } from '../../js/game/travel.js';
-import { cargoFree, camelPrice, provisionPrices } from '../../js/game/caravan.js';
+import { cargoFree, camelPrice, provisionPrices, provisionCap } from '../../js/game/caravan.js';
 import { canPayHere, nextInstallment, owedOn, totalOwed } from '../../js/game/debt.js';
 import { otherEnd } from '../../js/game/map-gen.js';
 import { optionState } from '../../js/game/events.js';
@@ -72,8 +72,8 @@ function stockUp(game, route, extraDays = 1) {
   const need = tripNeeds(state, { ...route, days: route.days + extraDays });
   const prices = provisionPrices(map.cityById[state.location]);
   for (const kind of ['food', 'water']) {
-    let missing = Math.min(need[kind] - state[kind], RULES.provisionCap - state[kind]);
-    if (kind === 'water' && prices.water === 0) missing = RULES.provisionCap - state.water;
+    let missing = Math.min(need[kind] - state[kind], provisionCap(state) - state[kind]);
+    if (kind === 'water' && prices.water === 0) missing = provisionCap(state) - state.water;
     if (missing > 0) {
       const affordable = prices[kind] === 0 ? missing : Math.min(missing, Math.floor(state.gold / prices[kind]));
       if (affordable > 0) buyProvision(game, kind, affordable);

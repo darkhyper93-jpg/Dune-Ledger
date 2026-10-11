@@ -16,6 +16,7 @@ import { hashUnit } from '../core/rng.js';
 import { repBuyFactor } from './reputation.js';
 import { newsMult } from './news.js';
 import { tradeBonus } from './crew.js';
+import { hasPerk, upgradeValue } from './perks.js';
 
 const M = RULES.market;
 
@@ -110,7 +111,7 @@ export function buyPriceAt(seed, city, goodId, stock, factor = 1, mult = 1) {
  * @param {string} cityId
  */
 export function buyFactor(game, cityId) {
-  return repBuyFactor(game.state.rep[game.map.cityById[cityId].zone]) * (1 - tradeBonus(game.state));
+  return repBuyFactor(game.state.rep[game.map.cityById[cityId].zone]) * (1 - tradeBonus(game.state)) * (hasPerk(game.state, 'negociante') ? 0.92 : 1);
 }
 
 /**
@@ -118,7 +119,7 @@ export function buyFactor(game, cityId) {
  * @param {object} game
  */
 export function sellFactor(game) {
-  return 1 + tradeBonus(game.state);
+  return 1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio');
 }
 
 /**
@@ -201,14 +202,15 @@ export function initialStock(map, goodIds) {
 }
 
 /**
- * Pasa un día en todos los mercados: cada stock vuelve un 5% hacia lo normal.
+ * Pasa un día en todos los mercados: cada stock vuelve un poco hacia lo normal.
  * @param {Record<string, Record<string, number>>} stock se modifica en el lugar
+ * @param {number} [rate] parte que se recupera (más rápido para el Negociante)
  */
-export function recoverStock(stock) {
+export function recoverStock(stock, rate = M.stockRecovery) {
   for (const cityId of Object.keys(stock)) {
     const row = stock[cityId];
     for (const goodId of Object.keys(row)) {
-      row[goodId] += (M.stockNormal - row[goodId]) * M.stockRecovery;
+      row[goodId] += (M.stockNormal - row[goodId]) * rate;
     }
   }
 }

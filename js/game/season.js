@@ -22,6 +22,9 @@ import { initialRep } from './reputation.js';
 import { initialNews } from './news.js';
 import { initialContracts, refreshOffers } from './contracts.js';
 import { initialHire, refreshHires } from './crew.js';
+import { getMerchant, cleanUpgrades } from './perks.js';
+import { startingResources, applyStartPerks } from './start.js';
+import { initialStats, initialSeen, see, bump, notePeaks } from './stats.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -33,21 +36,26 @@ export const STATE_VERSION = 2;
  * Crea una temporada nueva.
  * `events` y `eventRate` son opciones del juego (no se guardan): sirven
  * para pruebas que necesitan viajes sin sorpresas o con muchos eventos.
- * @param {{seed:string, difficulty?:string, events?:boolean, eventRate?:number}} opts
+ * `merchant` y `upgrades` son el mercader elegido y las mejoras del Gremio.
+ * @param {{seed:string, difficulty?:string, merchant?:string, upgrades?:Record<string,number>, events?:boolean, eventRate?:number}} opts
  * @returns {{map:object,state:object,options:object}}
  */
-export function createSeason({ seed, difficulty = 'normal', events = true, eventRate }) {
+export function createSeason({ seed, difficulty = 'normal', merchant = 'aprendiz', upgrades = {}, events = true, eventRate }) {
   getDifficulty(difficulty);
+  getMerchant(merchant);
+  const perks = { merchant, upgrades: cleanUpgrades(upgrades) };
+  const s = startingResources(perks);
   const map = generateMap(seed);
   const rng = new Rng(`season:${seed}`);
   const starts = map.cities.filter((c) => c.type !== 'capital');
   const start = rng.pick(starts);
   const news = initialNews(rng);
-  const s = RULES.start;
   const state = {
     v: STATE_VERSION,
     seed: String(seed),
     difficulty,
+    merchant,
+    upgrades: perks.upgrades,
     day: 1,
     rng: rng.getState(),
     location: start.id,
@@ -65,7 +73,9 @@ export function createSeason({ seed, difficulty = 'normal', events = true, event
     knownRoutes: {},
     visited: {},
     prices: {},
-    debt: createDebt(difficulty),
+    debt: createDebt(difficulty, { mult: s.debtMult, delays: s.delays }),
+    loan: 0,
+    deposit: 0,
     rep: initialRep(),
     news,
     trip: null,
@@ -74,14 +84,18 @@ export function createSeason({ seed, difficulty = 'normal', events = true, event
     hire: initialHire(),
     log: [],
     undo: [],
-    stats: { trips: 0, bestSale: null, routeProfit: {}, earned: 0, spent: 0 },
+    stats: initialStats(),
+    seen: initialSeen(),
     over: null,
   };
   const game = { map, state, options: { events, eventRate } };
   discoverAround(game, start.id);
+  applyStartPerks(game);
   snapshotPrices(game, start.id);
   refreshOffers(game, start.id);
   refreshHires(game, start.id);
+  see(state, 'cityTypes', start.type);
+  notePeaks(state);
   addLog(state, `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');
   return game;
 }
@@ -146,6 +160,7 @@ export function rest(game) {
     return { ok: true };
   }
   snapshotPrices(game, state.location);
+  bump(state, 'restDays');
   addLog(state, `Descansaste un día en ${map.cityById[state.location].name}.`, 'info');
   return { ok: true };
 }
@@ -157,7 +172,7 @@ export function rest(game) {
  */
 export function canFinish(game) {
   const { state } = game;
-  return !state.over && !state.trip && (state.day >= RULES.seasonDays || totalOwed(state.debt) === 0);
+  return !state.over && !state.trip && (state.day >= RULES.seasonDays || (totalOwed(state.debt) === 0 && state.loan === 0));
 }
 
 /**

@@ -10,6 +10,8 @@
  */
 
 import { validateState } from '../game/validate.js';
+import { safeParse } from './json.js';
+import { defaultProfile, validateProfile } from '../game/profile.js';
 
 export const KEYS = {
   season: 'dune-ledger:temporada',
@@ -17,19 +19,7 @@ export const KEYS = {
   settings: 'dune-ledger:ajustes',
 };
 
-const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
-/**
- * JSON.parse que rechaza claves peligrosas. Lanza un error si las encuentra.
- * @param {string} text
- * @returns {unknown}
- */
-export function safeParse(text) {
-  return JSON.parse(text, (key, value) => {
-    if (FORBIDDEN_KEYS.has(key)) throw new Error(`Clave no permitida: ${key}`);
-    return value;
-  });
-}
+export { safeParse };
 
 /**
  * Devuelve el almacenamiento disponible o null.
@@ -111,23 +101,7 @@ export function clearSeason(store) {
   }
 }
 
-/** Perfil vacío. */
-export function defaultProfile() {
-  return { seals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false };
-}
-
-/**
- * Valida un perfil leído; si algo está mal devuelve el perfil vacío.
- * @param {unknown} raw
- */
-export function validateProfile(raw) {
-  const d = defaultProfile();
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return d;
-  const intIn = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
-  if (!intIn(raw.seals, 1e7) || !intIn(raw.seasons, 1e6) || !intIn(raw.wins, 1e6) || !intIn(raw.bestScore, 1e8)) return d;
-  if (raw.wins > raw.seasons || typeof raw.tutorialDone !== 'boolean') return d;
-  return { seals: raw.seals, seasons: raw.seasons, wins: raw.wins, bestScore: raw.bestScore, tutorialDone: raw.tutorialDone };
-}
+export { defaultProfile, validateProfile };
 
 /** @param {Storage} [store] */
 export function loadProfile(store) {

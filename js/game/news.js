@@ -7,6 +7,7 @@ import { NEWS, NEWS_BY_ID } from '../data/news.js';
 import { ZONES, zoneName } from './reputation.js';
 import { withRng } from './random.js';
 import { addLog } from './knowledge.js';
+import { upgradeValue } from './perks.js';
 
 /** Probabilidad de que un rumor sea verdad. */
 export const RUMOR_TRUE = 0.75;
@@ -82,7 +83,7 @@ function makeNews(state, rng) {
     rumorDay: state.day,
     startDay,
     endDay: startDay + rng.int(5, 15) - 1,
-    real: rng.chance(RUMOR_TRUE),
+    real: rng.chance(RUMOR_TRUE + upgradeValue(state, 'rumores')),
   };
 }
 

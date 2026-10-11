@@ -8,6 +8,7 @@ import { VERSION } from '../core/version.js';
 import { forceUpdate } from '../core/updates.js';
 import { setVolumes, playTap } from '../core/audio.js';
 import { fmt } from '../core/text.js';
+import { progressCodeCard } from './progress.js';
 
 /**
  * Menú principal.
@@ -21,13 +22,15 @@ export function renderMenu(app) {
     h('div', { class: 'stack' },
       canContinue ? h('button', { class: 'btn big primary', 'data-testid': 'continue', onclick: () => app.go('city') }, `Continuar (día ${game.state.day})`) : null,
       h('button', { class: `btn big ${canContinue ? '' : 'primary'}`, 'data-testid': 'new-season', onclick: () => {
-        if (!canContinue) return app.newSeason();
+        if (!canContinue) return app.go('choose');
         openSheet((close) => h('div', { class: 'stack' },
           h('h2', {}, '¿Empezar de nuevo?'),
           h('p', { class: 'muted' }, 'Vas a perder la temporada que tenés empezada.'),
           h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: close }, 'No'),
-            h('button', { class: 'btn primary', 'data-testid': 'confirm-new', onclick: () => { close(); app.newSeason(); } }, 'Sí, nueva'))), { label: 'Nueva temporada' });
+            h('button', { class: 'btn primary', 'data-testid': 'confirm-new', onclick: () => { close(); app.go('choose'); } }, 'Sí, nueva'))), { label: 'Nueva temporada' });
       } }, 'Nueva temporada'),
+      h('button', { class: 'btn big', 'data-testid': 'shop', onclick: () => app.go('shop') }, `Gremio (${fmt(profile.seals)} sellos)`),
+      h('button', { class: 'btn big', 'data-testid': 'records', onclick: () => app.go('records') }, 'Logros y códice'),
       h('button', { class: 'btn big', 'data-testid': 'help', onclick: () => app.go('help') }, 'Cómo se juega'),
       h('button', { class: 'btn big', 'data-testid': 'settings', onclick: () => app.go('settings') }, 'Ajustes')),
     h('p', { class: 'center muted small' }, `Sellos del Gremio: ${fmt(profile.seals)} · Temporadas: ${profile.seasons} · Ganadas: ${profile.wins}`));
@@ -66,6 +69,7 @@ export function renderSettings(app) {
         forceUpdate();
       } }, 'Actualizar'),
       h('p', { class: 'muted small', style: 'margin:0' }, 'El juego se actualiza solo cuando estás en el menú. Si algo se traba, tocá Actualizar.')),
+    progressCodeCard(app),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
 }
 
@@ -86,6 +90,7 @@ export function renderHelp(app) {
       p('En el camino pasan cosas: bandidos, tormentas, mercaderes nómadas… Cada opción muestra su probabilidad de salir bien. Las rutas de peligro alto tienen más sorpresas.'),
       p('Los camellos se cansan viajando y se recuperan descansando. En la Taberna podés contratar tripulación: cada rol ayuda en algo, pero cobran sueldo cada 7 días y, si la moral baja mucho, se van.'),
       p('En la Taberna hay rumores (¡algunos falsos!) y contratos que pagan bien si llegás a tiempo. Cumplir sube tu reputación en esa zona; fallar la baja.'),
-      p('Al final, tu puntaje es el oro más la carga menos lo que debas. Con él ganás Sellos del Gremio.')),
+      p('Al final, tu puntaje es el oro más la carga menos lo que debas. Con él ganás Sellos del Gremio.'),
+      p('Con los sellos, en el Gremio comprás mercaderes con habilidades especiales y mejoras que valen para todas las temporadas. Algunos mercaderes piden un logro.')),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
 }

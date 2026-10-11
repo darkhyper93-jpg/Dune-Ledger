@@ -20,6 +20,13 @@ import { EVENTS_BY_ID } from '../data/events.js';
 import { CITY_TYPES_BY_ID } from '../data/cities.js';
 import { ROLES, TRAITS } from '../data/crew.js';
 import { MAX_CREW } from './crew.js';
+import { MERCHANTS_BY_ID } from '../data/merchants.js';
+import { cleanUpgrades } from './perks.js';
+import { startingResources } from './start.js';
+import { debtPlan } from './debt.js';
+import { initialStats } from './stats.js';
+import { CODEX } from './profile.js';
+import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
@@ -95,7 +102,19 @@ function stats(v, map) {
     routeProfit: record(v.routeProfit, routeKey, (x, w) => num(x, -1e7, 1e7, w), 'ganancia por ruta'),
     earned: num(v.earned, -1e8, 1e8, 'ganado'),
     spent: num(v.spent, 0, 1e8, 'gastado'),
+    sold: record(v.sold, isGoodId, (x, w) => int(x, 0, 1e6, w), 'vendido'),
+    ...Object.fromEntries(COUNTERS.map((k) => [k, int(v[k], 0, 1e6, k)])),
   };
+}
+
+/** Contadores enteros de las estadísticas (ver js/game/stats.js). */
+const COUNTERS = Object.keys(initialStats()).filter((k) => typeof initialStats()[k] === 'number' && !['trips', 'earned', 'spent'].includes(k));
+
+/** Valida lo visto en la temporada (códice). */
+function seenPart(v) {
+  need(isObj(v), 'visto');
+  return Object.fromEntries(Object.entries(CODEX).map(([section, valid]) => [section,
+    record(v[section], (k) => Object.hasOwn(valid, k), (x, w) => { need(x === true, w); return true; }, `visto ${section}`)]));
 }
 
 /** Salud de los camellos: un número de 1 a 100 por camello. */
@@ -108,8 +127,8 @@ function camelHpPart(v, camels) {
 function marketPart(v, map, cityId) {
   return {
     gold: int(v.gold, 0, 1e8, 'oro'),
-    food: int(v.food, 0, RULES.provisionCap, 'comida'),
-    water: int(v.water, 0, RULES.provisionCap, 'agua'),
+    food: int(v.food, 0, RULES.provisionCap + 100, 'comida'),
+    water: int(v.water, 0, RULES.provisionCap + 100, 'agua'),
     camels: int(v.camels, 1, RULES.maxCamels, 'camellos'),
     camelHp: camelHpPart(v.camelHp, v.camels),
     cargo: goodsRecord(v.cargo, 0, 1e5, 'carga', true),
@@ -138,6 +157,10 @@ export function validateState(raw) {
     need(cityOk(raw.location), 'ubicación');
     need(raw.lastFrom === null || cityOk(raw.lastFrom), 'ciudad anterior');
     need(Array.isArray(raw.rng) && raw.rng.length === 4, 'azar');
+    need(typeof raw.merchant === 'string' && Object.hasOwn(MERCHANTS_BY_ID, raw.merchant), 'mercader');
+    need(isObj(raw.upgrades), 'mejoras');
+    const perks = { merchant: raw.merchant, upgrades: cleanUpgrades(raw.upgrades) };
+    need(Object.keys(perks.upgrades).length === Object.keys(raw.upgrades).length, 'mejoras');
 
     const base = marketPart(raw, map);
     const state = {
@@ -164,7 +187,11 @@ export function validateState(raw) {
         need(isObj(p), w);
         return { day: int(p.day, 1, RULES.seasonDays, w), sell: goodsRecord(p.sell, 0, 1e5, w), buy: goodsRecord(p.buy, 0, 1e5, w) };
       }, 'precios'),
-      debt: debtPart(raw.debt, raw.difficulty),
+      merchant: perks.merchant,
+      upgrades: perks.upgrades,
+      debt: debtPart(raw.debt, raw.difficulty, perks),
+      loan: int(raw.loan, 0, 1e6, 'préstamo'),
+      deposit: int(raw.deposit, 0, 1e8, 'depósito'),
       rep: repPart(raw.rep),
       news: newsPart(raw.news),
       trip: tripPart(raw.trip, map, raw.location),
@@ -174,6 +201,7 @@ export function validateState(raw) {
       log: logPart(raw.log),
       undo: undoPart(raw.undo, map, raw.location),
       stats: base.stats,
+      seen: seenPart(raw.seen),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);
@@ -187,9 +215,10 @@ export function validateState(raw) {
 }
 
 /** Valida la deuda contra las cuotas de la dificultad. */
-function debtPart(v, difficulty) {
+function debtPart(v, difficulty, perks) {
   need(isObj(v) && Array.isArray(v.installments), 'deuda');
-  const plan = DIFFICULTIES[difficulty].installments;
+  const s = startingResources(perks);
+  const plan = debtPlan(difficulty, { mult: s.debtMult, delays: s.delays });
   need(v.installments.length === plan.length, 'cuotas');
   return {
     installments: v.installments.map((inst, i) => {
@@ -328,5 +357,6 @@ function overPart(v) {
     gold: int(v.gold, 0, 1e8, 'final'),
     owed: int(v.owed, 0, 1e8, 'final'),
     recorded: v.recorded === true,
+    newAchievements: Array.isArray(v.newAchievements) ? v.newAchievements.filter((id) => typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS_BY_ID, id)) : [],
   };
 }

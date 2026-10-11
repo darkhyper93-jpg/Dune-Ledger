@@ -155,3 +155,32 @@ revisarlo más adelante.
 - **Ruta en bucle**: la ganancia por viaje ahora descuenta la comida y el agua
   de ida y vuelta (un viaje cuesta provisiones) y se mide sin noticias de
   mercado, que son externas al bucle.
+
+## Etapa 4 — Progreso permanente
+
+- **Aprendiz**: el diseño dice que empieza con 150 de oro, pero la partida
+  base arranca con 300. Se usa 300 (si no, el Aprendiz sería peor que no
+  elegir nada y el balance medido con los bots dejaría de valer).
+- **Mercaderes con logro**: además de los sellos, el Contrabandista pide el
+  logro «Contrabando», el Cartógrafo «Trotamundos» y el Viejo Sultán «Mercader
+  de ley» (ganar 3 temporadas).
+- **Capitana**: empieza con 2 guardias leales (que cobran sueldo como
+  cualquiera) y suma +20% a las peleas.
+- **Negociante**: el stock se recupera 1,5 veces más rápido en todo el mapa.
+- **Préstamos**: hasta 1.000 en total; en cada vencimiento de cuota crecen un
+  20% (10% para la Banquera). Cuentan como deuda: hay que devolverlos para
+  ganar y al cerrar se cobran del oro.
+- **Oro guardado**: cualquiera puede guardar oro en el Gremio (Capital o
+  Puesto). Está a salvo, cuenta para el puntaje y el cobrador lo usa si falta;
+  sólo la Banquera cobra 2% por día.
+- **"Un rumor verdadero garantizado por semana"** se implementó como
+  «Oídos en el bazar»: los rumores son verdad un 7% más seguido por nivel.
+- **Mejoras**: 15, de 1 a 5 niveles (ver `js/data/upgrades.js`). La prórroga
+  corre 5 días la primera cuota (y la segunda en nivel 2).
+- **Códice**: bienes comerciados, tipos de ciudad visitados, eventos vividos,
+  oficios y personalidades contratadas. Se va guardando mientras jugás; lo
+  visto no se borra con "deshacer".
+- **Código de progreso**: `DL1-<datos en base64>-<suma de control>`. Si se
+  toca a mano o tiene claves peligrosas, se rechaza.
+- Los bots de las métricas juegan con el Aprendiz y sin mejoras: el balance
+  base no cambia.

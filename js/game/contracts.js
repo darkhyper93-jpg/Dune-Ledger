@@ -13,6 +13,7 @@ import { changeRep } from './reputation.js';
 import { addLog } from './knowledge.js';
 import { withRng } from './random.js';
 import { fmt } from '../core/text.js';
+import { upgradeValue } from './perks.js';
 
 /** Contratos activos como máximo. */
 export const MAX_ACTIVE = 3;
@@ -53,7 +54,7 @@ function makeOffer(game, city, days, rng, source, taken) {
     const bonus = source === 'gremio' ? 1.6 : rng.range(1.3, 1.45);
     const deadline = Math.min(RULES.seasonDays, state.day + Math.ceil(days[dest.id] * 1.5) + rng.int(3, 6));
     taken.add(`${goodId}>${dest.id}`);
-    return { id: `k${state.contracts.nextId++}`, goodId, qty, from: city.id, to: dest.id, deadline: Math.max(deadline, state.day + days[dest.id] + 2), reward: Math.round(market * bonus + 15), source };
+    return { id: `k${state.contracts.nextId++}`, goodId, qty, from: city.id, to: dest.id, deadline: Math.max(deadline, state.day + days[dest.id] + 2), reward: Math.round((market * bonus + 15) * (1 + upgradeValue(state, 'contactos'))), source };
   }
   return null;
 }
@@ -116,6 +117,7 @@ export function deliverContract(game, id) {
   if (state.cargo[k.goodId] === 0) state.costBasis[k.goodId] = 0;
   state.gold += k.reward;
   state.stats.earned += profit;
+  state.stats.contractsDone += 1;
   state.contracts.active.splice(state.contracts.active.indexOf(k), 1);
   changeRep(state, map.cityById[k.to].zone, DONE_REP);
   state.undo = [];

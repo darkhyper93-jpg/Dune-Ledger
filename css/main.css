@@ -309,3 +309,13 @@ input[type='range'] { width: 100%; height: 48px; accent-color: var(--accent); }
 .contract { display: grid; gap: 6px; }
 .rep-bar { height: 8px; border-radius: 4px; background: var(--surface-2); position: relative; overflow: hidden; }
 .rep-bar span { position: absolute; top: 0; bottom: 0; }
+
+/* ---------- Progreso ---------- */
+.merchant { display: grid; gap: 4px; text-align: left; cursor: pointer; width: 100%; font: inherit; color: inherit; }
+.merchant.chosen { border: 2px solid var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 10px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); font-size: 13px; font-weight: 500; }
+.chip.locked { background: var(--surface-2); color: var(--ink-2); }
+.achievement { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); opacity: 0.65; }
+.achievement.done { opacity: 1; border-color: var(--gold); }
+textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); word-break: break-all; }

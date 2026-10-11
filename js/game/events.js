@@ -7,7 +7,8 @@
 import { EVENTS, EVENTS_BY_ID } from '../data/events.js';
 import { RULES } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
-import { cargoFree } from './caravan.js';
+import { cargoFree, provisionCap } from './caravan.js';
+import { hasPerk, upgradeValue } from './perks.js';
 import { tireCamels } from './camels.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
@@ -35,7 +36,7 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
  */
 export const CHANCES = {
   /** Pelear: mejor con armas en la carga y con guardias (y valientes). */
-  fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08) + fightBonus(game.state), 0.05, 0.95),
+  fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08) + fightBonus(game.state) + (hasPerk(game.state, 'capitana') ? 0.2 : 0), 0.05, 0.95),
   /** Huir: más difícil en rutas de peligro alto. */
   flee: (game) => (tripInfo(game).route.danger === 'alto' ? 0.45 : 0.6),
   /** Cavar en un oasis seco. */
@@ -144,7 +145,7 @@ export function optionState(game, idx) {
 function applyEffects(game, eff, params, rng) {
   const { state, map } = game;
   const lines = [];
-  const cap = RULES.provisionCap;
+  const cap = provisionCap(state);
   if (eff.gold) {
     const g = val(eff.gold, params);
     const before = state.gold;
@@ -161,8 +162,9 @@ function applyEffects(game, eff, params, rng) {
     state.gold += n;
     lines.push(`+${fmt(n)} de oro`);
   }
-  if (eff.cargoPct) lines.push(...loseCargo(state, null, eff.cargoPct));
-  if (eff.breakFragile) lines.push(...loseCargo(state, 'ceramica', eff.breakFragile));
+  const insured = 1 - upgradeValue(state, 'seguro');
+  if (eff.cargoPct) lines.push(...loseCargo(state, null, eff.cargoPct * insured));
+  if (eff.breakFragile) lines.push(...loseCargo(state, 'ceramica', eff.breakFragile * insured));
   if (eff.give) {
     const good = val(eff.give.good, params);
     const w = getGood(good).weight;
@@ -182,7 +184,10 @@ function applyEffects(game, eff, params, rng) {
     state.costBasis[good] = 0;
   }
   if (eff.inspect) {
-    if (state.cargo.armas > 0) {
+    if (state.cargo.armas > 0 && hasPerk(state, 'contrabandista') && rng.chance(0.5)) {
+      lines.push('Revisaron, pero no encontraron tus armas');
+      state.stats.smuggled += 1;
+    } else if (state.cargo.armas > 0) {
       const fine = Math.min(state.gold, params.fine ?? 30);
       lines.push(`Te confiscaron ${state.cargo.armas} de Armas y te multaron con ${fmt(fine)}`);
       state.cargo.armas = 0;
@@ -235,6 +240,18 @@ function loseCargo(state, goodId, part) {
 }
 
 /**
+ * Anota lo que pasó en un evento para el códice y los logros.
+ */
+function noteEvent(state, id, idx, success) {
+  state.seen.events[id] = true;
+  if (id === 'bandidos' && idx === 1 && success) state.stats.fightsWon += 1;
+  if (id === 'ruinas' && success) state.stats.treasures += 1;
+  if (id === 'tormenta' && idx === 1 && success) state.stats.stormsBeaten += 1;
+  if (id === 'viajero' && idx === 0) state.stats.helped += 1;
+  if (id === 'control' && idx === 1 && success && state.cargo.armas > 0) state.stats.smuggled += 1;
+}
+
+/**
  * Elige una opción del evento en curso y aplica lo que pase.
  * @param {object} game
  * @param {number} idx
@@ -251,6 +268,7 @@ export function resolveOption(game, idx, rng) {
   const eff = success === null ? opt.effects : success ? opt.win : opt.lose;
   const lines = applyEffects(game, eff, ev.params, rng);
   game.state.trip.event = null;
+  noteEvent(game.state, ev.id, idx, success);
   const text = (success === false ? opt.loseText : opt.winText) ?? (lines.length ? 'Listo.' : 'Seguís tu camino.');
   addLog(game.state, `${fillText(def.text, ev.params).split('.')[0]}: ${st.label}. ${text}${lines.length ? ` (${lines.join(', ')})` : ''}`, success === false ? 'bad' : 'info');
   return { ok: true, success, text, lines };

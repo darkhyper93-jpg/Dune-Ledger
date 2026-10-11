@@ -10,7 +10,9 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 3 — Caravana viva** (ver `docs/DISENO.md`, "Plan por etapas").
+**Etapa 4 — Progreso permanente** (ver `docs/DISENO.md`, "Plan por etapas").
+
+Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
 
 - Etapa 1: mapa generado por semilla con niebla, mercado con stock, viajes
   con comida y agua, deuda con cuotas, cobrador y embargo, fin de temporada
@@ -21,6 +23,8 @@ con un solo dedo. También se juega en la compu.
 - Etapa 3: salud de cada camello, tripulación con roles (guía, guardia,
   cocinero, contable, curandero, explorador), rasgos, sueldos semanales,
   moral, deserciones y niveles. Bot prudente.
+- Etapa 4: sellos del Gremio, 8 mercaderes, 15 mejoras, préstamos y oro
+  guardado, 30 logros, códice y código de progreso para copiar y pegar.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

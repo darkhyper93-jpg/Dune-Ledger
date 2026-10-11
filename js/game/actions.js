@@ -8,9 +8,11 @@
  */
 
 import { RULES } from '../data/rules.js';
-import { getGood, ACTIVE_GOODS, isTradedIn } from '../data/goods.js';
+import { getGood, ACTIVE_GOODS } from '../data/goods.js';
+import { canTrade } from './perks.js';
+import { see, notePeaks } from './stats.js';
 import { quote } from './market.js';
-import { cargoFree, camelPrice, camelResale, provisionPrices } from './caravan.js';
+import { cargoFree, camelPrice, camelResale, provisionPrices, provisionCap } from './caravan.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { payDebt, canPayHere, totalOwed } from './debt.js';
 
@@ -102,7 +104,7 @@ export function buy(game, goodId, qty) {
   const err = checkBasics(state, qty);
   if (err) return fail(err);
   if (!ACTIVE_GOODS.includes(goodId)) return fail('Ese bien no se vende acá.');
-  if (!isTradedIn(goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
+  if (!canTrade(state, goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
   const good = getGood(goodId);
   if (qty * good.weight > cargoFree(state)) return fail('No te entra en la carga.');
   const q = quote(game, state.location, goodId, qty, 'buy');
@@ -115,6 +117,7 @@ export function buy(game, goodId, qty) {
   state.gold -= q.total;
   state.stock[state.location][goodId] = q.stockAfter;
   state.stats.spent += q.total;
+  see(state, 'goods', goodId);
   snapshotPrices(game, state.location);
   addLog(state, `Compraste ${qty} de ${good.name} por ${q.total} en ${map.cityById[state.location].name}.`, 'trade');
   return { ok: true, total: q.total };
@@ -131,7 +134,7 @@ export function sell(game, goodId, qty) {
   const err = checkBasics(state, qty);
   if (err) return fail(err);
   if (!ACTIVE_GOODS.includes(goodId)) return fail('Ese bien no se compra acá.');
-  if (!isTradedIn(goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
+  if (!canTrade(state, goodId, map.cityById[state.location].type)) return fail(`${getGood(goodId).name}: prohibido en esta ciudad.`);
   const good = getGood(goodId);
   if (qty > state.cargo[goodId]) return fail('No tenés tanto.');
   const q = quote(game, state.location, goodId, qty, 'sell');
@@ -157,6 +160,8 @@ export function sell(game, goodId, qty) {
 function recordSale(state, goodId, qty, profit) {
   const st = state.stats;
   st.earned += profit;
+  st.sold[goodId] = (st.sold[goodId] ?? 0) + qty;
+  see(state, 'goods', goodId);
   if (!st.bestSale || profit > st.bestSale.profit) {
     st.bestSale = { goodId, qty, profit, cityId: state.location, day: state.day };
   }
@@ -177,7 +182,7 @@ export function buyProvision(game, kind, qty) {
   const err = checkBasics(state, qty);
   if (err) return fail(err);
   if (kind !== 'food' && kind !== 'water') return fail('Provisión desconocida.');
-  if (state[kind] + qty > RULES.provisionCap) return fail(`Podés llevar hasta ${RULES.provisionCap}.`);
+  if (state[kind] + qty > provisionCap(state)) return fail(`Podés llevar hasta ${provisionCap(state)}.`);
   const cost = provisionPrices(map.cityById[state.location])[kind] * qty;
   if (cost > state.gold) return fail('No te alcanza el oro.');
   pushUndo(state, kind === 'food' ? 'compra de comida' : 'compra de agua');
@@ -201,6 +206,7 @@ export function buyCamel(game) {
   state.gold -= price;
   state.camels += 1;
   state.camelHp.push(100);
+  notePeaks(state);
   addLog(state, `Compraste un camello por ${price}.`, 'trade');
   return { ok: true, total: price };
 }

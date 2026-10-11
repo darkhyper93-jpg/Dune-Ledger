@@ -6,13 +6,22 @@ import { RULES } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
 import { hashUnit } from '../core/rng.js';
+import { upgradeValue } from './perks.js';
 
 /**
- * Carga máxima: 20 por camello.
+ * Carga máxima: 20 por camello (más con alforjas grandes).
  * @param {object} state
  */
 export function capacity(state) {
-  return state.camels * RULES.camelCapacity;
+  return state.camels * (RULES.camelCapacity + upgradeValue(state, 'carga'));
+}
+
+/**
+ * Tope de comida y de agua (más con odres de cuero).
+ * @param {object} state
+ */
+export function provisionCap(state) {
+  return RULES.provisionCap + upgradeValue(state, 'odres');
 }
 
 /**

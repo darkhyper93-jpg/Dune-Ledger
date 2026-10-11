@@ -1,11 +1,13 @@
 /**
  * Resumen al final de la temporada: puntaje, sellos, mejor venta y ruta
- * más rentable. También suma el resultado al perfil (una sola vez).
+ * más rentable y logros nuevos. También suma el resultado al perfil (una sola vez).
  */
 
 import { h } from './dom.js';
 import { getGood } from '../data/goods.js';
 import { fmt } from '../core/text.js';
+import { recordSeason } from '../game/profile.js';
+import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
 
 /** Textos de cómo terminó la temporada. */
 const REASONS = {
@@ -17,17 +19,12 @@ const REASONS = {
 /**
  * Suma la temporada terminada al perfil si todavía no se sumó.
  * @param {object} app
+ * @returns {string[]} logros nuevos
  */
 function record(app) {
-  const over = app.game.state.over;
-  if (over.recorded) return;
-  const p = app.profile;
-  p.seasons += 1;
-  if (over.won) p.wins += 1;
-  p.seals += over.seals;
-  p.bestScore = Math.max(p.bestScore, Math.max(0, over.score));
-  over.recorded = true;
+  const res = recordSeason(app.profile, app.game);
   app.saveAll();
+  return res.newAchievements;
 }
 
 /**
@@ -37,7 +34,7 @@ function record(app) {
 export function renderSummary(app) {
   const { state, map } = app.game;
   const over = state.over;
-  record(app);
+  const fresh = record(app);
   const best = state.stats.bestSale;
   const routes = Object.entries(state.stats.routeProfit).sort((a, b) => b[1] - a[1]);
   const topRoute = routes[0];
@@ -59,7 +56,9 @@ export function renderSummary(app) {
       h('dt', {}, 'Mejor venta'), h('dd', {}, best ? `${getGood(best.goodId).name} en ${map.cityById[best.cityId].name}: +${fmt(best.profit)}` : '—'),
       h('dt', {}, 'Ruta más rentable'), h('dd', {}, topRoute && topRoute[1] > 0 ? `${routeName(topRoute[0])} (+${fmt(topRoute[1])})` : '—'),
       h('dt', {}, 'Sellos acumulados'), h('dd', {}, fmt(app.profile.seals)))),
-    h('p', { class: 'muted small center' }, 'Con los sellos vas a poder elegir mercaderes y mejoras (etapa 4).'),
-    h('button', { class: 'btn big primary', 'data-testid': 'new-season', onclick: () => app.newSeason() }, 'Nueva temporada'),
+    fresh.length ? h('div', { class: 'card stack', 'data-testid': 'new-achievements' }, h('h3', {}, '¡Logros nuevos!'),
+      fresh.map((id) => h('div', { class: 'achievement done' }, h('b', {}, `★ ${ACHIEVEMENTS_BY_ID[id].name}`), h('span', { class: 'small muted' }, ACHIEVEMENTS_BY_ID[id].desc)))) : null,
+    h('p', { class: 'muted small center' }, 'Gastá tus sellos en el Gremio: mercaderes nuevos y mejoras para las próximas temporadas.'),
+    h('button', { class: 'btn big primary', 'data-testid': 'new-season', onclick: () => app.go('choose') }, 'Nueva temporada'),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver al menú'));
 }

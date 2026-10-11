@@ -4,7 +4,7 @@
 
 import { getDifficulty } from '../data/rules.js';
 import { quote } from './market.js';
-import { totalOwed, settleInstallment } from './debt.js';
+import { totalOwed, settleInstallment, spendFunds } from './debt.js';
 import { addLog } from './knowledge.js';
 
 /**
@@ -22,11 +22,13 @@ export function cargoValueHere(game) {
 }
 
 /**
- * Puntaje actual: oro + valor de la carga acá − deuda que queda.
+ * Puntaje actual: oro (en la bolsa y guardado) + valor de la carga acá −
+ * deuda que queda (cuotas y préstamo).
  * @param {object} game
  */
 export function currentScore(game) {
-  return game.state.gold + cargoValueHere(game) - totalOwed(game.state.debt);
+  const { state } = game;
+  return state.gold + state.deposit + cargoValueHere(game) - totalOwed(state.debt) - state.loan;
 }
 
 /**
@@ -57,7 +59,13 @@ export function finishSeason(game, reason) {
       }
     }
   }
-  const owed = totalOwed(state.debt);
+  if (state.loan > 0) {
+    const pay = Math.min(state.loan, state.gold + state.deposit);
+    spendFunds(state, pay);
+    state.loan -= pay;
+    if (pay > 0) addLog(state, `El Gremio cobró ${pay} del préstamo.`, 'debt');
+  }
+  const owed = totalOwed(state.debt) + state.loan;
   const score = currentScore(game);
   const won = !lostByDebt && owed === 0;
   state.over = {
@@ -70,6 +78,8 @@ export function finishSeason(game, reason) {
     owed,
     /** Si ya se sumó al perfil (sellos, récords). Lo marca la interfaz. */
     recorded: false,
+    /** Logros que se ganaron al cerrar (los completa recordSeason). */
+    newAchievements: [],
   };
   state.undo = [];
   addLog(state, won ? '¡Pagaste toda la deuda! Temporada ganada.' : 'Terminó la temporada sin saldar la deuda.', won ? 'good' : 'bad');

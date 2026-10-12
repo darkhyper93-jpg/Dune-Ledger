@@ -342,3 +342,51 @@ test('invertir en la ciudad sube el nivel y descuenta el oro', async ({ page }) 
   await expect(card).toContainText('nivel 1 de 3');
   expect(await hudNumber(page, 'hud-gold')).toBe(gold - 120);
 });
+
+test('ranking del desafío: publicar con apodo y ver la tabla (servidor simulado)', async ({ page }) => {
+  const posted = [];
+  await page.route('**/rest/v1/daily_scores**', async (route) => {
+    const req = route.request();
+    if (req.method() === 'POST') {
+      posted.push(JSON.parse(req.postData()));
+      return route.fulfill({ status: 201, body: '' });
+    }
+    const mine = posted[0];
+    const rows = [{ nickname: 'Zahra', score: 99999 }, ...(mine ? [{ nickname: mine.nickname, score: mine.score }] : [])];
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(rows) });
+  });
+  const today = dailyDate();
+  await page.evaluate(async (date) => {
+    const { createDaily } = await import('./js/game/daily.js');
+    const g = createDaily(date);
+    g.state.gold = 2500;
+    g.state.debt.installments.forEach((i) => { i.paid = i.amount; });
+    localStorage.setItem('dune-ledger:temporada', JSON.stringify(g.state));
+  }, today);
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await page.getByTestId('finish').click();
+  await page.getByTestId('finish-confirm').click();
+  await page.getByTestId('nickname').fill('a');
+  await page.getByTestId('publish').click();
+  await expect(page.getByTestId('publish-status')).toContainText('apodo');
+  await page.getByTestId('nickname').fill('  La   Zorra ');
+  await page.getByTestId('publish').click();
+  await expect(page.getByTestId('publish-status')).toContainText('Publicado');
+  expect(posted).toHaveLength(1);
+  expect(posted[0].nickname).toBe('La Zorra');
+  expect(posted[0].day).toBe(today);
+  expect(posted[0].code).toBe(scoreCode(today, posted[0].score));
+  await page.getByText('Volver al menú').click();
+  await page.getByTestId('daily').click();
+  await expect(page.getByTestId('ranking')).toContainText('Zahra');
+  await expect(page.getByTestId('ranking')).toContainText('(vos)');
+  await expect(page.getByTestId('publish')).toHaveCount(0);
+});
+
+test('ranking sin conexión: avisa y no rompe nada', async ({ page }) => {
+  await page.route('**/rest/v1/daily_scores**', (route) => route.abort('internetdisconnected'));
+  await page.getByTestId('daily').click();
+  await expect(page.getByTestId('ranking')).toContainText('Sin conexión');
+  await expect(page.getByTestId('daily-play')).toBeEnabled();
+});

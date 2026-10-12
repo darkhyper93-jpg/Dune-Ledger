@@ -5,6 +5,9 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
+/** La prueba de rendimiento (ver el proyecto 'rendimiento'). */
+const PERF = /perf\.spec\.js/;
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
@@ -18,8 +21,11 @@ export default defineConfig({
     timeout: 60_000,
   },
   projects: [
-    { name: 'android', use: { ...devices['Pixel 7'] } },
-    { name: 'iphone', use: { ...devices['iPhone 13'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'android', use: { ...devices['Pixel 7'] }, testIgnore: PERF },
+    { name: 'iphone', use: { ...devices['iPhone 13'] }, testIgnore: PERF },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: PERF },
+    // La medición de rendimiento corre sola, al final: con otras pruebas en
+    // paralelo el procesador está ocupado y los tiempos salen inflados.
+    { name: 'rendimiento', use: { ...devices['Pixel 7'] }, testMatch: PERF, dependencies: ['android', 'iphone', 'webkit'] },
   ],
 });

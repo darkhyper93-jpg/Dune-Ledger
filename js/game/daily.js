@@ -2,7 +2,8 @@
  * Desafío diario: todos juegan el mismo mapa ese día (semilla de la fecha),
  * en el Desierto, en Normal, con el Aprendiz y sin mejoras. Al terminar se
  * comparte un código de puntaje con suma de control, por ejemplo
- * `DL-2026-10-11-4870-a3f`, que no se puede inventar a mano.
+ * `DL-2026-10-11-4870-a3f`; la suma de control evita errores al copiarlo y
+ * trampas a mano, aunque alguien que lea el código del juego podría armarlo.
  */
 
 import { hashString } from '../core/rng.js';

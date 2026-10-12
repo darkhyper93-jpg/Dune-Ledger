@@ -10,7 +10,7 @@ con un solo dedo. También se juega en la compu.
 
 ## Estado
 
-**Etapa 7 — Pulido** (el plan del documento de diseño está completo) (ver `docs/DISENO.md`, "Plan por etapas").
+**Versión 1.0** (el plan del documento de diseño está completo, con contenido extra) (ver `docs/DISENO.md`, "Plan por etapas").
 
 Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
 
@@ -37,7 +37,11 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   procesador 6 veces más lento.
 - Contenido extra: 24 eventos, la caravana rival de Kasim «el Zorro», 10 mercaderes y escenas de ciudad distintas en cada región.
 - Crónicas: una historia de tres capítulos por región que avanza mientras
-  comerciás; bazar de equipo con 6 objetos; 47 logros.
+  comerciás; bazar de equipo con 6 objetos.
+- Versión 1.0: tratos y apuestas con Kasim, inversiones en ciudades, clima
+  de temporada, gráfico de tu patrimonio contra Kasim e historial, ajustes de
+  comodidad (texto grande, alto contraste, vibración), ranking online del
+  desafío del día y 50 logros.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.
@@ -63,6 +67,8 @@ npm run balance   # informe rápido de balance: npm run balance -- 500
 ```
 
 En local, si sólo tenés Chromium: `npx playwright test --project=android`.
+La medición de rendimiento corre aparte, al final, para no competir por el
+procesador: `npx playwright test --project=rendimiento --no-deps`.
 
 ## Estructura
 

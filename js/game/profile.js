@@ -37,7 +37,7 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null, hints: {}, history: [],
+    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null, hints: {}, history: [], nickname: '',
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -74,6 +74,7 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (typeof raw.nickname === 'string' && raw.nickname.length <= 16 && /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 _.-]*$/.test(raw.nickname)) out.nickname = raw.nickname;
   if (Array.isArray(raw.history)) out.history = raw.history.filter(validEntry).slice(0, PROFILE_HISTORY).map((e) => ({ ...e }));
   if (isObj(raw.hints)) {
     for (const id of HINT_IDS) if (raw.hints[id] === true) out.hints[id] = true;
@@ -87,7 +88,7 @@ export function validateProfile(raw) {
     out.wonIn = REGIONS.map((r) => r.id).filter((id) => ok.has(id));
   }
   if (isObj(raw.daily) && typeof raw.daily.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.daily.date) && Number.isFinite(raw.daily.score)) {
-    out.daily = { date: raw.daily.date, score: Math.round(raw.daily.score) };
+    out.daily = { date: raw.daily.date, score: Math.round(raw.daily.score), published: raw.daily.published === true };
   }
   if (isObj(raw.upgrades)) {
     for (const [id, lvl] of Object.entries(raw.upgrades)) {
@@ -187,7 +188,7 @@ export function recordSeason(profile, game) {
   }
   if (state.mode === 'diario') {
     over.official = profile.daily?.date !== state.daily;
-    if (over.official) profile.daily = { date: state.daily, score: over.score };
+    if (over.official) profile.daily = { date: state.daily, score: Math.round(over.score), published: false };
   }
   if (state.mode === 'libre' || over.official === false) {
     over.recorded = true;

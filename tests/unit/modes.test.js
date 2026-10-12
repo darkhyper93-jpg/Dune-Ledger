@@ -85,13 +85,14 @@ test('el desafío cuenta una sola vez por día: las repeticiones son de práctic
   const first = play(2000);
   assert.ok(first.g.state.over.official);
   assert.equal(p.daily.date, '2026-10-11');
-  assert.equal(p.daily.score, first.g.state.over.score);
+  assert.equal(p.daily.score, Math.round(first.g.state.over.score));
+  assert.equal(p.daily.published, false);
   const seals = p.seals;
   assert.ok(seals > 0);
   const again = play(5000);
   assert.equal(again.g.state.over.official, false);
   assert.equal(p.seals, seals);
-  assert.equal(p.daily.score, first.g.state.over.score);
+  assert.equal(p.daily.score, Math.round(first.g.state.over.score));
   assert.deepEqual(validateProfile(JSON.parse(JSON.stringify(p))).daily, p.daily);
 });
 

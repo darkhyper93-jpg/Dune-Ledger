@@ -7,6 +7,7 @@
 import { h, openSheet } from './dom.js';
 import { dailyDate, scoreCode, readScoreCode } from '../game/daily.js';
 import { fmt } from '../core/text.js';
+import { publishForm, rankingTable } from './ranking.js';
 
 /** "2026-10-11" → "11/10/2026". */
 export function prettyDate(date) {
@@ -81,11 +82,13 @@ export function openDailySheet(app) {
     h('p', { class: 'small', style: 'margin:0' }, 'Hoy todos juegan el mismo mapa, con el Aprendiz y sin mejoras. Cuenta tu primera partida del día; las demás son de práctica.'),
     done ? h('div', { class: 'card stack', style: 'gap:8px' },
       h('div', {}, 'Tu resultado de hoy: ', h('b', {}, `${fmt(Math.max(0, done.score))} puntos`)),
-      codeBox(app, scoreCode(done.date, done.score))) : null,
+      codeBox(app, scoreCode(done.date, done.score)),
+      publishForm(app, today)) : null,
     h('button', { class: `btn big${done ? '' : ' primary'}`, 'data-testid': 'daily-play', onclick: () => {
       close();
       app.confirmReplace(() => app.newDaily(today));
     } }, done ? 'Jugar de práctica' : 'Jugar el desafío'),
+    h('div', { class: 'stack', style: 'gap:8px' }, h('h3', {}, 'Ranking de hoy'), rankingTable(app, today)),
     compareBox(app),
     h('button', { class: 'btn', onclick: close }, 'Cerrar')), { label: 'Desafío del día' });
 }
@@ -101,7 +104,8 @@ export function dailyResultCard(app) {
   return h('div', { class: 'card stack unlock', 'data-testid': 'daily-result' },
     h('h3', {}, official ? `Desafío del ${prettyDate(state.daily)}` : 'Partida de práctica'),
     official
-      ? h('p', { class: 'small', style: 'margin:0' }, 'Pasale este código a tus amigos: con él ven tu puntaje y no se puede inventar.')
+      ? h('p', { class: 'small', style: 'margin:0' }, 'Publicá tu puntaje en el ranking de hoy o pasale este código a tus amigos para comparar.')
       : h('p', { class: 'small', style: 'margin:0' }, 'Ya habías jugado el desafío de ese día: esta partida no suma sellos ni cambia tu resultado.'),
-    official ? codeBox(app, scoreCode(state.daily, over.score)) : null);
+    official ? codeBox(app, scoreCode(state.daily, over.score)) : null,
+    official ? publishForm(app, state.daily) : null);
 }

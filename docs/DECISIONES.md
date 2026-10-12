@@ -336,3 +336,48 @@ revisarlo más adelante.
   falta cambiar la versión del formato.
 - `validate.js` se partió: las piezas básicas y las partes chicas (rival,
   crónica, equipo) están en `validate-parts.js`.
+
+## Versión 1.0 — correcciones, Kasim, inversiones, clima, comodidades y ranking
+
+- **Aviso abajo**: los avisos salen sobre la barra de navegación y nunca
+  tapan el oro ni la cuota. Consejos de una sola vez para Kasim, crónicas,
+  bazar, inversiones y clima (el perfil recuerda cuáles viste).
+- **Bots con extras** (`tests/sim/bot-extras.js`): compran equipo y siguen la
+  crónica (guardando lo que hay que entregar). Prueba nueva: con extras no se
+  gana más de 15 puntos por encima del bot base en ninguna región, y cada
+  crónica se termina en al menos 6 de 30 temporadas. Con esto se ajustaron
+  recompensas de crónicas (ningún capítulo da pérdida) y precios del equipo.
+- **Gráfico del resumen**: patrimonio (oro + guardado + lo que pagaste por la
+  carga + la mitad de lo invertido − deudas) contra el oro de Kasim, día a
+  día (hasta 120 días). Colores validados con el script de la guía de
+  visualización para modo claro y noche; leyenda, etiquetas directas,
+  cursor con tooltip, flechas del teclado y tabla. El perfil guarda las
+  últimas 12 temporadas (se ven en Logros).
+- **Tratos con Kasim**: el día que sale de tu ciudad podés comprarle lo que
+  cargó (+20% sobre lo que pagó) o apostar 60 a que llegás antes a su
+  destino (paga el doble; si llegan el mismo día, gana él). Si le sacás la
+  mitad más y 400 de oro, puede mandarte matones.
+- **Inversiones**: 3 niveles por ciudad (120, 200, 320). Cada nivel da 3% de
+  descuento al comprar ahí y +50% de reposición del mercado, y suma 4 de
+  reputación. Al final cuentan la mitad de lo invertido.
+- **Clima**: templado (más probable), tormentas, sequía, cosecha y ferias
+  (+10%). Se elige por la semilla. Con los climas, la Costa quedaba en 86%:
+  las rutas por mar ya no acortan un día y los piratas salen un poco más.
+- **Comodidad**: texto grande y muy grande con `zoom` en todo menos el mapa y
+  el viaje (en el canvas el zoom desalinearía los toques); alto contraste;
+  vibración (Android) al vender con ganancia, en eventos y al ganar.
+- **Ranking online del desafío** (Supabase, proyecto `dune-ledger` en São
+  Paulo, plan gratis: se pausa tras una semana sin uso). Tabla
+  `daily_scores` con RLS: el público sólo puede leer y agregar (sin cambiar
+  ni borrar). La base exige el apodo con letras y números (3 a 16), el
+  puntaje entre 0 y 100.000, el código de puntaje que corresponde, la fecha
+  de hoy (±1 día) y una sola fila por dispositivo y día; el id del
+  dispositivo no se puede leer. Se publican sólo el apodo y el puntaje.
+  Limitación honesta: alguien que lea el código del juego podría inventar un
+  puntaje creíble; para evitarlo haría falta validar la partida en un
+  servidor. La clave publicable va sólo en el encabezado `apikey` (como
+  Bearer la rechazaría Supabase). Las pruebas usan un servidor simulado.
+  Para probarlo de punta a punta se activó `pg_net` en la base; la API REST
+  no lo expone (no está en los esquemas publicados y `public` no tiene
+  funciones), pero conviene desactivarlo desde el panel (Database →
+  Extensions) y borrar la fila de prueba "Prueba del juego".

@@ -2,4 +2,4 @@
  * Versión del juego que se muestra en Ajustes.
  * Tiene que coincidir con la de package.json (hay una prueba que lo comprueba).
  */
-export const VERSION = '0.9.0';
+export const VERSION = '1.0.0';

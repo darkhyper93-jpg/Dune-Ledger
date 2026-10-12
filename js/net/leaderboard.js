@@ -15,6 +15,19 @@ export const RANKING = {
   key: 'sb_publishable_ZVdWJwMUHPDwYGLfIxSDKw_nSAILLQq',
 };
 
+/** Servidor que nunca existe (dominio reservado .invalid). */
+export const TEST_URL = 'https://ranking.invalid';
+
+/**
+ * A qué servidor se le habla. Si el navegador lo maneja un programa de
+ * pruebas (navigator.webdriver), nunca a la base real: así ninguna prueba
+ * puede publicar puntajes de mentira aunque falle su servidor simulado.
+ * @param {{webdriver?:boolean}} [nav]
+ */
+export function endpoint(nav = globalThis.navigator) {
+  return nav?.webdriver ? TEST_URL : RANKING.url;
+}
+
 /** Cuántos puestos se muestran. */
 const TOP = 20;
 /** Clave del id de este dispositivo en el almacenamiento. */
@@ -75,7 +88,7 @@ export async function submitScore({ date, nickname, score }, { fetchImpl = globa
   const s = Math.max(0, Math.round(score));
   const body = { day: date, nickname: nick, score: s, code: scoreCode(date, s), device: deviceId(storage) };
   try {
-    const res = await fetchImpl(`${RANKING.url}/rest/v1/daily_scores`, {
+    const res = await fetchImpl(`${endpoint()}/rest/v1/daily_scores`, {
       method: 'POST',
       headers: headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
       body: JSON.stringify(body),
@@ -98,7 +111,7 @@ export async function fetchTop(date, { fetchImpl = globalThis.fetch } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Fecha inválida.' };
   const q = `select=nickname,score&day=eq.${date}&order=score.desc,created_at.asc&limit=${TOP}`;
   try {
-    const res = await fetchImpl(`${RANKING.url}/rest/v1/daily_scores?${q}`, { headers: headers() });
+    const res = await fetchImpl(`${endpoint()}/rest/v1/daily_scores?${q}`, { headers: headers() });
     if (!res.ok) return { ok: false, error: 'No se pudo leer el ranking.' };
     const data = await res.json();
     const rows = (Array.isArray(data) ? data : [])

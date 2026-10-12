@@ -1,7 +1,7 @@
 /** Pruebas del cliente del ranking del desafío (con un fetch falso: nunca toca el servidor). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanNickname, deviceId, submitScore, fetchTop, RANKING } from '../../js/net/leaderboard.js';
+import { cleanNickname, deviceId, submitScore, fetchTop, endpoint, RANKING, TEST_URL } from '../../js/net/leaderboard.js';
 import { scoreCode } from '../../js/game/daily.js';
 import { MemoryStorage } from './helpers.js';
 
@@ -84,4 +84,11 @@ test('el ranking del día se pide ordenado y se devuelve limpio', async () => {
   assert.deepEqual(weird.rows, [{ nickname: 'Ok', score: 10 }]);
   const off = await fetchTop('2026-10-12', { fetchImpl: fakeFetch(new TypeError('offline')) });
   assert.equal(off.ok, false);
+});
+
+test('un navegador manejado por pruebas nunca le habla a la base real', () => {
+  assert.equal(endpoint({ webdriver: true }), TEST_URL);
+  assert.match(TEST_URL, /\.invalid$/);
+  assert.equal(endpoint({ webdriver: false }), RANKING.url);
+  assert.equal(endpoint(undefined), RANKING.url);
 });

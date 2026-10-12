@@ -12,10 +12,12 @@ test('responde rápido aunque el celular sea lento', async ({ page, browserName 
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
 
-  const t0 = Date.now();
   await page.goto('/?semilla=lento');
   await expect(page.getByTestId('new-season')).toBeVisible();
-  const load = Date.now() - t0;
+  // Tiempo desde que empezó la navegación hasta que el menú está dibujado,
+  // medido por el navegador (sin la demora de Playwright).
+  const load = await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(Math.round(performance.now())))));
+  console.log(`  abrir: ${load} ms (presupuesto 3000)`);
   expect(load, `abrir tardó ${load} ms`).toBeLessThan(3000);
 
   /**
@@ -30,6 +32,7 @@ test('responde rápido aunque el celular sea lento', async ({ page, browserName 
       return Math.round(performance.now() - t);
     }, testId);
     await expect(page.getByTestId(ready)).toBeVisible();
+    console.log(`  ${what}: ${ms} ms (presupuesto ${budget})`);
     expect(ms, `${what} tardó ${ms} ms`).toBeLessThan(budget);
   };
   await timed('nueva temporada', 'new-season', 'start-season');

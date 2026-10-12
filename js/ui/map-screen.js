@@ -9,9 +9,7 @@ import { h, openSheet, fmtPrice } from './dom.js';
 import { createMapView } from '../render/map.js';
 import { activeGoods } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
-import { TERRAINS, DANGERS } from '../data/routes.js';
-import { tripNeeds, canTravel } from '../game/travel.js';
-import { startTrip } from '../game/season.js';
+import { routeBlock } from './route-sheet.js';
 import { otherEnd } from '../game/map-gen.js';
 import { regionId } from '../game/perks.js';
 import { canPayHere } from '../game/debt.js';
@@ -83,25 +81,7 @@ function openCity(app, cityId, onClose) {
       h('div', { class: 'muted small' }, getCityType(city.type).name, ` · zona ${zoneName(city.zone)}`, canPayHere(city) ? ' · se le puede pagar al Gremio' : '')];
     if (here) parts.push(h('p', {}, 'Estás acá.'));
     else if (!route) parts.push(h('p', { class: 'muted' }, 'No hay ruta directa desde donde estás.'));
-    else {
-      const need = tripNeeds(state, route);
-      const ok = canTravel(game, route.id);
-      parts.push(h('dl', { class: 'kv' },
-        h('dt', {}, 'Duración'), h('dd', { 'data-testid': 'route-days' }, plural(route.days, 'día', 'días')),
-        h('dt', {}, 'Terreno'), h('dd', {}, TERRAINS[route.terrain].name),
-        h('dt', {}, 'Peligro'), h('dd', {}, h('span', { class: `pill ${route.danger}` }, DANGERS[route.danger].name)),
-        h('dt', {}, 'Comida'), h('dd', { class: need.enoughFood ? '' : 'need-bad' }, `${need.food} (tenés ${state.food})`),
-        h('dt', {}, 'Agua'), h('dd', { class: need.enoughWater ? '' : 'need-bad' }, `${need.water} (tenés ${state.water})`)));
-      if (!need.enoughFood || !need.enoughWater) {
-        parts.push(h('p', { class: 'bad small', style: 'margin:0' }, '¡No te alcanzan las provisiones! Cada día sin comida o sin agua vas a dejar un 10% de la carga en el camino. Cargá en Provisiones.'));
-      }
-      parts.push(h('button', { class: 'btn big primary', 'data-testid': 'travel', disabled: !ok.ok, onclick: () => {
-        close();
-        const res = app.quiet((g) => startTrip(g, route.id));
-        if (res.ok) app.go('travel');
-      } },
-        ok.ok ? `Viajar a ${city.name}` : ok.error));
-    }
+    else parts.push(routeBlock(app, route, city, close));
     if (seen && !here) {
       parts.push(h('h3', { style: 'margin-top:6px' }, `Precios de venta (${ago(state.day, seen.day)})`));
       parts.push(h('dl', { class: 'kv small' }, activeGoods(regionId(state)).map((g) => [h('dt', { class: 'row', style: 'gap:8px' }, goodArt(g.id, 24), g.name), h('dd', {}, fmtPrice(seen.sell[g.id]))])));

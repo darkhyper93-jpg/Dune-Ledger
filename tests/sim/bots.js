@@ -25,7 +25,7 @@ import { otherEnd } from '../../js/game/map-gen.js';
 import { optionState } from '../../js/game/events.js';
 import { bestOption } from './bot-choices.js';
 import { rivalNews } from '../../js/game/rival.js';
-import { extrasBefore, chronicleBonus } from './bot-extras.js';
+import { extrasBefore, chronicleBonus, nightChoice } from './bot-extras.js';
 import { chapterNow } from '../../js/game/chronicle.js';
 import { avgHealth } from '../../js/game/camels.js';
 import { hiresHere, hire } from '../../js/game/crew.js';
@@ -236,7 +236,7 @@ function greedyTurn(game, profile = PROFILES.greedy) {
       if (n > 0) buy(game, id, n);
     }
   }
-  travel(game, best.route.id, bestOption);
+  travel(game, best.route.id, bestOption, profile.extras ? nightChoice(game, best.route) : {});
 }
 
 /**

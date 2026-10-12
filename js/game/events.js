@@ -19,6 +19,7 @@ import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { fmt, plural } from '../core/text.js';
 import { lastDay } from './modes.js';
+import { nightBanditMult } from './moon.js';
 
 /** Probabilidad base de evento por día de viaje (≈ uno cada 3 o 4 días). */
 export const EVENT_RATE = 0.33;
@@ -137,6 +138,8 @@ export function eventWeights(game, route) {
       w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos
     }
     if (e.id === 'bandidos' || e.id === 'piratas') w *= bandits;
+    // De noche y sin luna los bandidos no te ven.
+    if (e.id === 'bandidos' && game.state.trip?.night) w *= nightBanditMult(game.state);
     weights[e.id] = w;
   }
   return weights;

@@ -148,10 +148,11 @@ export function advance(game) {
  * @param {object} game
  * @param {string} routeId
  * @param {(game:object)=>number} [chooser] devuelve el índice de la opción
+ * @param {{night?:boolean}} [opts] marcha nocturna
  * @returns {{ok:boolean, error?:string, arrived?:boolean, lost?:boolean, days?:number, to?:string, events?:number}}
  */
-export function travel(game, routeId, chooser = firstAvailable) {
-  const start = startTrip(game, routeId);
+export function travel(game, routeId, chooser = firstAvailable, opts = {}) {
+  const start = startTrip(game, routeId, opts);
   if (!start.ok) return start;
   const startDay = game.state.day;
   const to = game.state.trip.to;

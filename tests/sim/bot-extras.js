@@ -12,9 +12,10 @@ import { buy, maxBuy } from '../../js/game/actions.js';
 import { canTrade } from '../../js/game/perks.js';
 import { totalOwed } from '../../js/game/debt.js';
 import { otherEnd } from '../../js/game/map-gen.js';
+import { canNightMarch, lostChance } from '../../js/game/moon.js';
 
 /** Equipo en orden de preferencia para un comerciante. */
-const WANTED = ['cofre', 'brujula', 'lampara', 'toldo', 'catalejo', 'amuleto'];
+const WANTED = ['cofre', 'brujula', 'lampara', 'astrolabio', 'toldo', 'catalejo', 'amuleto'];
 
 /** Oro que el bot no quiere tocar (para la deuda y el viaje). */
 function reserve(state) {
@@ -66,4 +67,15 @@ export function chronicleBonus(game) {
     if (map.cityById[id].type === g.cityType) out[id] = 45;
   }
   return out;
+}
+
+/**
+ * Marcha de noche cuando se puede y hay poco riesgo de perderse (luna
+ * suficiente, guía o astrolabio): ahorra agua.
+ * @param {{map:object, state:object}} game
+ * @param {object} route
+ * @returns {{night:boolean}}
+ */
+export function nightChoice(game, route) {
+  return { night: canNightMarch(route) && lostChance(game.state) < 0.15 };
 }

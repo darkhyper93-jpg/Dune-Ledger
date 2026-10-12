@@ -381,3 +381,27 @@ revisarlo más adelante.
   no lo expone (no está en los esquemas publicados y `public` no tiene
   funciones), pero conviene desactivarlo desde el panel (Database →
   Extensions) y borrar la fila de prueba "Prueba del juego".
+
+## Versión 1.1 — la luna y la marcha nocturna
+
+- **La luna** da una vuelta cada 28 días; la fase del día 1 sale de la
+  semilla (no se guarda nada nuevo: se calcula). Ocho nombres de fase.
+- **Marcha nocturna**: sólo por arena o piedra (de noche, río, mar y montaña
+  no). Se gasta la mitad del agua (con 60% el redondeo hacia arriba se comía
+  el ahorro en caravanas chicas) y los camellos se cansan 1 punto más por
+  día. Al salir se tira si la caravana se pierde (+1 día, sólo si entra en
+  la temporada): 5% con luna llena y 40% sin luna; el guía y el astrolabio
+  dividen cada uno la chance por dos. Sin luna también hay menos bandidos
+  (35% de los de día, hasta 100% con luna llena): oscuridad = sigilo pero
+  riesgo de perderse; luz = rumbo seguro pero te ven.
+- La elección se recuerda entre hojas de ruta (sólo en la sesión).
+- El bot con extras marcha de noche cuando la chance de perderse es menor
+  al 15%; el balance de extras casi no cambia (±5 puntos por región).
+- **Pruebas que no tocan la base real**: en WebKit el servidor simulado del
+  ranking no atendía los pedidos (con el service worker activo Playwright
+  no los ve) y una corrida de CI publicó 4 filas «La Zorra» en la base real
+  del día. Ahora, con `navigator.webdriver`, el juego le habla a
+  `ranking.invalid`; las pruebas del ranking bloquean el service worker y
+  fallan si algún pedido sale hacia supabase.co. Borrar filas desde acá no
+  fue posible (la herramienta se cuelga en sentencias que borran): las de
+  prueba sólo se ven en el ranking de ese día.

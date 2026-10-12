@@ -225,7 +225,7 @@ test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async
   await page.getByText('Volver').click();
   await expect(page.getByTestId('shop')).toContainText('130 sellos');
   await page.getByTestId('records').click();
-  await expect(page.getByTestId('achievements-count')).toContainText('/50');
+  await expect(page.getByTestId('achievements-count')).toContainText('/51');
 });
 
 test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a caballo', async ({ page }) => {

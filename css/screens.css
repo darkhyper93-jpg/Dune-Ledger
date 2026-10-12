@@ -235,3 +235,9 @@ html[data-text='muy-grande'] .hud-item { gap: 4px; }
 .ranking-list li.me { outline: 2px solid var(--gold); }
 .rank-pos { width: 24px; text-align: right; font-weight: 700; color: var(--ink-2); }
 .ranking-list li:nth-child(-n + 3) .rank-pos { color: var(--gold-ink); }
+
+/* ---------- Marcha nocturna: la luna de hoy y elegir de día o de noche ---------- */
+.seg.seg-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.moon-line { gap: 10px; align-items: center; }
+.moon-ico { display: inline-flex; width: 28px; height: 28px; flex: none; }
+.moon-ico svg { width: 28px; height: 28px; }

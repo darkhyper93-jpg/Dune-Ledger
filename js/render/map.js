@@ -12,6 +12,8 @@ import { rivalNews } from '../game/rival.js';
 import { TERRAINS } from '../data/routes.js';
 import { routeDays } from '../game/travel.js';
 import { hashUnit } from '../core/rng.js';
+import { drawMoon, drawStars } from './moon-art.js';
+import { moonLight } from '../game/moon.js';
 
 const CITY_R = 4.4;
 /** Alto del nombre de una ciudad y ancho aproximado por letra (en unidades del mapa). */
@@ -137,7 +139,7 @@ export function createMapView(canvas, opts) {
    * Dibuja todo. `extra` puede traer la ciudad elegida, la posición de la
    * caravana en viaje (0..1 sobre una ruta) y la oscuridad del cielo.
    * @param {{map:object,state:object}} game
-   * @param {{selected?:string|null, travel?:{route:object,from:string,t:number}, night?:number}} [extra]
+   * @param {{selected?:string|null, travel?:{route:object,from:string,t:number}, night?:number, moon?:number}} [extra]
    */
   function draw(game, extra = {}) {
     last = { game, extra };
@@ -208,6 +210,10 @@ export function createMapView(canvas, opts) {
     if (extra.night) {
       ctx.fillStyle = `rgba(8, 16, 46, ${Math.min(0.6, extra.night)})`;
       ctx.fillRect(0, 0, w, hgt);
+    }
+    if (extra.moon !== undefined) {
+      drawStars(ctx, w, hgt, state.seed, moonLight(extra.moon));
+      drawMoon(ctx, extra.moon, w - 44, 130, 20); // debajo del cartel del viaje
     }
   }
 

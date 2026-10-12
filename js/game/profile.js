@@ -30,7 +30,7 @@ export const CODEX = {
 export const PROFILE_HISTORY = 12;
 
 /** Consejos de una sola vez (ver js/ui/coach.js). */
-export const HINT_IDS = ['kasim', 'cronica', 'bazar', 'invertir', 'clima'];
+export const HINT_IDS = ['kasim', 'cronica', 'bazar', 'invertir', 'clima', 'luna'];
 
 /** Perfil vacío: sólo el Aprendiz. */
 export function defaultProfile() {

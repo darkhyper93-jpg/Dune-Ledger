@@ -19,6 +19,7 @@ import { hasGear } from './gear.js';
 import { betArrive } from './rival-deals.js';
 import { bump, see, notePeaks } from './stats.js';
 import { lastDay } from './modes.js';
+import { canNightMarch, lostChance, moonLight, moonPhase } from './moon.js';
 
 /** Probabilidad por día de que se rompa cada cerámica en la montaña. */
 export const MOUNTAIN_BREAK = 0.04;
@@ -27,13 +28,15 @@ export const MOUNTAIN_BREAK = 0.04;
  * Sale de viaje por una ruta (todavía no pasa ningún día).
  * @param {object} game
  * @param {string} routeId
+ * @param {{night?:boolean}} [opts] marcha nocturna (ver moon.js)
  * @returns {{ok:boolean, error?:string}}
  */
-export function startTrip(game, routeId) {
+export function startTrip(game, routeId, { night = false } = {}) {
   const check = canTravel(game, routeId);
   if (!check.ok) return check;
   const { map, state } = game;
   const route = map.routeById[routeId];
+  if (night && !canNightMarch(route)) return { ok: false, error: 'De noche sólo se marcha por arena o piedra.' };
   const from = state.location;
   const to = otherEnd(route, from);
   let days = routeDays(state, route.days);
@@ -41,7 +44,16 @@ export function startTrip(game, routeId) {
   if (route.danger === 'alto') bump(state, 'highTrips');
   state.trip = { routeId, from, to, done: 0, days, rolled: 0, event: null };
   state.undo = [];
-  addLog(state, `Saliste de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(days, 'día', 'días')}).`, 'travel');
+  if (night) {
+    state.trip.night = true;
+    bump(state, 'nightTrips');
+  }
+  addLog(state, `Saliste ${night ? 'de noche ' : ''}de ${map.cityById[from].name} rumbo a ${map.cityById[to].name} (${plural(days, 'día', 'días')}).`, 'travel');
+  if (night && state.day + days + 1 <= lastDay(state) && withRng(state, (rng) => rng.chance(lostChance(state)))) {
+    days += 1;
+    state.trip.days = days;
+    addLog(state, `Sin ${moonLight(moonPhase(state)) < 0.5 ? 'luna' : 'rumbo'} se perdieron entre las dunas: el viaje dura un día más.`, 'bad');
+  }
   const sleeper = state.crew.find((m) => m.trait === 'dormilon');
   if (sleeper && state.day + days + 1 <= lastDay(state) && withRng(state, (rng) => rng.chance(0.1))) {
     days += 1;
@@ -119,8 +131,9 @@ export function advanceTrip(game) {
         }
       }
     }
-    const use = { food: dailyRation(state, 'food'), water: waterUntil(state, route.terrain, k) - waterUntil(state, route.terrain, k - 1) };
-    const res = passDay(game, use, 'en el camino', { terrain: route.terrain });
+    const night = trip.night === true;
+    const use = { food: dailyRation(state, 'food'), water: waterUntil(state, route.terrain, k, night) - waterUntil(state, route.terrain, k - 1, night) };
+    const res = passDay(game, use, 'en el camino', { terrain: route.terrain, night });
     trip.done = k;
     if (route.terrain === 'montana' && state.cargo.ceramica > 0) withRng(state, (rng) => mountainBreaks(state, rng));
     if (res.lost) {

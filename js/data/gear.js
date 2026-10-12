@@ -10,6 +10,7 @@ export const GEAR = [
   { id: 'toldo', name: 'Toldo de lona', price: 50, sold: ['aldea', 'oasis'], desc: 'Descansando a la sombra, los animales se recuperan un 50% más.' },
   { id: 'cofre', name: 'Cofre con candado', price: 75, sold: ['minera', 'capital'], desc: 'Cuando te roban o se cae carga, perdés un 40% menos.' },
   { id: 'catalejo', name: 'Catalejo', price: 60, sold: ['puerto', 'santa'], desc: 'Al llegar a una ciudad, ves los precios de una vecina que no conocés.' },
+  { id: 'astrolabio', name: 'Astrolabio', price: 55, sold: ['oasis', 'puerto'], desc: 'Leyendo las estrellas, marchando de noche te perdés la mitad de las veces.' },
   { id: 'amuleto', name: 'Amuleto del ojo', price: 40, sold: ['santa', 'aldea'], desc: 'Dicen que da suerte: +4% en todas las opciones que dependen del azar.' },
 ];
 

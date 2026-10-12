@@ -52,23 +52,28 @@ const HINTS = {
   bazar: 'En el bazar se compra equipo que sirve toda la temporada. Cada tipo de ciudad vende cosas distintas.',
   invertir: 'Podés invertir en las ciudades: lo que pongas te da descuentos ahí y el mercado se repone más rápido.',
   clima: 'Cada temporada tiene su clima, que cambia los eventos y algunos precios. Lo ves en la cabecera de cada ciudad: tocalo para ver qué hace.',
+  luna: 'Por arena o piedra podés marchar de noche: se gasta mucha menos agua, pero sin luna es fácil perderse. Mirá la fase antes de salir.',
 };
 
 /**
  * Consejo de una sola vez (o null si ya lo viste o el tutorial está en curso).
  * @param {object} app
- * @param {'kasim'|'cronica'|'bazar'|'invertir'|'clima'} id
+ * @param {'kasim'|'cronica'|'bazar'|'invertir'|'clima'|'luna'} id
+ * @param {{inline?:boolean}} [opts] inline: al cerrarlo sólo se quita (dentro
+ *   de una hoja, donde redibujar la pantalla no lo sacaría)
  */
-export function hintCard(app, id) {
+export function hintCard(app, id, { inline = false } = {}) {
   const p = app.profile;
   if (!p.tutorialDone || p.hints?.[id]) return null;
-  return h('aside', { class: 'coach hint', 'data-testid': `hint-${id}`, 'aria-label': 'Consejo' },
+  const card = h('aside', { class: 'coach hint', 'data-testid': `hint-${id}`, 'aria-label': 'Consejo' },
     h('span', { class: 'coach-badge', 'aria-hidden': 'true' }, svgNode(goodSvg('libros'))),
     h('div', { class: 'coach-body' },
       h('p', {}, HINTS[id]),
       h('button', { class: 'linkish', onclick: () => {
         p.hints = { ...p.hints, [id]: true };
         app.saveAll();
-        app.render();
+        if (inline) card.remove();
+        else app.render();
       } }, 'Entendido')));
+  return card;
 }

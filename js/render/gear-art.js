@@ -57,6 +57,17 @@ const ART = {
     <circle cx="24" cy="29" r="2.4" fill="#1E2742"/>
     <circle cx="22.5" cy="27.5" r="1" fill="#FFFFFF"/>
     <circle cx="24" cy="16" r="2.4" fill="#E2A42C" ${O}/>`,
+  // Un astrolabio de bronce: anilla, disco con estrellas y la regla cruzada.
+  astrolabio: `
+    <circle cx="24" cy="8" r="3" fill="none" ${O}/>
+    <path d="M21 12h6l-1 3h-4z" fill="#A8761A" ${O}/>
+    <circle cx="24" cy="28" r="15" fill="#C98A3A" ${O}/>
+    <circle cx="24" cy="28" r="11" fill="#1E2742" ${O}/>
+    <circle cx="19" cy="23" r="1.2" fill="#FBE3A6"/><circle cx="29" cy="25" r="1" fill="#FBE3A6"/><circle cx="21" cy="33" r="0.9" fill="#FBE3A6"/><circle cx="30" cy="33" r="1.3" fill="#FBE3A6"/>
+    <path d="M27 20a6 6 0 1 0 0 8a4.6 4.6 0 1 1 0-8z" fill="#F1D18F"/>
+    <path d="M12 34L36 22" stroke="#E2A42C" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M12 34L36 22" stroke="${INK}" stroke-width="0.8" stroke-linecap="round"/>
+    <circle cx="24" cy="28" r="2" fill="#E2A42C" ${O}/>`,
 };
 
 /**

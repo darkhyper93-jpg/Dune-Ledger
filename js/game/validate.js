@@ -28,6 +28,7 @@ import { cleanUpgrades } from './perks.js';
 import { startingResources } from './start.js';
 import { debtPlan } from './debt.js';
 import { initialStats } from './stats.js';
+import { canNightMarch } from './moon.js';
 import { CODEX } from './profile.js';
 import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
 import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart, historyPart, betPart, investPart, climatePart } from './validate-parts.js';
@@ -241,6 +242,10 @@ function tripPart(v, map, location) {
   need(v.from === location && (r.a === v.from || r.b === v.from) && v.to === (r.a === v.from ? r.b : r.a), 'extremos del viaje');
   const days = int(v.days, 1, 20, 'días del viaje');
   const trip = { routeId: v.routeId, from: v.from, to: v.to, done: int(v.done, 0, days, 'viaje'), days, rolled: int(v.rolled, 0, days, 'viaje'), event: null };
+  if (v.night !== undefined && v.night !== false) {
+    need(v.night === true && canNightMarch(r), 'marcha nocturna');
+    trip.night = true;
+  }
   if (v.event !== null) {
     need(isObj(v.event) && typeof v.event.id === 'string' && Object.hasOwn(EVENTS_BY_ID, v.event.id), 'evento');
     trip.event = { id: v.event.id, params: record(v.event.params, (k) => /^\w{1,20}$/.test(k), (x, w) => {

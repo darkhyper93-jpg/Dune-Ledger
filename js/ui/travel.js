@@ -10,6 +10,7 @@ import { createMapView } from '../render/map.js';
 import { advance } from '../game/season.js';
 import { showEvent } from './event.js';
 import { setWind } from '../core/audio.js';
+import { moonPhase, moonLight } from '../game/moon.js';
 
 let view = null;
 
@@ -37,9 +38,15 @@ function progress(trip) {
   return trip.days ? trip.done / trip.days : 0;
 }
 
-/** Dibuja la caravana en una posición de la ruta, con el cielo del día. */
+/** Dibuja la caravana en una posición de la ruta, con el cielo del día (o de la noche). */
 function drawAt(game, mapView, trip, p, dayFloat) {
   const route = game.map.routeById[trip.routeId];
+  // De noche el cielo queda oscuro y se ve la luna de ese día.
+  if (trip.night) {
+    const moon = moonPhase(game.state, game.state.day);
+    mapView.draw(game, { travel: { route, from: trip.from, t: p }, night: 0.6 - 0.1 * moonLight(moon), moon });
+    return;
+  }
   const night = 0.45 * (1 - Math.cos(dayFloat * Math.PI * 2)) / 2;
   mapView.draw(game, { travel: { route, from: trip.from, t: p }, night });
 }
@@ -90,7 +97,7 @@ function step(app, mapView, banner) {
     if (done) return;
     const t = Math.min(1, (now - t0) / total);
     const dayFloat = t * days;
-    banner.textContent = `En camino… día ${Math.min(endDay, startDay + Math.floor(dayFloat))}`;
+    banner.textContent = `${snapshot.night ? 'Marcha nocturna' : 'En camino'}… día ${Math.min(endDay, startDay + Math.floor(dayFloat))}`;
     drawAt(game, mapView, snapshot, p0 + (p1 - p0) * t, dayFloat);
     if (t < 1) requestAnimationFrame(frame);
     else setTimeout(finish, 200);

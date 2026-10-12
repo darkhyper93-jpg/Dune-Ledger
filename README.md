@@ -37,11 +37,15 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   procesador 6 veces más lento.
 - Contenido extra: 24 eventos, la caravana rival de Kasim «el Zorro», 10 mercaderes y escenas de ciudad distintas en cada región.
 - Crónicas: una historia de tres capítulos por región que avanza mientras
-  comerciás; bazar de equipo con 6 objetos.
+  comerciás; bazar de equipo con 7 objetos.
 - Versión 1.0: tratos y apuestas con Kasim, inversiones en ciudades, clima
   de temporada, gráfico de tu patrimonio contra Kasim e historial, ajustes de
   comodidad (texto grande, alto contraste, vibración), ranking online del
   desafío del día y 50 logros.
+- Versión 1.1: la luna y la marcha nocturna. Por arena o piedra se puede
+  salir de noche: se gasta la mitad del agua, pero sin luna es fácil
+  perderse (aunque los bandidos tampoco te ven). Astrolabio en el bazar y el
+  logro «Hijo de la luna».
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

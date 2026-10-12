@@ -28,6 +28,7 @@ import { recordDay } from './history.js';
 import { climateOf } from './climate.js';
 import { investLevel, INVEST_RECOVERY } from './invest.js';
 import { lastDay } from './modes.js';
+import { NIGHT_WATER, NIGHT_FATIGUE } from './moon.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
 export const SHORTAGE_LOSS = 0.1;
@@ -69,21 +70,23 @@ export function routeDays(state, days) {
  * @param {object} state
  * @param {string} terrain
  * @param {number} k
+ * @param {boolean} [night] marcha nocturna (se gasta menos)
  */
-export function waterUntil(state, terrain, k) {
-  return Math.ceil(k * dailyRation(state) * TERRAINS[terrain].water - 1e-9);
+export function waterUntil(state, terrain, k, night = false) {
+  return Math.ceil(k * dailyRation(state) * TERRAINS[terrain].water * (night ? NIGHT_WATER : 1) - 1e-9);
 }
 
 /**
  * Lo que hace falta para recorrer una ruta: días, comida y agua.
  * @param {object} state
  * @param {{days:number,terrain:string}} route
+ * @param {{night?:boolean}} [opts] marcha nocturna
  * @returns {{days:number,food:number,water:number,enoughFood:boolean,enoughWater:boolean}}
  */
-export function tripNeeds(state, route) {
+export function tripNeeds(state, route, { night = false } = {}) {
   const days = routeDays(state, route.days);
   const food = days * dailyRation(state, 'food');
-  const water = waterUntil(state, route.terrain, days);
+  const water = waterUntil(state, route.terrain, days, night);
   return { days, food, water, enoughFood: state.food >= food, enoughWater: state.water >= water };
 }
 
@@ -128,8 +131,9 @@ function loseCargo(state, part) {
  * @param {object} game
  * @param {{food:number,water:number}} use lo que se gasta ese día
  * @param {string} where texto para el diario ("en el camino", "en Kharsa")
- * @param {{terrain?:string, rest?:boolean}} [mode] día de viaje (cansa a los
- *   camellos según el terreno) o de descanso (los recupera)
+ * @param {{terrain?:string, rest?:boolean, night?:boolean}} [mode] día de viaje
+ *   (cansa a los camellos según el terreno, un poco más de noche) o de
+ *   descanso (los recupera)
  * @returns {{lost:boolean}} lost: la temporada terminó por la deuda
  */
 export function passDay(game, use, where, mode = {}) {
@@ -146,7 +150,7 @@ export function passDay(game, use, where, mode = {}) {
   if (hungry || thirsty) state.stats.shortageDays += 1;
   if (hungry) addLog(state, `Sin comida ${where}: la caravana pasa hambre.`, 'bad');
   if (mode.terrain || thirsty || hungry) {
-    const fatigue = (mode.terrain ? dayFatigue(mode.terrain) : 0) + (thirsty ? THIRST_HP : 0) + (hungry ? HUNGER_HP : 0);
+    const fatigue = (mode.terrain ? dayFatigue(mode.terrain) + (mode.night ? NIGHT_FATIGUE : 0) : 0) + (thirsty ? THIRST_HP : 0) + (hungry ? HUNGER_HP : 0);
     for (const line of tireCamels(state, fatigue)) addLog(state, `${line}.`, 'bad');
   }
   if (mode.rest && !thirsty && !hungry) healCamels(state, Math.round(REST_HP * healMult(state) * (hasGear(state, 'toldo') ? 1.5 : 1)));

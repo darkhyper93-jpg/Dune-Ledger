@@ -241,7 +241,7 @@ test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a c
   await expect(page.getByTestId('region-desierto')).toHaveAttribute('aria-checked', 'true');
   await page.getByTestId('region-estepa').click();
   await page.getByTestId('difficulty-dificil').click();
-  await expect(page.getByText('Deuda: 2.750 de oro')).toBeVisible();
+  await expect(page.getByText('Deuda: 3.025 de oro')).toBeVisible();
   await page.getByTestId('start-season').click();
   await expect(page.getByTestId('hud-camels')).toContainText('Caballos');
   await page.getByTestId('tab-provisiones').click();

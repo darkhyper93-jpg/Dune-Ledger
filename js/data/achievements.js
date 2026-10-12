@@ -54,6 +54,7 @@ export const ACHIEVEMENTS = [
   { id: 'desafio', name: 'Desafío cumplido', desc: 'Ganá un desafío del día.', check: ({ over, state }) => over.won && state.mode === 'diario' },
   // ── La caravana rival ──
   { id: 'zorro', name: 'Más zorro que el Zorro', desc: 'Terminá con más puntaje que el oro de Kasim (desbloquea a la Espía del Gremio).', check: ({ over }) => over.rivalGold !== null && over.score > over.rivalGold },
+  { id: 'caravasar', name: 'Caravasar propio', desc: 'Invertí hasta el nivel 3 en una ciudad.', check: ({ state }) => Object.values(state.invest ?? {}).some((l) => l >= 3) },
   { id: 'carrera', name: 'Ganá la carrera', desc: 'Ganale una apuesta de carrera a Kasim.', check: ({ state }) => (state.stats.betsWon ?? 0) >= 1 },
   { id: 'te-lo-compro', name: 'Te lo compro todo', desc: 'Comprale a Kasim toda su carga.', check: ({ state }) => (state.stats.cargoBought ?? 0) >= 1 },
   { id: 'zorro-doble', name: 'Kasim, a casa', desc: 'Terminá con el doble de puntaje que el oro de Kasim.', check: ({ over }) => over.rivalGold !== null && over.score >= 2 * Math.max(1, over.rivalGold) },

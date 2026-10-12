@@ -225,7 +225,7 @@ test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async
   await page.getByText('Volver').click();
   await expect(page.getByTestId('shop')).toContainText('130 sellos');
   await page.getByTestId('records').click();
-  await expect(page.getByTestId('achievements-count')).toContainText('/49');
+  await expect(page.getByTestId('achievements-count')).toContainText('/50');
 });
 
 test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a caballo', async ({ page }) => {
@@ -330,4 +330,15 @@ test('crónica en la taberna y bazar de equipo en provisiones', async ({ page })
     await page.getByTestId('nav-caravan').click();
     await expect(page.getByTestId('gear-owned')).toBeVisible();
   }
+});
+
+test('invertir en la ciudad sube el nivel y descuenta el oro', async ({ page }) => {
+  await newSeason(page);
+  await page.getByTestId('tab-provisiones').click();
+  const card = page.getByTestId('invest');
+  await expect(card).toContainText('nivel 0 de 3');
+  const gold = await hudNumber(page, 'hud-gold');
+  await card.getByTestId('invest-buy').click();
+  await expect(card).toContainText('nivel 1 de 3');
+  expect(await hudNumber(page, 'hud-gold')).toBe(gold - 120);
 });

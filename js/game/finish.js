@@ -8,6 +8,7 @@ import { totalOwed, settleInstallment, spendFunds } from './debt.js';
 import { addLog } from './knowledge.js';
 import { isFree } from './modes.js';
 import { rivalWorth } from './rival.js';
+import { investValue } from './invest.js';
 
 /**
  * Valor de la carga si la vendieras toda acá, unidad por unidad.
@@ -24,13 +25,13 @@ export function cargoValueHere(game) {
 }
 
 /**
- * Puntaje actual: oro (en la bolsa y guardado) + valor de la carga acá −
- * deuda que queda (cuotas y préstamo).
+ * Puntaje actual: oro (en la bolsa y guardado) + valor de la carga acá +
+ * la mitad de lo invertido en ciudades − deuda que queda (cuotas y préstamo).
  * @param {object} game
  */
 export function currentScore(game) {
   const { state } = game;
-  return state.gold + state.deposit + cargoValueHere(game) - totalOwed(state.debt) - state.loan;
+  return state.gold + state.deposit + cargoValueHere(game) + investValue(state) - totalOwed(state.debt) - state.loan;
 }
 
 /**

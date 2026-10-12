@@ -20,7 +20,7 @@ import { dailyRation, canTravel } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
 import { coachCard } from './coach.js';
-import { bazaarCard } from './bazaar.js';
+import { bazaarCard, investCard } from './bazaar.js';
 
 /**
  * Arma la pantalla de la ciudad actual.
@@ -147,6 +147,7 @@ function renderProvisions(app) {
           if (res.ok) app.toast(`Vendiste un ${mountName(state)} por ${fmt(res.total)}.`);
         } }, `Vender (${fmt(resale)})`))),
     bazaarCard(app),
+    investCard(app),
     h('div', { class: 'card stack' },
       h('h3', {}, 'Descansar'),
       h('div', { class: 'small' }, `Pasás un día en ${city.name}: los ${mountName(state, 2)} recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),

@@ -104,6 +104,7 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     gear: {},
     history: [],
     bet: null,
+    invest: {},
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);

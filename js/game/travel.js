@@ -25,6 +25,7 @@ import { mountName } from './caravan.js';
 import { rivalDay } from './rival.js';
 import { hasGear } from './gear.js';
 import { recordDay } from './history.js';
+import { investLevel, INVEST_RECOVERY } from './invest.js';
 import { lastDay } from './modes.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
@@ -149,7 +150,8 @@ export function passDay(game, use, where, mode = {}) {
   if (mode.rest && !thirsty && !hungry) healCamels(state, Math.round(REST_HP * healMult(state) * (hasGear(state, 'toldo') ? 1.5 : 1)));
   notePeaks(state);
   const crew = crewDay(game, { travel: !!mode.terrain, rest: !!mode.rest, hungry, thirsty });
-  recoverStock(state.stock, RULES.market.stockRecovery * (hasPerk(state, 'negociante') ? 1.5 : 1));
+  // Las ciudades donde invertiste se reponen más rápido.
+  recoverStock(state.stock, RULES.market.stockRecovery * (hasPerk(state, 'negociante') ? 1.5 : 1), (id) => 1 + INVEST_RECOVERY * investLevel(state, id));
   rivalDay(game);
   tickNews(game);
   if (crew.extraRumor) extraRumor(game);

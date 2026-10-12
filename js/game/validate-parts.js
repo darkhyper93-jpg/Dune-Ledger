@@ -100,3 +100,9 @@ export function betPart(v, cityOk) {
   need(isObj(v) && cityOk(v.to), 'apuesta');
   return { to: v.to, stake: int(v.stake, 1, 1000, 'apuesta'), rivalDay: int(v.rivalDay, 1, 999, 'apuesta') };
 }
+
+/** Valida las inversiones en ciudades (nivel 1 a 3 por ciudad). */
+export function investPart(v, cityOk) {
+  if (v === undefined) return {};
+  return record(v, cityOk, (x, w) => int(x, 1, 3, w), 'inversiones');
+}

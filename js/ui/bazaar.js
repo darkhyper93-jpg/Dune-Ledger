@@ -1,6 +1,6 @@
 /**
- * Bazar de equipo (en la pestaña Provisiones) y lista del equipo que ya
- * lleva la caravana (en la pantalla Caravana).
+ * Bazar de equipo e inversiones en la ciudad (en la pestaña Provisiones) y
+ * lista del equipo que ya lleva la caravana (en la pantalla Caravana).
  */
 
 import { h } from './dom.js';
@@ -11,6 +11,7 @@ import { svgNode } from '../render/shapes.js';
 import { playCoins } from '../core/audio.js';
 import { fmt } from '../core/text.js';
 import { hintCard } from './coach.js';
+import { INVEST, INVEST_DISCOUNT, investLevel, nextInvest, invest } from '../game/invest.js';
 
 /** Dibujo de un objeto del bazar. */
 function gearArt(id, size = 48) {
@@ -57,4 +58,31 @@ export function gearOwnedCard(app) {
   return h('div', { class: 'card stack', 'data-testid': 'gear-owned' },
     h('h3', {}, 'Equipo'),
     owned.map((it) => h('div', { class: 'gear-row' }, gearArt(it.id, 40), h('div', { class: 'grow' }, h('b', {}, it.name), h('div', { class: 'small muted' }, it.desc)))));
+}
+
+/**
+ * Invertir en la ciudad actual: el nivel que tiene y el próximo.
+ * @param {object} app
+ */
+export function investCard(app) {
+  const { state, map } = app.game;
+  const city = map.cityById[state.location];
+  const lvl = investLevel(state, city.id);
+  const next = nextInvest(app.game);
+  return h('div', { class: 'card stack', 'data-testid': 'invest' },
+    hintCard(app, 'invertir'),
+    h('div', { class: 'row between' }, h('h3', {}, `Invertir en ${city.name}`), h('span', { class: 'pill' }, `nivel ${lvl} de ${INVEST.length}`)),
+    h('div', { class: 'invest-steps', 'aria-hidden': 'true' }, INVEST.map((_, i) => h('span', { class: i < lvl ? 'on' : '' }))),
+    lvl ? h('p', { class: 'small', style: 'margin:0' }, `Acá comprás un ${Math.round(lvl * INVEST_DISCOUNT * 100)}% más barato y el mercado se repone más rápido.`) : null,
+    next
+      ? h('div', { class: 'gear-row' },
+        h('div', { class: 'grow' }, h('b', {}, next.name), h('div', { class: 'small muted' }, `${next.desc} Al final de la temporada vale la mitad de lo que pusiste.`)),
+        h('button', { class: 'btn small', 'data-testid': 'invest-buy', disabled: state.gold < next.cost, onclick: () => {
+          const res = app.act((g) => invest(g));
+          if (res.ok) {
+            playCoins(30);
+            app.toast(`¡${next.name} en ${city.name}!`);
+          }
+        } }, `${fmt(next.cost)} de oro`))
+      : h('p', { class: 'small muted', style: 'margin:0' }, 'Ya invertiste todo lo posible en esta ciudad.'));
 }

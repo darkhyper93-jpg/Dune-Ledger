@@ -174,3 +174,8 @@ input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--f
 .history-list li:last-child { border-bottom: 0; }
 .history-score { display: grid; justify-items: end; font-variant-numeric: tabular-nums; }
 .history-list li.best .history-score b { color: var(--gold-ink); }
+
+/* ---------- Inversiones ---------- */
+.invest-steps { display: flex; gap: 6px; }
+.invest-steps span { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
+.invest-steps span.on { background: var(--gold); border-color: var(--gold-deep); }

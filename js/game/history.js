@@ -1,11 +1,13 @@
 /**
  * Registro día a día de la temporada para el gráfico del resumen: tu
- * patrimonio (oro + oro guardado + lo que pagaste por la carga − deudas) y
+ * patrimonio (oro + oro guardado + lo que pagaste por la carga + la mitad
+ * de lo invertido − deudas) y
  * el oro de Kasim. Se anota al empezar y al final de cada día.
  */
 
 import { totalOwed } from './debt.js';
 import { rivalWorth } from './rival.js';
+import { investValue } from './invest.js';
 
 /** Máximo de días guardados (el modo libre puede durar cientos). */
 export const HISTORY_LIMIT = 120;
@@ -17,7 +19,7 @@ export const HISTORY_LIMIT = 120;
 export function worthNow(state) {
   let cargo = 0;
   for (const [id, qty] of Object.entries(state.cargo)) cargo += qty * (state.costBasis[id] ?? 0);
-  return Math.round(state.gold + state.deposit + cargo - totalOwed(state.debt) - state.loan);
+  return Math.round(state.gold + state.deposit + cargo + investValue(state) - totalOwed(state.debt) - state.loan);
 }
 
 /**

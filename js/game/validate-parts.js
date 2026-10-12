@@ -71,6 +71,10 @@ export function rivalPart(v, cityOk) {
     left: int(v.left, 0, 30, 'rival'), days: int(v.days, 0, 30, 'rival'), wait: int(v.wait, 0, 10, 'rival'),
     gold: int(v.gold, 0, 1e8, 'oro del rival'),
     cargo: v.cargo === null ? null : { goodId: v.cargo.goodId, qty: int(v.cargo.qty, 1, 999, 'rival'), cost: int(v.cargo.cost, 0, 1e8, 'rival') },
+    // Partidas viejas: Kasim con la carga de antes y sin peligro anotado.
+    capacity: int(v.capacity ?? 40, 20, 400, 'carga del rival'),
+    danger: ['bajo', 'medio', 'alto'].includes(v.danger) ? v.danger : 'bajo',
+    full: v.full === true,
   };
 }
 

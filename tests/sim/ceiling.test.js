@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runMany, PROFILES } from './bots.js';
+import { runMany, playSeason, PROFILES } from './bots.js';
 
 const N = 200;
 
@@ -41,4 +41,15 @@ test('agrandar la caravana rinde: con 4 camellos el puntaje mediano supera al de
   const four = median(4);
   console.log(`  mediana con 2 camellos ${two} · con 4 camellos ${four}`);
   assert.ok(four > two, `4 camellos: ${four}, 2 camellos: ${two}`);
+});
+
+test('Kasim compite: el codicioso le gana entre el 40% y el 75% de las temporadas (150 temporadas)', () => {
+  let beat = 0;
+  const n = 150;
+  for (let i = 0; i < n; i++) {
+    const r = playSeason('greedy', `kasim-${i}`);
+    if (r.score > r.game.state.over.rivalGold) beat++;
+  }
+  console.log(`  el codicioso le gana a Kasim en ${((beat / n) * 100).toFixed(1)}%`);
+  assert.ok(beat / n >= 0.4 && beat / n <= 0.75, `${((beat / n) * 100).toFixed(1)}%`);
 });

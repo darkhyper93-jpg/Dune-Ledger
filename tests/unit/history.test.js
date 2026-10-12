@@ -5,12 +5,14 @@ import { createSeason, rest, finishSeason } from '../../js/game/season.js';
 import { worthNow, HISTORY_LIMIT } from '../../js/game/history.js';
 import { validateState } from '../../js/game/validate.js';
 import { defaultProfile, recordSeason, validateProfile, PROFILE_HISTORY } from '../../js/game/profile.js';
+import { ANIMAL_VALUE } from '../../js/game/caravan.js';
 
 const fresh = () => createSeason({ seed: 'historia', events: false });
 
 test('la temporada anota tu patrimonio y el de Kasim cada día', () => {
   const g = fresh();
-  assert.deepEqual(g.state.history, [{ day: 1, me: worthNow(g.state), rival: 400 }]);
+  // Kasim arranca con 400 de oro y dos camellos, como vos.
+  assert.deepEqual(g.state.history, [{ day: 1, me: worthNow(g.state), rival: 400 + 2 * ANIMAL_VALUE }]);
   for (let i = 0; i < 4; i++) rest(g);
   assert.equal(g.state.history.length, 5);
   assert.deepEqual(g.state.history.map((h) => h.day), [1, 2, 3, 4, 5]);

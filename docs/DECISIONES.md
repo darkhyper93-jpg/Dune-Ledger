@@ -492,3 +492,16 @@ peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).
   lugares de carga. Con eso, 2 camellos pasó a ser lo peor: mediana ~2.990
   contra 3.200–4.000 con 3 o 4 (antes, más camellos siempre bajaba el
   puntaje). La Estepa sube su deuda un 10%.
+- **Kasim compite**: antes arrancaba con 400 y terminaba con una mediana de
+  634 (ganarle era lo mismo que ganar la temporada). Ahora empieza con dos
+  camellos como vos, compra uno más cuando su carga viene llena, sólo carga
+  mientras cada unidad le deja ganancia en el destino, no gasta su reserva,
+  descansa un día por ciudad, prefiere ir adonde van tus contratos y a la
+  Gran Feria, y por temerario a veces lo asaltan (pierde media carga). Su
+  patrimonio cuenta sus camellos, como el tuyo. Resultado: mediana ~1.600 y
+  el codicioso le gana en el 60% de las temporadas mientras gana la suya en
+  el 76%: ganarle a Kasim pasó a ser una meta aparte (prueba en
+  `tests/sim/ceiling.test.js`). El criterio de "70–110% de tu patrimonio" no
+  sirve: el puntaje del jugador varía demasiado (de −1.000 a +4.000).
+- Pesadilla quedó más dura (el codicioso gana ~20%, antes ~36%): es el modo
+  para quien ya ganó en Difícil.

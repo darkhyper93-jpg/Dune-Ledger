@@ -56,7 +56,7 @@ export const CHANCES = {
 };
 
 /** Reemplaza "$clave" por valores de setup ("-$clave" da el negativo). */
-function val(v, params) {
+export function val(v, params) {
   if (typeof v !== 'string') return v;
   if (v.startsWith('-$')) return -params[v.slice(2)];
   if (v.startsWith('$')) return params[v.slice(1)];
@@ -198,6 +198,15 @@ export function optionState(game, idx) {
 }
 
 /**
+ * Qué parte de una pérdida de carga se pierde de verdad: el Seguro del
+ * Gremio y el cofre con candado la achican.
+ * @param {object} state
+ */
+export function cargoLossFactor(state) {
+  return (1 - upgradeValue(state, 'seguro')) * (hasGear(state, 'cofre') ? 0.6 : 1);
+}
+
+/**
  * Aplica los efectos de una opción y devuelve las líneas de lo que cambió.
  */
 function applyEffects(game, eff, params, rng) {
@@ -220,7 +229,7 @@ function applyEffects(game, eff, params, rng) {
     state.gold += n;
     lines.push(`+${fmt(n)} de oro`);
   }
-  const insured = (1 - upgradeValue(state, 'seguro')) * (hasGear(state, 'cofre') ? 0.6 : 1);
+  const insured = cargoLossFactor(state);
   if (eff.cargoPct) lines.push(...loseCargo(state, null, eff.cargoPct * insured));
   if (eff.breakFragile) lines.push(...loseCargo(state, 'ceramica', eff.breakFragile * insured));
   if (eff.give) {

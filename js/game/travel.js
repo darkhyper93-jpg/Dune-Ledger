@@ -67,6 +67,22 @@ export function routeDays(state, days) {
 }
 
 /**
+ * Qué pasa si descansás hoy sin provisiones (o null si alcanzan): sirve para
+ * pedir confirmación antes, porque descansar sin agua mata camellos.
+ * @param {object} state
+ * @returns {string|null}
+ */
+export function restRisk(state) {
+  const noFood = state.food < dailyRation(state, 'food');
+  const noWater = state.water < dailyRation(state);
+  if (!noFood && !noWater) return null;
+  const parts = [];
+  if (noWater) parts.push(`sin agua, los animales pierden ${THIRST_HP} de salud y dejás el ${Math.round(SHORTAGE_LOSS * 100)}% de la carga`);
+  if (noFood) parts.push(`sin comida, la caravana pasa hambre: los animales pierden ${HUNGER_HP} de salud y baja la moral`);
+  return `Si descansás así, ${parts.join('; y ')}. Cargá provisiones antes.`;
+}
+
+/**
  * Agua que se gasta en total hasta el día k de una ruta (acumulado).
  * @param {object} state
  * @param {string} terrain

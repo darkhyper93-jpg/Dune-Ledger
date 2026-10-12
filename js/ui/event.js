@@ -1,12 +1,14 @@
 /**
  * Carta de evento durante un viaje: texto, opciones como botones grandes
- * (con su probabilidad de salir bien, si depende de la suerte) y, después
+ * (con su probabilidad de salir bien y lo que se pierde si sale mal, si
+ * depende de la suerte) y, después
  * de elegir, el resultado. No se puede cerrar sin elegir.
  */
 
 import { h, openSheet } from './dom.js';
 import { eventDef, fillText, optionState } from '../game/events.js';
 import { chooseOption } from '../game/season.js';
+import { riskOf } from '../game/event-risk.js';
 import { playCoins, playTap } from '../core/audio.js';
 import { buzz } from '../core/haptics.js';
 
@@ -37,8 +39,10 @@ export function showEvent(app, onDone) {
     const options = def.options.map((_, i) => {
       const st = optionState(game, i);
       const chance = st.chance === null ? null : h('span', { class: 'chance' }, `${Math.round(st.chance * 100)}% de salir bien`);
+      const risk = riskOf(game, i);
       return h('button', { class: 'btn big event-opt', 'data-testid': `event-opt-${i}`, disabled: !st.available, onclick: () => choose(i) },
-        h('span', {}, st.label), chance, st.reason ? h('span', { class: 'chance' }, st.reason) : null);
+        h('span', {}, st.label), chance, risk ? h('span', { class: 'risk', 'data-testid': `event-risk-${i}` }, risk) : null,
+        st.reason ? h('span', { class: 'chance' }, st.reason) : null);
     });
     body.append(
       h('div', { class: 'muted small' }, `Día ${game.state.day} · en el camino`),

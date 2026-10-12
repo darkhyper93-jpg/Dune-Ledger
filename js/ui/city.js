@@ -16,7 +16,7 @@ import { canPayHere, totalOwed, owedOn, nextInstallment } from '../game/debt.js'
 import { canFinish, rest, finishSeason, lastDay } from '../game/season.js';
 import { buyProvision, buyCamel, sellCamel, payGuild } from '../game/actions.js';
 import { camelPrice, camelResale, provisionPrices, provisionCap, perMount, mountName } from '../game/caravan.js';
-import { dailyRation, canTravel } from '../game/travel.js';
+import { dailyRation, canTravel, restRisk } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
 import { coachCard, hintCard } from './coach.js';
@@ -167,10 +167,30 @@ function renderProvisions(app) {
       h('h3', {}, 'Descansar'),
       h('div', { class: 'small' }, `Pasás un día en ${city.name}: los ${mountName(state, 2)} recuperan salud, la tripulación ánimo y los mercados se reponen. Gastás ${ration} de comida y ${dailyRation(state)} de agua.`),
       h('button', { class: 'btn', 'data-testid': 'rest', disabled: state.day >= lastDay(state), onclick: () => {
-        app.act((g) => rest(g));
-        if (app.game.state.over) app.go('summary');
-        else app.toast(`Día ${app.game.state.day}.`);
+        const risk = restRisk(state);
+        if (risk) confirmRest(app, risk);
+        else doRest(app);
       } }, 'Descansar un día')));
+}
+
+/** Descansa un día y avisa (o va al resumen si terminó la temporada). */
+function doRest(app) {
+  app.act((g) => rest(g));
+  if (app.game.state.over) app.go('summary');
+  else app.toast(`Día ${app.game.state.day}.`);
+}
+
+/**
+ * Antes de descansar sin provisiones, explica lo que se pierde.
+ * @param {object} app
+ * @param {string} risk
+ */
+function confirmRest(app, risk) {
+  openSheet((close) => h('div', { class: 'stack' },
+    h('h2', {}, 'Te faltan provisiones'),
+    h('p', { class: 'bad', 'data-testid': 'rest-risk' }, risk),
+    h('button', { class: 'btn big primary', onclick: () => close() }, 'Mejor cargo provisiones'),
+    h('button', { class: 'btn', 'data-testid': 'rest-anyway', onclick: () => { close(); doRest(app); } }, 'Descansar igual')), { label: 'Te faltan provisiones' });
 }
 
 /**

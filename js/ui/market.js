@@ -12,6 +12,7 @@ import { cityPrices, quote, cityMod } from '../game/market.js';
 import { buy, sell, undo, maxBuy } from '../game/actions.js';
 import { cargoFree } from '../game/caravan.js';
 import { bestKnownSell } from '../game/knowledge.js';
+import { worthBuying } from '../game/advice.js';
 import { newsMult } from '../game/news.js';
 import { fmt, plural } from '../core/text.js';
 import { playCoins, playTap } from '../core/audio.js';
@@ -122,6 +123,7 @@ export function openTrade(app, goodId, startMode) {
         info = h('p', { class: 'small', style: 'margin:0' }, profit >= 0 ? h('b', { class: 'good' }, `Ganás ${fmt(profit)}`) : h('b', { class: 'bad' }, `Perdés ${fmt(-profit)}`),
           h('span', { class: 'muted' }, ` (lo pagaste ${fmtPrice(Math.round(state.costBasis[goodId] * 10) / 10)} c/u)`));
       }
+      const advice = mode === 'buy' ? worthBuying(game, goodId) : null;
       const why = max === 0 ? (mode === 'buy' ? (cargoFree(state) < good.weight ? 'No te entra más carga.' : 'No te alcanza el oro.') : 'No llevás este bien.') : null;
       mount(body,
         h('div', { class: 'row' }, goodArt(goodId, 64, 'gico'),
@@ -137,7 +139,11 @@ export function openTrade(app, goodId, startMode) {
         h('div', { class: 'btn-row' },
           h('button', { class: 'btn small', disabled: max < 5, onclick: () => { qty = Math.min(max, qty + 5); paint(); } }, '+5'),
           h('button', { class: 'btn small', disabled: max < 10, onclick: () => { qty = Math.min(max, qty + 10); paint(); } }, '+10'),
-          h('button', { class: 'btn small', 'data-testid': 'qty-max', disabled: max === 0, onclick: () => { qty = max; paint(); } }, `Máx (${max})`)),
+          h('button', { class: 'btn small', 'data-testid': 'qty-max', disabled: max === 0, onclick: () => { qty = max; paint(); } }, `Máx (${max})`),
+          advice && advice.qty > 0 ? h('button', { class: 'btn small primary', 'data-testid': 'qty-worth', onclick: () => { qty = advice.qty; paint(); } }, `Lo que conviene (${advice.qty})`) : null),
+        advice ? h('p', { class: 'small muted', style: 'margin:0', 'data-testid': 'worth-note' }, advice.qty > 0
+          ? `Para venderlo en ${map.cityById[advice.cityId].name}, conviene hasta ${advice.qty}: cada una que comprás sale más cara y allá cada una que vendés rinde menos.`
+          : `Con el precio que viste en ${map.cityById[advice.cityId].name}, comprarlo acá no deja ganancia.`) : null,
         qty > 0 ? h('div', {}, h('div', { class: 'muted tiny', style: 'margin-bottom:4px' }, 'Precio de cada unidad:'), h('div', { class: 'unit-prices' }, chips)) : null,
         h('div', { class: 'total-line' }, h('span', {}, mode === 'buy' ? 'Pagás' : 'Cobrás'), h('b', { 'data-testid': 'trade-total' }, fmt(q.total))),
         info,

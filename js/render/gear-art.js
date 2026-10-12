@@ -24,14 +24,13 @@ const ART = {
     <path d="M24 16l4 10h-8z" fill="#B4482A" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M24 36l-4-10h8z" fill="#1E2742" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
     <circle cx="24" cy="26" r="2" fill="#E2A42C" ${O}/>`,
-  // Un toldo a rayas sobre dos palos, con su sombra.
+  // Un toldo a rayas sobre dos palos, con volado y su sombra.
   toldo: `
     <ellipse cx="24" cy="41" rx="16" ry="3" fill="#C4A57A"/>
-    <path d="M10 41V20M38 41V20" ${O}/>
-    <path d="M6 20l18-9 18 9z" fill="#F8EED9" ${O}/>
-    <path d="M12 17l6 3V20M24 11v9M30 14l6 3" stroke="#B4482A" stroke-width="4" stroke-linecap="butt"/>
-    <path d="M6 20l18-9 18 9z" fill="none" ${O}/>
-    <path d="M6 20c2 3 4 3 6 0 2 3 4 3 6 0 2 3 4 3 6 0 2 3 4 3 6 0 2 3 4 3 6 0 2 3 4 3 6 0" fill="#F8EED9" ${O}/>`,
+    <path d="M10 41V22M38 41V22" ${O}/>
+    <path d="M12 12L16 12L12 22L6 22z" fill="#B4482A"/><path d="M16 12L20 12L18 22L12 22z" fill="#F8EED9"/><path d="M20 12L24 12L24 22L18 22z" fill="#B4482A"/><path d="M24 12L28 12L30 22L24 22z" fill="#F8EED9"/><path d="M28 12L32 12L36 22L30 22z" fill="#B4482A"/><path d="M32 12L36 12L42 22L36 22z" fill="#F8EED9"/>
+    <path d="M6 22l6-10h24l6 10z" fill="none" ${O}/>
+    <path d="M6 22a3 3 0 0 0 6 0z" fill="#B4482A" ${O}/><path d="M12 22a3 3 0 0 0 6 0z" fill="#F8EED9" ${O}/><path d="M18 22a3 3 0 0 0 6 0z" fill="#B4482A" ${O}/><path d="M24 22a3 3 0 0 0 6 0z" fill="#F8EED9" ${O}/><path d="M30 22a3 3 0 0 0 6 0z" fill="#B4482A" ${O}/><path d="M36 22a3 3 0 0 0 6 0z" fill="#F8EED9" ${O}/>`,
   // Un cofre de madera con herrajes y candado.
   cofre: `
     <path d="M8 22h32v18H8z" fill="#9C5626" ${O}/>

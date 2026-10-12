@@ -19,6 +19,7 @@ import { svgNode } from '../render/shapes.js';
 import { CHRONICLES, CHAPTERS } from '../data/chronicles.js';
 import { chapterNow, chronicleCheck, chronicleAct, goalText } from '../game/chronicle.js';
 import { regionId } from '../game/perks.js';
+import { hintCard } from './coach.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -76,6 +77,7 @@ export function renderTavern(app) {
   const news = activeNews(state);
   const offers = offersHere(app.game).filter((k) => k.source === 'taberna');
   return h('div', { class: 'stack' },
+    hintCard(app, 'cronica'),
     chronicleCard(app),
     h('h3', {}, 'Rumores'),
     rumors.length
@@ -86,6 +88,7 @@ export function renderTavern(app) {
     news.length
       ? h('ul', { class: 'result-lines' }, news.map((n) => h('li', {}, newsText(n), h('span', { class: 'muted small' }, ` (hasta el día ${n.endDay})`))))
       : h('p', { class: 'muted small', style: 'margin:0' }, 'Ninguna por ahora.'),
+    hintCard(app, 'kasim'),
     rivalCard(app),
     h('h3', {}, 'Contratos'),
     h('p', { class: 'muted small', style: 'margin:0' }, 'Pagan más que el mercado, pero tienen fecha. Si no cumplís, baja tu reputación en esa zona.'),

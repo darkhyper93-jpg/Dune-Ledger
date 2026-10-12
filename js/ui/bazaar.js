@@ -10,6 +10,7 @@ import { gearSvg } from '../render/gear-art.js';
 import { svgNode } from '../render/shapes.js';
 import { playCoins } from '../core/audio.js';
 import { fmt } from '../core/text.js';
+import { hintCard } from './coach.js';
 
 /** Dibujo de un objeto del bazar. */
 function gearArt(id, size = 48) {
@@ -25,6 +26,7 @@ export function bazaarCard(app) {
   const items = gearHere(app.game);
   if (!items.length) return null;
   return h('div', { class: 'card stack', 'data-testid': 'bazaar' },
+    hintCard(app, 'bazar'),
     h('h3', {}, 'Bazar de equipo'),
     h('p', { class: 'muted small', style: 'margin:0' }, 'Se compra una vez y sirve hasta el final de la temporada.'),
     items.map((it) => {

@@ -53,7 +53,7 @@ test('la crónica del desierto se completa entera y da sus recompensas', () => {
   goTo(g, 'capital');
   g.state.gold = 400;
   assert.ok(chronicleAct(g).ok);
-  assert.equal(g.state.gold, 400 - 150 + 120);
+  assert.equal(g.state.gold, 400 - 150 + 230);
   assert.ok(g.map.cities.every((c) => g.state.known[c.id]));
   assert.equal(chapterNow(g.state), null);
   assert.equal(g.state.chronicle.step, CHAPTERS);

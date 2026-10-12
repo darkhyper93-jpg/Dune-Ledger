@@ -28,7 +28,7 @@ export const CHRONICLES = {
       },
       {
         text: 'Rashid se recupera, pero el Gremio le reclama 150 de oro por la caravana perdida. Si no paga, lo meten preso.',
-        goal: { type: 'pay', gold: 150, cityType: 'capital' }, reward: { gold: 120, reveal: true },
+        goal: { type: 'pay', gold: 150, cityType: 'capital' }, reward: { gold: 230, reveal: true },
         done: 'Rashid queda libre y te regala su mapa de toda la vida: ahora conocés todo el desierto.',
       },
     ],
@@ -58,7 +58,7 @@ export const CHRONICLES = {
     chapters: [
       {
         text: 'Un marinero borracho te vende medio mapa de un tesoro pirata. La otra mitad la tiene un pescador de algún puerto.',
-        goal: { type: 'visit', cityType: 'puerto' }, reward: {},
+        goal: { type: 'visit', cityType: 'puerto' }, reward: { gold: 20 },
         done: 'El pescador tiene la otra mitad, pero no la da gratis.',
       },
       {
@@ -88,8 +88,8 @@ export const CHRONICLES = {
       },
       {
         text: 'Los monjes te piden un último favor: ayudar a reabrir el paso de una mina, cerrado por un derrumbe.',
-        goal: { type: 'pay', gold: 100, cityType: 'minera' }, reward: { heal: 100, rep: 15 },
-        done: 'Con el paso abierto, los mineros te reciben como a un héroe y cuidan a tus camellos.',
+        goal: { type: 'pay', gold: 100, cityType: 'minera' }, reward: { gold: 220, heal: 100, rep: 15 },
+        done: 'Con el paso abierto, los mineros te reciben como a un héroe, cuidan a tus camellos y te regalan una veta de oro.',
       },
     ],
   },
@@ -98,17 +98,17 @@ export const CHRONICLES = {
     chapters: [
       {
         text: 'El visir perdió su anillo de sello y desconfía de todos. Ofrece una recompensa a quien lo encuentre. Empezá por la Capital.',
-        goal: { type: 'visit', cityType: 'capital' }, reward: {},
+        goal: { type: 'visit', cityType: 'capital' }, reward: { gold: 30 },
         done: 'En el palacio, un guardia te sopla que un ladronzuelo de aldea anda vendiendo un anillo.',
       },
       {
         text: 'El ladronzuelo dice saber quién tiene el anillo, pero quiere oro por el dato.',
-        goal: { type: 'pay', gold: 80, cityType: 'aldea' }, reward: {},
+        goal: { type: 'pay', gold: 80, cityType: 'aldea' }, reward: { rep: 6 },
         done: 'Lo tiene un joyero de la Capital, que sólo acepta pagos en incienso.',
       },
       {
         text: 'El joyero devuelve el anillo si le llevás incienso para su templo.',
-        goal: { type: 'deliver', good: 'incienso', qty: 3, cityType: 'capital' }, reward: { gold: 250, rep: 15, perk: 'exento' },
+        goal: { type: 'deliver', good: 'incienso', qty: 3, cityType: 'capital' }, reward: { gold: 320, rep: 15, perk: 'exento' },
         done: 'El visir recupera su sello y firma un decreto: no pagás impuestos el resto de la temporada.',
       },
     ],

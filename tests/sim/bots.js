@@ -25,17 +25,22 @@ import { otherEnd } from '../../js/game/map-gen.js';
 import { optionState } from '../../js/game/events.js';
 import { bestOption } from './bot-choices.js';
 import { rivalNews } from '../../js/game/rival.js';
+import { extrasBefore, chronicleBonus } from './bot-extras.js';
+import { chapterNow } from '../../js/game/chronicle.js';
 import { avgHealth } from '../../js/game/camels.js';
 import { hiresHere, hire } from '../../js/game/crew.js';
 
 export { bestOption };
 
 /**
- * Vende toda la carga en la ciudad actual.
+ * Vende toda la carga en la ciudad actual, menos lo comprometido en
+ * contratos y (si juega con extras) lo que pide la crónica.
  */
-function sellAll(game) {
+function sellAll(game, extras = false) {
   const reserved = {};
   for (const k of game.state.contracts.active) reserved[k.goodId] = (reserved[k.goodId] ?? 0) + k.qty;
+  const goal = extras ? chapterNow(game.state)?.goal : null;
+  if (goal?.type === 'deliver') reserved[goal.good] = (reserved[goal.good] ?? 0) + goal.qty;
   for (const id of ACTIVE_GOODS) {
     const qty = game.state.cargo[id] - (reserved[id] ?? 0);
     if (qty > 0) sell(game, id, qty);
@@ -188,7 +193,8 @@ function maybeHire(game, roles) {
 function greedyTurn(game, profile = PROFILES.greedy) {
   const { state, map } = game;
   for (const k of state.contracts.active.slice()) if (k.to === state.location) deliverContract(game, k.id);
-  sellAll(game);
+  if (profile.extras) extrasBefore(game);
+  sellAll(game, profile.extras);
   const here = map.cityById[state.location];
   const inst = nextInstallment(state.debt);
   if (inst && canPayHere(here)) {
@@ -206,7 +212,9 @@ function greedyTurn(game, profile = PROFILES.greedy) {
     if (rest(game).ok) return;
   }
 
+  if (profile.extras) extrasBefore(game);
   const bonus = handleContracts(game);
+  if (profile.extras) for (const [id, v] of Object.entries(chronicleBonus(game))) bonus[id] = (bonus[id] ?? 0) + v;
   const usable = map.routesByCity[state.location].filter((r) => canTravel(game, r.id).ok);
   const minDanger = Math.min(...usable.map((r) => DANGER_LEVEL[r.danger]));
   const allowed = Math.max(profile.maxDanger, minDanger);
@@ -266,7 +274,8 @@ function randomTurn(game, rng) {
  * Juega una temporada completa con un bot.
  * @param {'greedy'|'prudent'|'random'} kind
  * @param {string} seed
- * @param {{difficulty?:string, region?:string, onTurn?:Function}} [opts] onTurn se llama después de cada turno
+ * @param {{difficulty?:string, region?:string, extras?:boolean, onTurn?:Function}} [opts] onTurn se llama después de cada turno;
+ *   extras: el bot también compra equipo y sigue la crónica
  * @returns {{won:boolean, score:number, game:object}}
  */
 export function playSeason(kind, seed, opts = {}) {
@@ -274,7 +283,7 @@ export function playSeason(kind, seed, opts = {}) {
   const rng = new Rng(`bot:${kind}:${seed}`);
   for (let turn = 0; turn < 500 && !game.state.over; turn++) {
     if (kind === 'random') randomTurn(game, rng);
-    else greedyTurn(game, PROFILES[kind]);
+    else greedyTurn(game, opts.extras ? { ...PROFILES[kind], extras: true } : PROFILES[kind]);
     if (opts.onTurn) opts.onTurn(game);
   }
   if (!game.state.over) finishSeason(game, 'fin');
@@ -286,7 +295,7 @@ export function playSeason(kind, seed, opts = {}) {
  * @param {'greedy'|'prudent'|'random'} kind
  * @param {number} n
  * @param {string} [prefix='sim']
- * @param {{difficulty?:string, region?:string}} [opts]
+ * @param {{difficulty?:string, region?:string, extras?:boolean}} [opts]
  */
 export function runMany(kind, n, prefix = 'sim', opts = {}) {
   let wins = 0;

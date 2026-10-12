@@ -345,8 +345,9 @@ svg { display: block; }
 .toast {
   position: fixed;
   left: 50%;
-  top: calc(var(--safe-top) + 10px);
-  transform: translateX(-50%) translateY(-20px);
+  /* Abajo, sobre la barra de navegación: así nunca tapa el oro ni la cuota. */
+  bottom: calc(var(--safe-bottom) + 96px);
+  transform: translateX(-50%) translateY(16px);
   max-width: min(92vw, 520px);
   background: var(--hud-bg);
   color: var(--hud-ink);

@@ -59,3 +59,8 @@ test('la Espía del Gremio sabe dónde anda Kasim aunque esté lejos', () => {
   g.state.rival.to = null;
   assert.match(rivalNews(g), /Kasim/);
 });
+
+test('los consejos vistos se guardan en el perfil y se descartan los desconocidos', () => {
+  const p = validateProfile({ ...defaultProfile(), hints: { kasim: true, bazar: true, trampa: true, __proto__x: true } });
+  assert.deepEqual(p.hints, { kasim: true, bazar: true });
+});

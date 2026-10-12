@@ -26,12 +26,15 @@ export const CODEX = {
   traits: TRAITS,
 };
 
+/** Consejos de una sola vez (ver js/ui/coach.js). */
+export const HINT_IDS = ['kasim', 'cronica', 'bazar', 'invertir', 'clima'];
+
 /** Perfil vacío: sólo el Aprendiz. */
 export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null,
+    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null, hints: {},
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -60,6 +63,9 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (isObj(raw.hints)) {
+    for (const id of HINT_IDS) if (raw.hints[id] === true) out.hints[id] = true;
+  }
   if (Array.isArray(raw.chronicles)) {
     const ok = new Set(raw.chronicles.filter((id) => typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id)));
     out.chronicles = REGIONS.map((r) => r.id).filter((id) => ok.has(id));

@@ -144,7 +144,9 @@ export function openTrade(app, goodId, startMode) {
         advice ? h('p', { class: 'small muted', style: 'margin:0', 'data-testid': 'worth-note' }, advice.qty > 0
           ? `Para venderlo en ${map.cityById[advice.cityId].name}, conviene hasta ${advice.qty}: cada una que comprás sale más cara y allá cada una que vendés rinde menos.`
           : `Con el precio que viste en ${map.cityById[advice.cityId].name}, comprarlo acá no deja ganancia.`) : null,
-        qty > 0 ? h('div', {}, h('div', { class: 'muted tiny', style: 'margin-bottom:4px' }, 'Precio de cada unidad:'), h('div', { class: 'unit-prices' }, chips)) : null,
+        qty > 0 ? h('div', {}, h('div', { class: 'muted tiny', style: 'margin-bottom:4px', 'data-testid': 'unit-why' }, mode === 'buy'
+          ? 'Precio de cada unidad (sube porque en la ciudad queda menos):'
+          : 'Precio de cada unidad (baja porque en la ciudad ya sobra):'), h('div', { class: 'unit-prices' }, chips)) : null,
         h('div', { class: 'total-line' }, h('span', {}, mode === 'buy' ? 'Pagás' : 'Cobrás'), h('b', { 'data-testid': 'trade-total' }, fmt(q.total))),
         info,
         why ? h('p', { class: 'bad small', style: 'margin:0' }, why) : null,

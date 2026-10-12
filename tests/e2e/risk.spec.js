@@ -59,6 +59,7 @@ test('la compra marca cuánto conviene llevar al mejor destino conocido', async 
   await page.locator('.good-row').first().click();
   await expect(page.getByTestId('qty-worth')).toBeVisible();
   await expect(page.getByTestId('worth-note')).toContainText('conviene hasta');
+  await expect(page.getByTestId('unit-why')).toContainText('queda menos');
   await page.getByTestId('qty-worth').click();
   const n = Number((await page.getByTestId('qty-worth').innerText()).match(/\((\d+)\)/)[1]);
   await expect(page.getByTestId('qty')).toHaveText(String(n));

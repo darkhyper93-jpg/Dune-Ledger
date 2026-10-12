@@ -14,7 +14,7 @@ export const UPGRADES = [
   { id: 'plazo', name: 'Prórroga', desc: 'La primera cuota (y en nivel 2 también la segunda) vence 5 días después.', costs: [30, 60], step: 5 },
   { id: 'rumores', name: 'Oídos en el bazar', desc: 'Los rumores son verdad más seguido (+7% por nivel).', costs: [12, 25, 40], step: 0.07 },
   { id: 'guardias', name: 'Escuela de guardias', desc: 'Guardias 20% más baratos por nivel.', costs: [15, 35], step: 0.2 },
-  { id: 'socio', name: 'Socio del Gremio', desc: 'Vendés 1% más caro por nivel.', costs: [25, 50, 80], step: 0.01 },
+  { id: 'socio', name: 'Socio del Gremio', desc: 'Nivel 1: podés renegociar una cuota dos veces por temporada. Nivel 2: el recargo baja de 25% a 10%.', costs: [30, 60], step: 1 },
   { id: 'resistentes', name: 'Camellos de raza', desc: 'Los camellos se cansan 10% menos por nivel.', costs: [15, 30, 50], step: 0.1 },
   { id: 'fama', name: 'Buena fama', desc: '+10 de reputación en todas las zonas al empezar por nivel.', costs: [12, 25, 40], step: 10 },
   { id: 'contactos', name: 'Contactos', desc: 'Los contratos pagan 5% más por nivel.', costs: [15, 30, 50], step: 0.05 },

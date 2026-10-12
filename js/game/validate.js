@@ -206,6 +206,7 @@ export function validateState(input) {
       climate: climatePart(raw.climate),
       fair: fairPart(raw.fair, map),
       safeUntil: int(raw.safeUntil ?? 0, 0, FREE_DAYS + 10, 'salvoconducto'),
+      amuletUsed: raw.amuletUsed === true,
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);
@@ -231,7 +232,8 @@ function debtPart(v, difficulty, perks, mode) {
       return { day: inst.day, amount, paid: int(inst.paid, 0, amount, 'cuota pagada') };
     }),
     strikes: int(v.strikes, 0, RULES.debt.maxStrikes, 'faltas'),
-    renegotiated: v.renegotiated === true,
+    // Partidas de la 1.3 guardaban sólo si ya habías renegociado.
+    renegotiations: v.renegotiated === true ? 1 : int(v.renegotiations ?? 0, 0, 2, 'renegociaciones'),
   };
 }
 

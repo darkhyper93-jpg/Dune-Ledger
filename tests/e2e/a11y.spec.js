@@ -69,6 +69,7 @@ test(`el resumen con el gráfico y el historial son accesibles (${scheme === 'li
   await page.getByTestId('finish').click();
   await page.getByTestId('finish-confirm').click();
   await expect(page.getByTestId('worth-chart')).toBeVisible();
+  await expect(page.getByTestId('explain')).toContainText('Para pensar');
   await page.getByTestId('worth-chart').locator('svg').focus();
   await page.keyboard.press('ArrowLeft');
   await expect(page.locator('.chart-tip')).toContainText('Día');

@@ -50,6 +50,13 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   cuentas con lo comprado (Debe) y vendido (Haber) de cada bien y su
   ganancia, y adónde fue el oro: provisiones, animales, sueldos, Gremio,
   equipo y lo demás, hasta el oro de hoy.
+- Versión 1.3: correcciones de una revisión de diseño hecha con bots. El
+  préstamo cobra 2% por día y presta hasta tu oro propio; agrandar la
+  caravana rinde (pedidos grandes del Gremio, animales que cuentan como
+  bienes); cuotas que suben, renegociar una vez y la Gran Feria del final;
+  las cartas de evento dicen qué se pierde si sale mal; "Lo que conviene" al
+  comprar; pagarles a los bandidos da un salvoconducto; Kasim compite de
+  verdad; y el resumen explica por qué ganaste o perdiste.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

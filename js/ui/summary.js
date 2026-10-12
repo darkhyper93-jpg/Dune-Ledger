@@ -17,6 +17,7 @@ import { worthChart } from './chart.js';
 import { climateOf } from '../game/climate.js';
 import { kasimSvg } from '../render/portraits.js';
 import { buzz } from '../core/haptics.js';
+import { explainSeason } from '../game/explain.js';
 
 /** Textos de cómo terminó la temporada. */
 const REASONS = {
@@ -45,7 +46,21 @@ function rivalCard(over) {
     h('span', { class: 'rival-face', 'aria-hidden': 'true' }, svgNode(kasimSvg())),
     h('div', { class: 'stack', style: 'gap:4px' },
       h('h3', {}, 'Kasim «el Zorro»'),
-      h('p', { class: 'small', style: 'margin:0' }, `Terminó la temporada con ${fmt(over.rivalGold)} de oro. ${verdict}`)));
+      h('p', { class: 'small', style: 'margin:0' }, `Terminó la temporada con ${fmt(over.rivalGold)} entre oro, carga y camellos. ${verdict}`)));
+}
+
+/**
+ * "¿Por qué ganaste/perdiste?": razones con números y preguntas para
+ * conversar después de jugar.
+ * @param {object} state
+ */
+function explainCard(state) {
+  const { title, reasons, questions } = explainSeason(state);
+  return h('div', { class: 'card stack', 'data-testid': 'explain' },
+    h('h3', {}, title),
+    reasons.length ? h('ul', { class: 'explain-list' }, reasons.map((r) => h('li', {}, r))) : null,
+    h('p', { class: 'small', style: 'margin:0' }, h('b', {}, 'Para pensar:')),
+    h('ul', { class: 'explain-list small' }, questions.map((q) => h('li', {}, q))));
 }
 
 /** Tarjeta de lo que se abrió al ganar: región nueva o la Pesadilla. */
@@ -90,10 +105,11 @@ export function renderSummary(app) {
       h('div', { class: 'muted' }, 'Puntaje'),
       h('div', { class: 'score', 'data-testid': 'final-score' }, fmt(over.score)),
       counts ? h('div', {}, 'Ganaste ', h('b', { 'data-testid': 'final-seals' }, `${over.seals} sellos del Gremio`)) : null,
-      h('div', { class: 'muted small' }, free ? 'Puntaje = oro + valor de la carga.' : 'Puntaje = oro + valor de la carga − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
+      h('div', { class: 'muted small' }, free ? 'Puntaje = oro + valor de la carga + animales.' : 'Puntaje = oro + valor de la carga + animales − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
     state.mode === 'diario' ? dailyResultCard(app) : null,
     worthChart(state.history),
     rivalCard(over),
+    free ? null : explainCard(state),
     h('div', { class: 'card' }, h('dl', { class: 'kv' },
       h('dt', {}, 'Oro final'), h('dd', {}, fmt(over.gold)),
       h('dt', {}, 'Deuda sin pagar'), h('dd', { class: over.owed ? 'bad' : 'good' }, fmt(over.owed)),

@@ -6,7 +6,7 @@
 import { h, openSheet } from './dom.js';
 import { getGood } from '../data/goods.js';
 import { fmt } from '../core/text.js';
-import { canRenegotiate, renegotiate, RENEGOTIATE_FEE } from '../game/renegotiate.js';
+import { canRenegotiate, renegotiate, renegotiateFee } from '../game/renegotiate.js';
 import { goodArt } from './art.js';
 
 /**
@@ -37,8 +37,9 @@ export function fairCard(app) {
 export function renegotiateCard(app) {
   const check = canRenegotiate(app.game);
   const { state } = app.game;
-  if (state.debt.renegotiated || state.debt.installments.every((i) => i.amount <= i.paid)) return null;
-  const pct = Math.round(RENEGOTIATE_FEE * 100);
+  if (state.debt.installments.every((i) => i.amount <= i.paid)) return null;
+  if (!check.ok && /Ya renegociaste/.test(check.error)) return null;
+  const pct = Math.round(renegotiateFee(state) * 100);
   return h('div', { class: 'card stack', 'data-testid': 'renegotiate' },
     h('h3', {}, '¿No llegás con la cuota?'),
     h('p', { class: 'small', style: 'margin:0' }, `Una vez por temporada, el Gremio te pasa la cuota que viene a la siguiente con ${pct}% de recargo, sin contarte una falta. Se pide desde 7 días antes del vencimiento, y la última no se puede pasar.`),

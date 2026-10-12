@@ -1,6 +1,6 @@
 /**
  * Invertir en ciudades: hasta 3 niveles por ciudad (pozo, mercado techado,
- * caravasar). Cada nivel da 3% de descuento al comprar ahí, hace que ese
+ * caravasar). Cada nivel da 5% de descuento al comprar ahí, hace que ese
  * mercado se reponga más rápido y suma reputación en la zona. Al final de
  * la temporada, lo invertido cuenta la mitad en el puntaje.
  */
@@ -18,7 +18,7 @@ export const INVEST = [
 ];
 
 /** Descuento por nivel al comprar en una ciudad con inversión. */
-export const INVEST_DISCOUNT = 0.03;
+export const INVEST_DISCOUNT = 0.05;
 /** Reposición extra del mercado por nivel (sobre la normal). */
 export const INVEST_RECOVERY = 0.5;
 

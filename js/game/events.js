@@ -200,7 +200,6 @@ export function optionState(game, idx) {
   if (opt.spareDays && state.day + (state.trip.days - state.trip.done) + opt.spareDays > lastDay(state)) reason = 'No te da el tiempo.';
   let chance = null;
   if (opt.chance !== undefined) chance = typeof opt.chance === 'number' ? opt.chance : CHANCES[opt.chance](game);
-  if (chance !== null && hasGear(state, 'amuleto')) chance = Math.min(0.95, chance + 0.04);
   return { available: reason === null, reason, chance, label };
 }
 
@@ -360,8 +359,15 @@ export function resolveOption(game, idx, rng) {
   const def = eventDef(ev.id);
   const opt = def.options[idx];
   const success = st.chance === null ? null : rng.next() < st.chance;
-  const eff = success === null ? opt.effects : success ? opt.win : opt.lose;
+  let eff = success === null ? opt.effects : success ? opt.win : opt.lose;
+  // El amuleto salva una vez por temporada: si sale mal, no se pierde nada.
+  const saved = success === false && hasGear(game.state, 'amuleto') && !game.state.amuletUsed;
+  if (saved) {
+    eff = {};
+    game.state.amuletUsed = true;
+  }
   const lines = applyEffects(game, eff, ev.params, rng);
+  if (saved) lines.push('El amuleto se partió en dos: esta vez no perdiste nada');
   game.state.trip.event = null;
   noteEvent(game.state, ev.id, idx, success);
   const text = fillText((success === false ? opt.loseText : opt.winText) ?? (lines.length ? 'Listo.' : 'Seguís tu camino.'), ev.params);

@@ -505,3 +505,16 @@ peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).
   sirve: el puntaje del jugador varía demasiado (de −1.000 a +4.000).
 - Pesadilla quedó más dura (el codicioso gana ~20%, antes ~36%): es el modo
   para quien ya ganó en Difícil.
+- **Podar lo que no se siente** (para chicos, un +1% no existe):
+  - Amuleto del ojo: antes +4% en todo; ahora la primera vez que algo sale mal
+    en la temporada se rompe y no perdés nada (la carta lo avisa). Cambia la
+    decisión: te animás a arriesgar una vez. Sube de 40 a 70 de oro (salvarse
+    de los piratas una vez vale mucho: con 40, el bot con extras ganaba 93% en
+    la Costa).
+  - Socio del Gremio: antes +1% al vender por nivel; ahora nivel 1 deja
+    renegociar dos veces por temporada y nivel 2 baja el recargo a 10%.
+  - Inversiones: 5% de descuento por nivel (antes 3%).
+- **¿Por qué ganaste/perdiste?** (`js/game/explain.js`): el resumen da razones
+  con números (intereses pagados, días sin provisiones, el peor negocio,
+  faltas, renegociación, el mejor negocio, Kasim) y tres preguntas para
+  conversar después de jugar.

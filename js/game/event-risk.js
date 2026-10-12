@@ -8,6 +8,7 @@
 import { getGood } from '../data/goods.js';
 import { eventDef, val, cargoLossFactor } from './events.js';
 import { regionOf } from './perks.js';
+import { hasGear } from './gear.js';
 import { fmt, plural } from '../core/text.js';
 
 /** Valor de la carga a precio base (para decir cuánto oro es una pérdida). */
@@ -50,5 +51,6 @@ export function riskOf(game, idx) {
   if (lose.water < 0) parts.push(`gastás ${-lose.water} de agua`);
   if (lose.rep < 0) parts.push(`baja tu fama en la zona (${lose.rep})`);
   if (!parts.length) return 'Si sale mal: no perdés nada, sólo no conseguís lo que buscabas.';
-  return `Si sale mal: ${parts.join(', ')}.`;
+  const amulet = hasGear(state, 'amuleto') && !state.amuletUsed ? ' Tu amuleto te salva la primera vez.' : '';
+  return `Si sale mal: ${parts.join(', ')}.${amulet}`;
 }

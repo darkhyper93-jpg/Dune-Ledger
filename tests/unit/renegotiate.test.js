@@ -54,8 +54,10 @@ test('se guarda que ya renegociaste', () => {
   renegotiate(g);
   const res = validateState(JSON.parse(JSON.stringify(g.state)));
   assert.ok(res.ok, res.error);
-  assert.equal(res.game.state.debt.renegotiated, true);
+  assert.equal(res.game.state.debt.renegotiations, 1);
   const old = JSON.parse(JSON.stringify(g.state));
-  delete old.debt.renegotiated;
-  assert.equal(validateState(old).game.state.debt.renegotiated, false);
+  delete old.debt.renegotiations;
+  assert.equal(validateState(old).game.state.debt.renegotiations, 0);
+  old.debt.renegotiated = true;
+  assert.equal(validateState(old).game.state.debt.renegotiations, 1, 'partida guardada en la 1.3');
 });

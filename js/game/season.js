@@ -88,7 +88,7 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     knownRoutes: {},
     visited: {},
     prices: {},
-    debt: mode === 'libre' ? { installments: [], strikes: 0, renegotiated: false } : createDebt(difficulty, { mult: s.debtMult, delays: s.delays }),
+    debt: mode === 'libre' ? { installments: [], strikes: 0, renegotiations: 0 } : createDebt(difficulty, { mult: s.debtMult, delays: s.delays }),
     loan: 0,
     loanTaken: 0,
     deposit: 0,
@@ -111,6 +111,7 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     climate: pickClimate(String(seed)),
     fair: null,
     safeUntil: 0,
+    amuletUsed: false,
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);

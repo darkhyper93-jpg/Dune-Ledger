@@ -11,7 +11,7 @@ export const GEAR = [
   { id: 'cofre', name: 'Cofre con candado', price: 75, sold: ['minera', 'capital'], desc: 'Cuando te roban o se cae carga, perdés un 40% menos.' },
   { id: 'catalejo', name: 'Catalejo', price: 60, sold: ['puerto', 'santa'], desc: 'Al llegar a una ciudad, ves los precios de una vecina que no conocés.' },
   { id: 'astrolabio', name: 'Astrolabio', price: 55, sold: ['oasis', 'puerto'], desc: 'Leyendo las estrellas, marchando de noche te perdés la mitad de las veces.' },
-  { id: 'amuleto', name: 'Amuleto del ojo', price: 40, sold: ['santa', 'aldea'], desc: 'Dicen que da suerte: +4% en todas las opciones que dependen del azar.' },
+  { id: 'amuleto', name: 'Amuleto del ojo', price: 70, sold: ['santa', 'aldea'], desc: 'La primera vez en la temporada que algo te sale mal, el amuleto se rompe y no perdés nada.' },
 ];
 
 /** Acceso por id. */

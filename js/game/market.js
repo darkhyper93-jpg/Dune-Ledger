@@ -16,7 +16,7 @@ import { hashUnit } from '../core/rng.js';
 import { repBuyFactor } from './reputation.js';
 import { newsMult } from './news.js';
 import { tradeBonus } from './crew.js';
-import { hasPerk, upgradeValue, regionOf } from './perks.js';
+import { hasPerk, regionOf } from './perks.js';
 import { investLevel, INVEST_DISCOUNT } from './invest.js';
 import { climatePrice } from './climate.js';
 import { fairMult } from './fair.js';
@@ -146,7 +146,7 @@ export function buyFactor(game, cityId) {
 export function sellFactor(game) {
   // El decreto del visir (crónica del Reino del Sultán) saca el impuesto.
   const tax = game.state.chronicle?.perk === 'exento' ? 0 : (regionOf(game.state).salesTax ?? 0);
-  return (1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio')) * (1 - tax);
+  return (1 + tradeBonus(game.state)) * (1 - tax);
 }
 
 /**

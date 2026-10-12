@@ -95,6 +95,8 @@ export async function submitScore({ date, nickname, score }, { fetchImpl = globa
     });
     if (res.ok) return { ok: true };
     if (res.status === 409) return { ok: false, error: 'Desde este celular ya se publicó un puntaje de hoy.' };
+    // La base frena a quien publica muchas veces seguidas (ver docs/DECISIONES.md).
+    if (res.status === 429) return { ok: false, error: 'Llegaron muchos puntajes seguidos: probá de nuevo en unos minutos.' };
     return { ok: false, error: 'El ranking no aceptó el puntaje. Puede que el desafío sea de otro día.' };
   } catch {
     return { ok: false, error: 'Sin conexión: probá de nuevo cuando tengas internet.' };

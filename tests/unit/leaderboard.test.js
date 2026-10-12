@@ -92,3 +92,10 @@ test('un navegador manejado por pruebas nunca le habla a la base real', () => {
   assert.equal(endpoint({ webdriver: false }), RANKING.url);
   assert.equal(endpoint(undefined), RANKING.url);
 });
+
+test('si el ranking frena por demasiados intentos, se avisa sin marcarlo como publicado', async () => {
+  const res = await submitScore({ date: '2026-10-12', nickname: 'Pepa', score: 10 }, { fetchImpl: fakeFetch({ status: 429 }), storage: new MemoryStorage() });
+  assert.equal(res.ok, false);
+  assert.match(res.error, /minutos/);
+  assert.doesNotMatch(res.error, /ya se publicó/);
+});

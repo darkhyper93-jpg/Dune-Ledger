@@ -427,3 +427,21 @@ revisarlo más adelante.
   finos, el margen rojo y la doble raya de cierre de los libros de
   contabilidad; columnas Debe y Haber con números tabulares. Las ganancias
   llevan signo (+/−) además del color.
+
+## Seguridad del ranking (ajuste)
+
+- **Permisos mínimos**: el público sólo puede leer `id, day, nickname, score,
+  code, created_at` e insertar `day, nickname, score, code, device`. No puede
+  leer `device`, ni poner la fecha de alta, ni cambiar o borrar filas. RLS
+  activo en todas las tablas.
+- **Límite de pedidos** (trigger `private.limit_score_inserts`, antes de cada
+  alta): por IP, 5 puntajes cada 10 minutos y 20 por hora; en total, 120 por
+  minuto. Pasado el límite responde 429 y el juego avisa "probá de nuevo en
+  unos minutos" sin marcar el puntaje como publicado. La IP sale de
+  `cf-connecting-ip` (la pone Cloudflare) y se guarda sólo como hash en
+  `private.score_attempts` (esquema sin acceso público, con RLS y sin
+  políticas a propósito); los intentos de más de un día se borran solos.
+- La fecha de alta (`created_at`) la pone la base, así nadie la puede usar
+  para esquivar el límite global ni el desempate del ranking.
+- Probado con una transacción que se deshace: 5 altas aceptadas y la sexta
+  rechazada con PT429; no quedó ninguna fila.

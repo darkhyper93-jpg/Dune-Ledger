@@ -12,6 +12,7 @@
 
 import { RULES, getDifficulty } from '../data/rules.js';
 import { getGood } from '../data/goods.js';
+import { noteFlow } from './ledger.js';
 
 const D = RULES.debt;
 
@@ -90,6 +91,7 @@ export function payDebt(state, amount) {
     left -= part;
   }
   state.gold -= paid;
+  noteFlow(state, 'gremio', -paid);
   return paid;
 }
 
@@ -132,7 +134,9 @@ export function settleInstallment(state, inst) {
   const funds = state.gold + (state.deposit ?? 0);
   if (funds >= owed) {
     const fee = Math.min(funds - owed, Math.ceil(owed * D.collectorFee));
+    const before = state.gold;
     spendFunds(state, owed + fee);
+    noteFlow(state, 'gremio', state.gold - before);
     inst.paid = inst.amount;
     return { kind: 'collected', fee, lost: false };
   }

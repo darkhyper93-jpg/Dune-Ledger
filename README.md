@@ -46,6 +46,10 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   salir de noche: se gasta la mitad del agua, pero sin luna es fácil
   perderse (aunque los bandidos tampoco te ven). Astrolabio en el bazar y el
   logro «Hijo de la luna».
+- Versión 1.2: el libro mayor. En el Diario, una página de libro de
+  cuentas con lo comprado (Debe) y vendido (Haber) de cada bien y su
+  ganancia, y adónde fue el oro: provisiones, animales, sueldos, Gremio,
+  equipo y lo demás, hasta el oro de hoy.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

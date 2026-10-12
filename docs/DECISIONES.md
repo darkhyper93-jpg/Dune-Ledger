@@ -405,3 +405,25 @@ revisarlo más adelante.
   fallan si algún pedido sale hacia supabase.co. Borrar filas desde acá no
   fue posible (la herramienta se cuelga en sentencias que borran): las de
   prueba sólo se ven en el ranking de ese día.
+
+## Versión 1.2 — el libro mayor
+
+- **Dónde vive**: en `state.stats.ledger`, así deshacer una compra o venta
+  borra también su asiento (deshacer ya restaura las estadísticas). Todo lo
+  que no es comercio de mercado vacía la pila de deshacer, así que no hay
+  asientos que queden colgados.
+- **Cuentas**: por bien, cantidad y oro comprado y vendido y la ganancia de
+  lo vendido (con el costo promedio que ya se llevaba). Aparte, provisiones,
+  animales (compra y venta), sueldos (incluida la primera semana al
+  contratar), pagos al Gremio (también lo que cobra el cobrador, sólo la
+  parte que sale de la bolsa) y equipo e inversiones.
+- **"Camino, contratos, banco y otros"** no se anota: es la diferencia entre
+  el oro de hoy y el inicial menos todas las cuentas. Así el libro siempre
+  cierra con el oro de la barra sin instrumentar cada evento.
+- El oro inicial se anota después de los arreglos de inicio (mercader y
+  mejoras). Una partida vieja sin libro arranca uno vacío sin oro inicial y
+  no muestra "otros" (no se puede saber).
+- **Diseño**: la única nota fuerte de la pantalla es el papel: renglones
+  finos, el margen rojo y la doble raya de cierre de los libros de
+  contabilidad; columnas Debe y Haber con números tabulares. Las ganancias
+  llevan signo (+/−) además del color.

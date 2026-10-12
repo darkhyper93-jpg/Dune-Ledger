@@ -101,3 +101,30 @@ test('comodidad: texto grande y alto contraste se aplican, se guardan y siguen s
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+for (const scheme of ['light', 'dark']) {
+  test(`el libro mayor con asientos es accesible (${scheme === 'light' ? 'claro' : 'noche'})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+    await page.goto('/?semilla=a11y-libro');
+    await page.evaluate(async () => {
+      localStorage.clear();
+      const { createSeason } = await import('./js/game/season.js');
+      const g = createSeason({ seed: 'a11y-libro' });
+      g.state.stats.ledger.goods = {
+        seda: { bq: 12, bt: 640, sq: 12, st: 1180, p: 540 },
+        sal: { bq: 30, bt: 210, sq: 30, st: 360, p: 150 },
+        te: { bq: 8, bt: 170, sq: 8, st: 130, p: -40 },
+        incienso: { bq: 6, bt: 150, sq: 0, st: 0, p: 0 },
+      };
+      Object.assign(g.state.stats.ledger.flows, { provisiones: -96, animales: -120, sueldos: -48 });
+      localStorage.setItem('dune-ledger:temporada', JSON.stringify(g.state));
+    });
+    await page.reload();
+    await page.getByTestId('continue').click();
+    await page.getByTestId('nav-journal').click();
+    await page.getByTestId('journal-tab-libro').click();
+    await expect(page.getByTestId('ledger').locator('tbody tr')).toHaveCount(4);
+    if (process.env.LEDGER_SHOT) await page.screenshot({ path: `${process.env.LEDGER_SHOT}/ledger-${scheme}.png`, fullPage: true });
+    await check(page, 'libro mayor');
+  });
+}

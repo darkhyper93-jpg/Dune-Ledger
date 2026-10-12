@@ -8,6 +8,7 @@
 import { changeRep } from './reputation.js';
 import { addLog } from './knowledge.js';
 import { fmt } from '../core/text.js';
+import { noteFlow } from './ledger.js';
 
 /** Niveles de inversión, en orden. */
 export const INVEST = [
@@ -51,6 +52,7 @@ export function invest(game) {
   if (state.gold < next.cost) return { ok: false, error: 'No te alcanza el oro.' };
   const city = map.cityById[state.location];
   state.gold -= next.cost;
+  noteFlow(state, 'equipo', -next.cost);
   state.invest[city.id] = investLevel(state, city.id) + 1;
   changeRep(state, city.zone, 4);
   state.undo = [];

@@ -31,6 +31,7 @@ import { createRival } from './rival.js';
 import { createChronicle } from './chronicle.js';
 import { recordDay } from './history.js';
 import { pickClimate } from './climate.js';
+import { initialLedger } from './ledger.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -119,6 +120,8 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
   refreshHires(game, start.id);
   see(state, 'cityTypes', start.type);
   notePeaks(state);
+  // El libro mayor abre con el oro que queda después de los arreglos iniciales.
+  state.stats.ledger = initialLedger(state.gold);
   addLog(state, mode === 'libre'
     ? `Empieza el modo libre en ${start.name}. Sin deuda ni apuro: probá rutas y aprendé los precios.`
     : `Empieza la temporada en ${start.name}. Le debés ${totalOwed(state.debt)} de oro al Gremio.`, 'info');

@@ -15,6 +15,7 @@ import { quote } from './market.js';
 import { cargoFree, camelPrice, camelResale, provisionPrices, provisionCap, perMount, mountName } from './caravan.js';
 import { addLog, snapshotPrices } from './knowledge.js';
 import { payDebt, canPayHere, totalOwed } from './debt.js';
+import { noteTrade, noteFlow } from './ledger.js';
 
 /** Cuántas acciones se pueden deshacer como máximo. */
 export const UNDO_LIMIT = 30;
@@ -117,6 +118,7 @@ export function buy(game, goodId, qty) {
   state.gold -= q.total;
   state.stock[state.location][goodId] = q.stockAfter;
   state.stats.spent += q.total;
+  noteTrade(state, 'buy', goodId, qty, q.total);
   see(state, 'goods', goodId);
   snapshotPrices(game, state.location);
   addLog(state, `Compraste ${qty} de ${good.name} por ${q.total} en ${map.cityById[state.location].name}.`, 'trade');
@@ -148,6 +150,7 @@ export function sell(game, goodId, qty) {
   state.gold += q.total;
   state.stock[state.location][goodId] = q.stockAfter;
   recordSale(state, goodId, qty, profit);
+  noteTrade(state, 'sell', goodId, qty, q.total, profit);
   snapshotPrices(game, state.location);
   const sign = profit >= 0 ? `ganaste ${profit}` : `perdiste ${-profit}`;
   addLog(state, `Vendiste ${qty} de ${good.name} por ${q.total} en ${map.cityById[state.location].name} (${sign}).`, 'trade');
@@ -188,6 +191,7 @@ export function buyProvision(game, kind, qty) {
   pushUndo(state, kind === 'food' ? 'compra de comida' : 'compra de agua');
   state.gold -= cost;
   state[kind] += qty;
+  noteFlow(state, 'provisiones', -cost);
   addLog(state, `Cargaste ${qty} de ${kind === 'food' ? 'comida' : 'agua'} por ${cost}.`, 'trade');
   return { ok: true, total: cost };
 }
@@ -204,6 +208,7 @@ export function buyCamel(game) {
   if (price > state.gold) return fail('No te alcanza el oro.');
   pushUndo(state, `compra de ${mountName(state)}`);
   state.gold -= price;
+  noteFlow(state, 'animales', -price);
   state.camels += 1;
   state.camelHp.push(100);
   notePeaks(state);
@@ -224,6 +229,7 @@ export function sellCamel(game) {
   const price = camelResale(state.seed, map.cityById[state.location], state.camelHp[weakest]);
   pushUndo(state, `venta de ${mountName(state)}`);
   state.gold += price;
+  noteFlow(state, 'animales', price);
   state.camels -= 1;
   state.camelHp.splice(weakest, 1);
   addLog(state, `Vendiste un ${mountName(state)} por ${price}.`, 'trade');

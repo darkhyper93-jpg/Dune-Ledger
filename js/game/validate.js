@@ -32,6 +32,7 @@ import { canNightMarch } from './moon.js';
 import { CODEX } from './profile.js';
 import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
 import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart, historyPart, betPart, investPart, climatePart } from './validate-parts.js';
+import { initialLedger, FLOW_IDS } from './ledger.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
@@ -65,9 +66,24 @@ function stats(v, map) {
     earned: num(v.earned, -1e8, 1e8, 'ganado'),
     spent: num(v.spent, 0, 1e8, 'gastado'),
     sold: record(v.sold, isGoodId, (x, w) => int(x, 0, 1e6, w), 'vendido'),
+    ledger: ledgerPart(v.ledger),
     // Contadores nuevos que una partida vieja no tiene arrancan en 0.
     ...Object.fromEntries(COUNTERS.map((k) => [k, int(v[k] ?? 0, 0, 1e6, k)])),
   };
+}
+
+/** Valida el libro mayor (una partida vieja sin libro arranca uno vacío). */
+function ledgerPart(v) {
+  if (v === undefined) return initialLedger(null);
+  need(isObj(v) && isObj(v.goods) && isObj(v.flows), 'libro mayor');
+  const start = v.start === null ? null : int(v.start, 0, 1e8, 'libro mayor');
+  const goods = record(v.goods, isGoodId, (r, w) => {
+    need(isObj(r), w);
+    return { bq: int(r.bq, 0, 1e6, w), bt: int(r.bt, 0, 1e8, w), sq: int(r.sq, 0, 1e6, w), st: int(r.st, 0, 1e8, w), p: int(r.p, -1e8, 1e8, w) };
+  }, 'libro mayor');
+  need(Object.keys(v.flows).every((k) => FLOW_IDS.includes(k)), 'libro mayor');
+  const flows = Object.fromEntries(FLOW_IDS.map((k) => [k, int(v.flows[k] ?? 0, -1e8, 1e8, k)]));
+  return { start, goods, flows };
 }
 
 /** Contadores enteros de las estadísticas (ver js/game/stats.js). */

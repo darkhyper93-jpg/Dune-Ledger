@@ -8,6 +8,7 @@ import { addLog } from './knowledge.js';
 import { withRng } from './random.js';
 import { fmt } from '../core/text.js';
 import { upgradeValue } from './perks.js';
+import { noteFlow } from './ledger.js';
 
 /** Máximo de tripulantes. */
 export const MAX_CREW = 5;
@@ -128,6 +129,7 @@ export function hire(game, id) {
   if (state.crew.length >= MAX_CREW) return { ok: false, error: `Podés llevar hasta ${MAX_CREW} personas.` };
   if (state.gold < c.wage) return { ok: false, error: 'No te alcanza para la primera semana.' };
   state.gold -= c.wage;
+  noteFlow(state, 'sueldos', -c.wage);
   list.splice(list.indexOf(c), 1);
   state.crew.push(c);
   state.seen.roles[c.role] = true;
@@ -180,6 +182,7 @@ export function crewDay(game, day) {
   const total = state.crew.reduce((s, m) => s + m.wage, 0);
   if (state.gold >= total) {
     state.gold -= total;
+    noteFlow(state, 'sueldos', -total);
     addLog(state, `Pagaste ${fmt(total)} de sueldos.`, 'info');
   } else {
     changeMorale(state, -20);

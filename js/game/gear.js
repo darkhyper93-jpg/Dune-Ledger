@@ -6,6 +6,7 @@
 import { GEAR, GEAR_BY_ID } from '../data/gear.js';
 import { addLog } from './knowledge.js';
 import { fmt } from '../core/text.js';
+import { noteFlow } from './ledger.js';
 
 /**
  * Dice si la caravana tiene un objeto.
@@ -40,6 +41,7 @@ export function buyGear(game, id) {
   if (hasGear(state, id)) return { ok: false, error: 'Ya lo tenés.' };
   if (state.gold < it.price) return { ok: false, error: 'No te alcanza el oro.' };
   state.gold -= it.price;
+  noteFlow(state, 'equipo', -it.price);
   state.gear[id] = true;
   state.undo = [];
   addLog(state, `Compraste ${it.name.toLowerCase()} por ${fmt(it.price)} en ${map.cityById[state.location].name}.`, 'trade');

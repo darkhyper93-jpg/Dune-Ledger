@@ -1,6 +1,6 @@
 /**
  * Pantallas Caravana (camellos, tripulación, carga, contratos, reputación)
- * y Diario (lo que pasó cada día).
+ * y Diario (lo que pasó cada día, o el libro mayor).
  */
 
 import { h } from './dom.js';
@@ -15,6 +15,7 @@ import { contractCard } from './tavern.js';
 import { renderCamels, renderCrew } from './crew.js';
 import { goodArt } from './art.js';
 import { gearOwnedCard } from './bazaar.js';
+import { renderLedger } from './ledger.js';
 
 /**
  * Pantalla de la caravana.
@@ -75,9 +76,24 @@ function repRow(zone, rep) {
  */
 export function renderJournal(app) {
   const { state } = app.game;
+  const tab = (id, label) => h('button', {
+    class: `seg-btn${journalTab === id ? ' chosen' : ''}`, role: 'radio', 'aria-checked': String(journalTab === id),
+    'data-testid': `journal-tab-${id}`, onclick: () => { journalTab = id; app.render(); },
+  }, h('b', {}, label));
+  const tabs = h('div', { class: 'seg seg-2', role: 'radiogroup', 'aria-label': 'Qué ver' }, tab('diario', 'Lo que pasó'), tab('libro', 'Libro mayor'));
+  if (journalTab === 'libro') {
+    return h('div', { class: 'stack' },
+      h('h1', {}, 'Libro mayor'),
+      tabs,
+      renderLedger(app));
+  }
   const items = state.log.slice().reverse().map((e) => h('li', { class: e.kind }, h('span', { class: 'd' }, `Día ${e.day}`), h('span', {}, e.text)));
   return h('div', { class: 'stack' },
     h('h1', {}, 'Diario'),
+    tabs,
     h('p', { class: 'muted small', style: 'margin:0' }, 'Todo lo que pasó en la temporada. Sirve para aprender qué conviene.'),
     h('ul', { class: 'log', 'data-testid': 'journal' }, items));
 }
+
+/** Qué muestra el diario: lo que pasó o el libro mayor (se recuerda en la sesión). */
+let journalTab = 'diario';

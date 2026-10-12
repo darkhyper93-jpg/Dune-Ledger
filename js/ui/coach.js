@@ -51,7 +51,7 @@ const HINTS = {
   cronica: 'Cada región tiene una crónica: una historia en tres capítulos que avanza mientras comerciás y da buenas recompensas.',
   bazar: 'En el bazar se compra equipo que sirve toda la temporada. Cada tipo de ciudad vende cosas distintas.',
   invertir: 'Podés invertir en las ciudades: lo que pongas te da descuentos ahí y el mercado se repone más rápido.',
-  clima: 'Cada temporada tiene su clima, que cambia los eventos y algunos precios. Lo ves arriba, junto al día.',
+  clima: 'Cada temporada tiene su clima, que cambia los eventos y algunos precios. Lo ves en la cabecera de cada ciudad: tocalo para ver qué hace.',
 };
 
 /**

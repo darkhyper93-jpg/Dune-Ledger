@@ -30,6 +30,7 @@ import { lastDay, isFree, MODES } from './modes.js';
 import { createRival } from './rival.js';
 import { createChronicle } from './chronicle.js';
 import { recordDay } from './history.js';
+import { pickClimate } from './climate.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -105,6 +106,7 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     history: [],
     bet: null,
     invest: {},
+    climate: pickClimate(String(seed)),
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);

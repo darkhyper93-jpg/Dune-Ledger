@@ -25,6 +25,7 @@ import { mountName } from './caravan.js';
 import { rivalDay } from './rival.js';
 import { hasGear } from './gear.js';
 import { recordDay } from './history.js';
+import { climateOf } from './climate.js';
 import { investLevel, INVEST_RECOVERY } from './invest.js';
 import { lastDay } from './modes.js';
 
@@ -49,7 +50,8 @@ export function mouths(state) {
 export function dailyRation(state, kind = 'water') {
   const base = Math.ceil(mouths(state) / 2);
   if (kind === 'food') return Math.ceil(base * foodFactor(state));
-  return hasPerk(state, 'nomada') ? Math.ceil(base / 2) : base;
+  const water = Math.ceil(base * (climateOf(state).water ?? 1));
+  return hasPerk(state, 'nomada') ? Math.ceil(water / 2) : water;
 }
 
 /**

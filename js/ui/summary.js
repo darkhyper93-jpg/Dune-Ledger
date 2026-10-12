@@ -14,6 +14,7 @@ import { regionSvg } from '../render/regions-art.js';
 import { svgNode } from '../render/shapes.js';
 import { dailyResultCard } from './modes.js';
 import { worthChart } from './chart.js';
+import { climateOf } from '../game/climate.js';
 import { kasimSvg } from '../render/portraits.js';
 
 /** Textos de cómo terminó la temporada. */
@@ -73,7 +74,7 @@ export function renderSummary(app) {
   const free = state.mode === 'libre';
   const counts = !free && over.official !== false;
   const title = free ? 'Fin del modo libre' : over.won ? '¡Temporada ganada!' : 'Temporada perdida';
-  const where = free ? 'Modo libre: no da sellos ni logros.' : `${REGIONS_BY_ID[state.region].name} · ${DIFFICULTIES[state.difficulty].name}`;
+  const where = free ? 'Modo libre: no da sellos ni logros.' : `${REGIONS_BY_ID[state.region].name}, ${DIFFICULTIES[state.difficulty].name.toLowerCase()}, ${climateOf(state).name.toLowerCase()}`;
   return h('div', { class: 'stack' },
     h('div', { class: `banner ${over.won || free ? 'win' : 'lose'}` },
       over.won ? h('span', { class: 'stamp', 'aria-hidden': 'true' }, 'Saldado') : null,

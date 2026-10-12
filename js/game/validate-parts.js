@@ -7,6 +7,7 @@
 
 import { isGoodId } from '../data/goods.js';
 import { GEAR_BY_ID } from '../data/gear.js';
+import { CLIMATES_BY_ID } from '../data/climates.js';
 
 /** Error de validación con un mensaje que dice qué campo falló. */
 export class SaveError extends Error {}
@@ -105,4 +106,11 @@ export function betPart(v, cityOk) {
 export function investPart(v, cityOk) {
   if (v === undefined) return {};
   return record(v, cityOk, (x, w) => int(x, 1, 3, w), 'inversiones');
+}
+
+/** Valida el clima de la temporada (templado en partidas viejas). */
+export function climatePart(v) {
+  if (v === undefined) return 'templado';
+  need(typeof v === 'string' && Object.hasOwn(CLIMATES_BY_ID, v), 'clima');
+  return v;
 }

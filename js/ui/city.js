@@ -19,7 +19,8 @@ import { camelPrice, camelResale, provisionPrices, provisionCap, perMount, mount
 import { dailyRation, canTravel } from '../game/travel.js';
 import { fmt, plural } from '../core/text.js';
 import { playTap, playCoins } from '../core/audio.js';
-import { coachCard } from './coach.js';
+import { coachCard, hintCard } from './coach.js';
+import { climateOf } from '../game/climate.js';
 import { bazaarCard, investCard } from './bazaar.js';
 
 /**
@@ -41,7 +42,8 @@ export function renderCity(app, params = {}) {
     h('div', { class: 'scene' }, svgNode(sceneSvg(city.type, state.region))),
     h('div', { class: 'plaque' },
       h('h1', { 'data-testid': 'city-name' }, city.name),
-      h('div', { class: 'kind' }, kind)));
+      h('div', { class: 'kind' }, kind)),
+    climateChip(app));
 
   const tabBar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(([id, label]) =>
     h('button', { role: 'tab', 'aria-selected': String(id === tab), 'data-testid': `tab-${id}`, onclick: () => app.go('city', { tab: id }) }, label)));
@@ -52,7 +54,19 @@ export function renderCity(app, params = {}) {
   else if (tab === 'gremio') content = renderGuild(app);
   else content = renderMarket(app);
 
-  return h('div', {}, head, coachCard(app, 'city'), endCard(app), deliverables(app), tabBar, content);
+  return h('div', {}, head, coachCard(app, 'city'), climateOf(state).id === 'templado' ? null : hintCard(app, 'clima'), endCard(app), deliverables(app), tabBar, content);
+}
+
+/**
+ * Cartelito del clima en la cabecera; al tocarlo explica qué cambia.
+ * @param {object} app
+ */
+function climateChip(app) {
+  const c = climateOf(app.game.state);
+  return h('button', { class: `climate-chip ${c.id}`, 'data-testid': 'climate', onclick: () => openSheet((close) => h('div', { class: 'stack' },
+    h('h2', {}, c.name), h('p', { style: 'margin:0' }, c.desc),
+    h('p', { class: 'small muted', style: 'margin:0' }, 'El clima se elige al empezar la temporada y dura hasta el final.'),
+    h('button', { class: 'btn', onclick: close }, 'Entendido')), { label: 'Clima de la temporada' }) }, c.name);
 }
 
 /**
@@ -126,7 +140,7 @@ function renderProvisions(app) {
   const { game } = app;
   const { state, map } = game;
   const city = map.cityById[state.location];
-  const p = provisionPrices(city);
+  const p = provisionPrices(city, state);
   const price = camelPrice(state.seed, city);
   const resale = camelResale(state.seed, city);
   const ration = dailyRation(state, 'food');

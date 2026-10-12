@@ -76,7 +76,7 @@ function handleContracts(game) {
 function stockUp(game, route, extraDays = 1) {
   const { state, map } = game;
   const need = tripNeeds(state, { ...route, days: route.days + extraDays });
-  const prices = provisionPrices(map.cityById[state.location]);
+  const prices = provisionPrices(map.cityById[state.location], state);
   for (const kind of ['food', 'water']) {
     let missing = Math.min(need[kind] - state[kind], provisionCap(state) - state[kind]);
     if (kind === 'water' && prices.water === 0) missing = provisionCap(state) - state.water;
@@ -95,7 +95,7 @@ function stockUp(game, route, extraDays = 1) {
 function provisionCost(game, route) {
   const { state, map } = game;
   const need = tripNeeds(state, { ...route, days: route.days + 1 });
-  const p = provisionPrices(map.cityById[state.location]);
+  const p = provisionPrices(map.cityById[state.location], state);
   return Math.max(0, need.food - state.food) * p.food + Math.max(0, need.water - state.water) * p.water;
 }
 

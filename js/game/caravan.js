@@ -7,6 +7,7 @@ import { getGood } from '../data/goods.js';
 import { getCityType } from '../data/cities.js';
 import { hashUnit } from '../core/rng.js';
 import { upgradeValue, regionOf, hasPerk } from './perks.js';
+import { climateOf } from './climate.js';
 
 /**
  * Carga que lleva cada animal: 20 un camello (12 un caballo en la Estepa),
@@ -87,9 +88,10 @@ export function camelResale(seed, city, hp = 100) {
 /**
  * Precio de la comida y el agua en una ciudad.
  * @param {{type:string}} city
+ * @param {object} [state] para el clima (la cosecha abarata la comida)
  * @returns {{food:number,water:number}}
  */
-export function provisionPrices(city) {
+export function provisionPrices(city, state = {}) {
   const t = getCityType(city.type);
-  return { food: t.food, water: t.water };
+  return { food: Math.max(1, Math.round(t.food * (climateOf(state).food ?? 1))), water: t.water };
 }

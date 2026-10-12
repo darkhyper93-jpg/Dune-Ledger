@@ -12,6 +12,7 @@ import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
 import { tireCamels, healCamels } from './camels.js';
 import { hasGear } from './gear.js';
 import { worthNow } from './history.js';
+import { climateOf } from './climate.js';
 import { rivalWorth } from './rival.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
@@ -130,7 +131,7 @@ export function eventWeights(game, route) {
   const bandits = getDifficulty(game.state.difficulty).bandits ?? 1;
   for (const e of EVENTS) {
     if (e.weight <= 0 || !eventAllowed(game, route, e)) continue;
-    let w = e.weight * (regional[e.id] ?? 1);
+    let w = e.weight * (regional[e.id] ?? 1) * (climateOf(game.state).events?.[e.id] ?? 1);
     if (e.id === 'bandidos') {
       if (route.danger === 'alto') w *= 3;
       w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos

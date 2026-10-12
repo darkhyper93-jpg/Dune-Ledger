@@ -11,6 +11,8 @@ import { createSeason } from '../../js/game/season.js';
  */
 export function testGame(patch = {}, seed = 'prueba') {
   const game = createSeason({ seed, events: false });
+  // Año templado: las pruebas de cuentas exactas no dependen del clima.
+  game.state.climate = 'templado';
   Object.assign(game.state, patch);
   return game;
 }

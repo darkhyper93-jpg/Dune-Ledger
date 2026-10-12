@@ -179,3 +179,16 @@ input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--f
 .invest-steps { display: flex; gap: 6px; }
 .invest-steps span { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
 .invest-steps span.on { background: var(--gold); border-color: var(--gold-deep); }
+
+/* ---------- Clima de la temporada (cartelito sobre el cielo de la escena) ---------- */
+.climate-chip {
+  position: absolute; top: 10px; right: 12px; min-height: 44px; padding: 6px 14px;
+  border-radius: 999px; border: 2px solid var(--gold); cursor: pointer;
+  background: var(--hud-bg); color: var(--hud-ink); font: 700 13px var(--font);
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.25); touch-action: manipulation;
+}
+.climate-chip::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--gold); vertical-align: 1px; }
+.climate-chip.tormentas::before { background: #9FB6C8; }
+.climate-chip.sequia::before { background: #F6B73C; }
+.climate-chip.cosecha::before { background: #76B35C; }
+.climate-chip.ferias::before { background: #E07E45; }

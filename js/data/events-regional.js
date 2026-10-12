@@ -17,7 +17,7 @@ export const REGIONAL_EVENTS = [
   {
     id: 'piratas',
     when: { terrain: ['mar'] },
-    weight: 3,
+    weight: 4,
     text: 'Una galera de velas negras se pone a la par. Los piratas piden $toll de oro para no abordarte.',
     setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
     options: [

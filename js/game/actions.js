@@ -183,7 +183,7 @@ export function buyProvision(game, kind, qty) {
   if (err) return fail(err);
   if (kind !== 'food' && kind !== 'water') return fail('Provisión desconocida.');
   if (state[kind] + qty > provisionCap(state)) return fail(`Podés llevar hasta ${provisionCap(state)}.`);
-  const cost = provisionPrices(map.cityById[state.location])[kind] * qty;
+  const cost = provisionPrices(map.cityById[state.location], state)[kind] * qty;
   if (cost > state.gold) return fail('No te alcanza el oro.');
   pushUndo(state, kind === 'food' ? 'compra de comida' : 'compra de agua');
   state.gold -= cost;

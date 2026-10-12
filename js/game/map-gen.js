@@ -228,11 +228,9 @@ function tryMap(rng, seed, region) {
       terrain: pickTerrain(rng, types[a], types[b], rm.terrain),
       danger: rng.weighted(dangerW),
     };
-    // En la Costa, entre dos puertos se va en barco: más rápido.
-    if (rm.sea && types[a] === 'puerto' && types[b] === 'puerto') {
-      route.terrain = 'mar';
-      route.days = Math.max(1, route.days - 1);
-    }
+    // En la Costa, entre dos puertos se va en barco: casi no se gasta agua
+    // ni se cansan los animales (pero hay piratas). Tarda lo mismo.
+    if (rm.sea && types[a] === 'puerto' && types[b] === 'puerto') route.terrain = 'mar';
     return route;
   });
   const map = indexMap({ cities, routes });

@@ -7,7 +7,7 @@ import { NEWS, NEWS_BY_ID } from '../data/news.js';
 import { ZONES, zoneName } from './reputation.js';
 import { withRng } from './random.js';
 import { addLog } from './knowledge.js';
-import { upgradeValue, hasPerk } from './perks.js';
+import { upgradeValue, hasPerk, regionId } from './perks.js';
 
 /** Probabilidad de que un rumor sea verdad. */
 export const RUMOR_TRUE = 0.75;
@@ -72,7 +72,8 @@ export function activeNews(state) {
  * Crea una noticia nueva al azar (arranca como rumor hoy).
  */
 function makeNews(state, rng) {
-  const tpl = rng.pick(NEWS);
+  const region = regionId(state);
+  const tpl = rng.pick(NEWS.filter((n) => !n.regions || n.regions.includes(region)));
   const startDay = state.day + rng.int(3, 5);
   return {
     tpl: tpl.id,

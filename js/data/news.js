@@ -5,6 +5,7 @@
  *
  * scope 'type': afecta a todas las ciudades de un tipo (cityType).
  * scope 'zone': afecta a una zona del mapa elegida al azar ({zona} en el texto).
+ * regions: si está, la noticia sólo sale en esas regiones.
  */
 
 export const NEWS = [
@@ -20,6 +21,13 @@ export const NEWS = [
   { id: 'biblioteca', scope: 'type', cityType: 'capital', goods: ['libros'], mult: 2, text: 'Se quemó la biblioteca de la Capital: los libros valen el doble.' },
   { id: 'boda', scope: 'zone', goods: ['ceramica', 'seda'], mult: 2, text: 'Boda de un príncipe en el {zona}: cerámica y seda se pagan el doble.' },
   { id: 'caravana-te', scope: 'zone', goods: ['te'], mult: 0.5, text: 'Una caravana enorme de té llegó al {zona}: el té vale la mitad.' },
+  { id: 'langostas', scope: 'zone', goods: ['datiles', 'te'], mult: 2, text: 'Una plaga de langostas arrasó los cultivos del {zona}: dátiles y té se pagan el doble.' },
+  { id: 'mina-nueva', scope: 'zone', goods: ['metal'], mult: 0.5, text: 'El Gremio abrió una mina nueva en el {zona}: el metal vale la mitad.' },
+  // Noticias de una sola región.
+  { id: 'feria-caballos', scope: 'type', cityType: 'aldea', goods: ['lana'], mult: 0.5, regions: ['estepa'], text: 'Gran feria de caballos en las aldeas: sobra lana y vale la mitad.' },
+  { id: 'naufragio', scope: 'type', cityType: 'capital', goods: ['perlas', 'seda'], mult: 2, regions: ['costa'], text: 'Una tormenta hundió la flota del Gremio: perlas y seda escasean en la Capital.' },
+  { id: 'templo-jade', scope: 'type', cityType: 'santa', goods: ['jade'], mult: 2, regions: ['jade'], text: 'Se consagra un templo nuevo: las ciudades santas pagan el doble por el jade.' },
+  { id: 'cumple-sultan', scope: 'type', cityType: 'capital', goods: ['especias', 'seda'], mult: 2, regions: ['sultan'], text: 'Cumpleaños del sultán: en la Capital pagan el doble por especias y seda.' },
 ];
 
 /** Acceso por id. */

@@ -31,7 +31,7 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], wonIn: [], hardWin: false, daily: null,
+    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null,
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
@@ -60,6 +60,10 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (Array.isArray(raw.chronicles)) {
+    const ok = new Set(raw.chronicles.filter((id) => typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id)));
+    out.chronicles = REGIONS.map((r) => r.id).filter((id) => ok.has(id));
+  }
   if (Array.isArray(raw.wonIn)) {
     const ok = new Set(raw.wonIn.filter((id) => typeof id === 'string' && Object.hasOwn(REGIONS_BY_ID, id)));
     out.wonIn = REGIONS.map((r) => r.id).filter((id) => ok.has(id));
@@ -155,6 +159,10 @@ export function recordSeason(profile, game) {
   if (!over || over.recorded) return { newAchievements: over?.newAchievements ?? [], unlocked: over?.unlocked ?? [] };
   // El modo libre no cuenta; el desafío cuenta sólo la primera vez del día.
   mergeSeen(profile, state.seen);
+  const region = state.region ?? 'desierto';
+  if ((state.chronicle?.step ?? 0) >= 3 && !profile.chronicles.includes(region)) {
+    profile.chronicles = REGIONS.map((r) => r.id).filter((id) => id === region || profile.chronicles.includes(id));
+  }
   if (state.mode === 'diario') {
     over.official = profile.daily?.date !== state.daily;
     if (over.official) profile.daily = { date: state.daily, score: over.score };
@@ -168,7 +176,6 @@ export function recordSeason(profile, game) {
   const unlocked = [];
   if (over.won) {
     profile.wins += 1;
-    const region = state.region ?? 'desierto';
     if (!profile.wonIn.includes(region)) profile.wonIn = REGIONS.map((r) => r.id).filter((id) => id === region || profile.wonIn.includes(id));
     unlocked.push(...unlockNext(profile, state));
   }

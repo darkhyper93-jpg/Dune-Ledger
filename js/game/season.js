@@ -28,6 +28,7 @@ import { startingResources, applyStartPerks } from './start.js';
 import { initialStats, initialSeen, see, bump, notePeaks } from './stats.js';
 import { lastDay, isFree, MODES } from './modes.js';
 import { createRival } from './rival.js';
+import { createChronicle } from './chronicle.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -98,6 +99,8 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     stats: initialStats(),
     seen: initialSeen(),
     rival: null,
+    chronicle: createChronicle(),
+    gear: {},
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);

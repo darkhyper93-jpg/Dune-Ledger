@@ -30,56 +30,12 @@ import { debtPlan } from './debt.js';
 import { initialStats } from './stats.js';
 import { CODEX } from './profile.js';
 import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
+import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart } from './validate-parts.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
 // Los demás topes de días usan FREE_DAYS (el modo libre no tiene límite);
 // el día actual se controla contra el último día del modo.
-
-/** Error de validación con un mensaje que dice qué campo falló. */
-class SaveError extends Error {}
-
-/** Lanza un SaveError si la condición no se cumple. */
-function need(cond, what) {
-  if (!cond) throw new SaveError(`Partida inválida: ${what}`);
-}
-
-/** Objeto plano (no arreglo, no null). */
-function isObj(v) {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** Entero dentro de un rango. */
-function int(v, lo, hi, what) {
-  need(Number.isInteger(v) && v >= lo && v <= hi, what);
-  return v;
-}
-
-/** Número finito dentro de un rango. */
-function num(v, lo, hi, what) {
-  need(typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi, what);
-  return v;
-}
-
-/** Texto con largo máximo. */
-function str(v, max, what) {
-  need(typeof v === 'string' && v.length <= max, what);
-  return v;
-}
-
-/**
- * Recorre un objeto con claves que deben cumplir `keyOk`, validando cada valor.
- * Devuelve un objeto nuevo sin prototipo raro.
- */
-function record(v, keyOk, valueFn, what) {
-  need(isObj(v), what);
-  const out = {};
-  for (const [k, val] of Object.entries(v)) {
-    need(keyOk(k), `${what} (${k})`);
-    out[k] = valueFn(val, `${what}.${k}`);
-  }
-  return out;
-}
 
 /** Mapa de bien → número, con todos los bienes activos presentes. */
 function goodsRecord(v, lo, hi, what, intOnly = false) {
@@ -216,6 +172,8 @@ export function validateState(input) {
       stats: base.stats,
       seen: seenPart(raw.seen),
       rival: rivalPart(raw.rival, cityOk),
+      chronicle: chroniclePart(raw.chronicle),
+      gear: gearPart(raw.gear),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);
@@ -226,19 +184,6 @@ export function validateState(input) {
     if (e instanceof SaveError) return { ok: false, error: e.message };
     return { ok: false, error: `Partida inválida: ${e.message}` };
   }
-}
-
-/** Valida la caravana rival (puede no haber, en partidas viejas). */
-function rivalPart(v, cityOk) {
-  if (v === null || v === undefined) return null;
-  need(isObj(v) && cityOk(v.at) && (v.to === null || cityOk(v.to)), 'rival');
-  need(v.cargo === null || (isObj(v.cargo) && isGoodId(v.cargo.goodId)), 'carga del rival');
-  return {
-    at: v.at, to: v.to,
-    left: int(v.left, 0, 30, 'rival'), days: int(v.days, 0, 30, 'rival'), wait: int(v.wait, 0, 10, 'rival'),
-    gold: int(v.gold, 0, 1e8, 'oro del rival'),
-    cargo: v.cargo === null ? null : { goodId: v.cargo.goodId, qty: int(v.cargo.qty, 1, 999, 'rival'), cost: int(v.cargo.cost, 0, 1e8, 'rival') },
-  };
 }
 
 /** Valida la deuda contra las cuotas de la dificultad (sin cuotas en el modo libre). */

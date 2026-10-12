@@ -313,3 +313,26 @@ revisarlo más adelante.
   cielo violeta con luna del sultán).
 - **Balance con todo esto** (300 temporadas, Normal): codicioso 76,7%,
   prudente 43,7%, aleatorio 0%.
+
+## Crónicas, noticias y bazar
+
+- **Crónicas** (`js/data/chronicles.js`): una historia por región en tres
+  capítulos («La caravana perdida de Rashid», «El potro blanco», «El mapa
+  del pirata tuerto», «El monje de la montaña» y «El anillo del visir»).
+  Cada capítulo pide llegar a un tipo de ciudad, entregar mercadería o pagar
+  algo, y da una recompensa: oro, reputación, el mapa entero, un animal más,
+  curar a los animales o, en la del sultán, no pagar impuestos el resto de la
+  temporada. Se sigue desde la Taberna. Los bots no las juegan, así que no
+  cambian las métricas. Dos logros más (47): terminar una crónica y
+  terminar las cinco (el perfil guarda cuáles terminaste).
+- **Noticias**: 6 más; 4 de ellas salen sólo en su región (feria de caballos
+  en la Estepa, naufragio en la Costa, templo de jade, cumpleaños del sultán).
+- **Bazar de equipo** (`js/data/gear.js`): 6 objetos que se compran una vez
+  por temporada en ciertos tipos de ciudad: lámpara (+12% en tormentas),
+  brújula (+12% al huir), toldo (+50% de curación al descansar), cofre (−40%
+  de carga perdida en eventos), catalejo (precios de una vecina al llegar) y
+  amuleto (+4% en todo lo que depende del azar). Los bots no compran equipo.
+- **Partidas viejas**: crónica y equipo arrancan vacíos si faltan; no hizo
+  falta cambiar la versión del formato.
+- `validate.js` se partió: las piezas básicas y las partes chicas (rival,
+  crónica, equipo) están en `validate-parts.js`.

@@ -140,7 +140,9 @@ export function buyFactor(game, cityId) {
  * @param {object} game
  */
 export function sellFactor(game) {
-  return (1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio')) * (1 - (regionOf(game.state).salesTax ?? 0));
+  // El decreto del visir (crónica del Reino del Sultán) saca el impuesto.
+  const tax = game.state.chronicle?.perk === 'exento' ? 0 : (regionOf(game.state).salesTax ?? 0);
+  return (1 + tradeBonus(game.state) + upgradeValue(game.state, 'socio')) * (1 - tax);
 }
 
 /**

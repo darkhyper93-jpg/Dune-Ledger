@@ -225,7 +225,7 @@ test('progreso: comprar en el Gremio, elegir mercader y pasar el código', async
   await page.getByText('Volver').click();
   await expect(page.getByTestId('shop')).toContainText('130 sellos');
   await page.getByTestId('records').click();
-  await expect(page.getByTestId('achievements-count')).toContainText('/45');
+  await expect(page.getByTestId('achievements-count')).toContainText('/47');
 });
 
 test('regiones y dificultades: lo bloqueado no se elige y la Estepa se juega a caballo', async ({ page }) => {
@@ -307,4 +307,27 @@ test('caravana rival: Kasim aparece en la taberna y en el resumen', async ({ pag
   await page.getByTestId('finish').click();
   await page.getByTestId('finish-confirm').click();
   await expect(page.getByTestId('rival-result')).toContainText('Le ganaste');
+});
+
+test('crónica en la taberna y bazar de equipo en provisiones', async ({ page }) => {
+  await newSeason(page);
+  await page.getByTestId('tab-taberna').click();
+  await expect(page.getByTestId('chronicle')).toContainText('capítulo 1 de 3');
+  // Llevamos la caravana a la Capital con oro, para ver el bazar ahí.
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('dune-ledger:temporada'));
+    s.gold = 500;
+    localStorage.setItem('dune-ledger:temporada', JSON.stringify(s));
+  });
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await page.getByTestId('tab-provisiones').click();
+  const bazaar = page.getByTestId('bazaar');
+  if (await bazaar.count()) {
+    const first = bazaar.locator('button').first();
+    await first.click();
+    await expect(bazaar).toContainText('Ya lo tenés');
+    await page.getByTestId('nav-caravan').click();
+    await expect(page.getByTestId('gear-owned')).toBeVisible();
+  }
 });

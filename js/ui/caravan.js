@@ -14,6 +14,7 @@ import { ZONES } from '../game/reputation.js';
 import { contractCard } from './tavern.js';
 import { renderCamels, renderCrew } from './crew.js';
 import { goodArt } from './art.js';
+import { gearOwnedCard } from './bazaar.js';
 
 /**
  * Pantalla de la caravana.
@@ -36,6 +37,7 @@ export function renderCaravan(app) {
         h('dt', {}, 'Deuda que queda'), h('dd', {}, fmt(totalOwed(state.debt))),
         h('dt', {}, 'Faltas con el Gremio'), h('dd', { class: state.debt.strikes ? 'bad' : '' }, `${state.debt.strikes} de ${RULES.debt.maxStrikes}`))),
     renderCamels(app),
+    gearOwnedCard(app),
     h('h2', {}, 'Tripulación'),
     renderCrew(app),
     h('h2', {}, 'Carga'),

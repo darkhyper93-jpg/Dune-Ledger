@@ -10,6 +10,7 @@ import { getGood } from '../data/goods.js';
 import { cargoFree, provisionCap } from './caravan.js';
 import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
 import { tireCamels, healCamels } from './camels.js';
+import { hasGear } from './gear.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
@@ -39,11 +40,11 @@ export const CHANCES = {
   /** Pelear: mejor con armas en la carga y con guardias (y valientes). */
   fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08) + fightBonus(game.state) + (hasPerk(game.state, 'capitana') ? 0.2 : 0), 0.05, 0.95),
   /** Huir: más difícil en rutas de peligro alto. */
-  flee: (game) => (tripInfo(game).route.danger === 'alto' ? 0.45 : 0.6),
+  flee: (game) => (tripInfo(game).route.danger === 'alto' ? 0.45 : 0.6) + (hasGear(game.state, 'brujula') ? 0.12 : 0),
   /** Cavar en un oasis seco. */
   dig: () => 0.55,
   /** Seguir en una tormenta de arena. */
-  storm: (game) => clamp(0.6 + stormBonus(game.state), 0, 0.95),
+  storm: (game) => clamp(0.6 + stormBonus(game.state) + (hasGear(game.state, 'lampara') ? 0.12 : 0), 0, 0.95),
   /** Mandar al explorador a las ruinas. */
   scout: (game) => (scoutLevel(game.state) >= 3 ? 0.95 : 0.85),
   /** Sobornar: depende de tu reputación en la zona. */
@@ -174,6 +175,7 @@ export function optionState(game, idx) {
   if (opt.spareDays && state.day + (state.trip.days - state.trip.done) + opt.spareDays > lastDay(state)) reason = 'No te da el tiempo.';
   let chance = null;
   if (opt.chance !== undefined) chance = typeof opt.chance === 'number' ? opt.chance : CHANCES[opt.chance](game);
+  if (chance !== null && hasGear(state, 'amuleto')) chance = Math.min(0.95, chance + 0.04);
   return { available: reason === null, reason, chance, label };
 }
 
@@ -200,7 +202,7 @@ function applyEffects(game, eff, params, rng) {
     state.gold += n;
     lines.push(`+${fmt(n)} de oro`);
   }
-  const insured = 1 - upgradeValue(state, 'seguro');
+  const insured = (1 - upgradeValue(state, 'seguro')) * (hasGear(state, 'cofre') ? 0.6 : 1);
   if (eff.cargoPct) lines.push(...loseCargo(state, null, eff.cargoPct * insured));
   if (eff.breakFragile) lines.push(...loseCargo(state, 'ceramica', eff.breakFragile * insured));
   if (eff.give) {

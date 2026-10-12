@@ -60,6 +60,9 @@ export const ACHIEVEMENTS = [
   { id: 'peregrinos', name: 'Camino santo', desc: 'Acompañá a 2 grupos de peregrinos en una temporada.', check: ({ state }) => state.stats.pilgrims >= 2 },
   { id: 'lobos', name: 'Noche de lobos', desc: 'Espantá a los lobos con tus guardias.', check: ({ state }) => state.stats.wolves >= 1 },
   { id: 'banquete', name: 'Invitado de honor', desc: 'Andá a un banquete del visir.', check: ({ state }) => state.stats.banquets >= 1 },
+  // ── Crónicas ──
+  { id: 'cronista', name: 'Cronista', desc: 'Terminá la crónica de una región.', check: ({ state }) => (state.chronicle?.step ?? 0) >= 3 },
+  { id: 'cinco-cronicas', name: 'Las mil y una rutas', desc: 'Terminá las crónicas de las 5 regiones.', check: ({ profile }) => profile.chronicles.length >= 5 },
   { id: 'altar', name: 'Altar de jade', desc: 'Vendé 10 de jade en una temporada.', check: ({ state }) => sold(state, 'jade') >= 10 },
 ];
 

@@ -16,6 +16,9 @@ import { goodArt } from './art.js';
 import { RIVAL, rivalNews, rivalWorth } from '../game/rival.js';
 import { kasimSvg } from '../render/portraits.js';
 import { svgNode } from '../render/shapes.js';
+import { CHRONICLES, CHAPTERS } from '../data/chronicles.js';
+import { chapterNow, chronicleCheck, chronicleAct, goalText } from '../game/chronicle.js';
+import { regionId } from '../game/perks.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -73,6 +76,7 @@ export function renderTavern(app) {
   const news = activeNews(state);
   const offers = offersHere(app.game).filter((k) => k.source === 'taberna');
   return h('div', { class: 'stack' },
+    chronicleCard(app),
     h('h3', {}, 'Rumores'),
     rumors.length
       ? h('ul', { class: 'result-lines', 'data-testid': 'rumors' }, rumors.map((n) => h('li', {}, `Dicen que… ${newsText(n)} `, h('span', { class: 'muted small' }, `(se sabrá el día ${n.startDay})`))))
@@ -87,6 +91,37 @@ export function renderTavern(app) {
     h('p', { class: 'muted small', style: 'margin:0' }, 'Pagan más que el mercado, pero tienen fecha. Si no cumplís, baja tu reputación en esa zona.'),
     offers.length ? offers.map((k) => contractCard(app, k, 'offer')) : h('p', { class: 'muted small' }, 'No hay encargos nuevos. Volvé en unos días.'),
     renderHires(app));
+}
+
+/**
+ * La crónica de la región: el capítulo actual, qué pide y, si es de
+ * entregar o pagar, el botón para hacerlo acá.
+ * @param {object} app
+ */
+function chronicleCard(app) {
+  const { state } = app.game;
+  const chapter = chapterNow(state);
+  const ch = CHRONICLES[regionId(state)];
+  if (!chapter) {
+    return h('div', { class: 'card chronicle done', 'data-testid': 'chronicle' },
+      h('span', { class: 'chronicle-kicker' }, 'Crónica terminada'), h('h3', {}, ch.title),
+      h('p', { class: 'small', style: 'margin:0' }, ch.chapters[ch.chapters.length - 1].done));
+  }
+  const g = chapter.goal;
+  const check = chronicleCheck(app.game);
+  const verb = g.type === 'deliver' ? `Entregar ${g.qty} de ${getGood(g.good).name}` : g.type === 'pay' ? `Pagar ${fmt(g.gold)} de oro` : null;
+  return h('div', { class: 'card chronicle', 'data-testid': 'chronicle' },
+    h('span', { class: 'chronicle-kicker' }, `Crónica, capítulo ${chapter.index + 1} de ${CHAPTERS}`),
+    h('h3', {}, chapter.title),
+    h('p', { class: 'small chronicle-text', style: 'margin:0' }, chapter.text),
+    h('p', { class: 'small', style: 'margin:0' }, h('b', {}, 'Para seguir: '), goalText(g)),
+    verb ? h('button', { class: 'btn small primary', 'data-testid': 'chronicle-act', disabled: !check.ok, onclick: () => {
+      const res = app.act((game) => chronicleAct(game));
+      if (res.ok) {
+        playCoins(60);
+        app.toast('¡Capítulo cumplido! Mirá el Diario.');
+      }
+    } }, check.ok ? verb : check.error) : null);
 }
 
 /**

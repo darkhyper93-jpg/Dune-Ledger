@@ -14,6 +14,8 @@ import { withRng } from './random.js';
 import { plural } from '../core/text.js';
 import { refreshOffers } from './contracts.js';
 import { scoutLevel, refreshHires, crewArrive } from './crew.js';
+import { chronicleArrive } from './chronicle.js';
+import { hasGear } from './gear.js';
 import { bump, see, notePeaks } from './stats.js';
 import { lastDay } from './modes.js';
 
@@ -74,10 +76,18 @@ function arrive(game) {
   snapshotPrices(game, to);
   if (scoutLevel(state)) {
     for (const r of map.routesByCity[to]) snapshotPrices(game, otherEnd(r, to));
+  } else if (hasGear(state, 'catalejo')) {
+    // Con el catalejo se ven los precios de una vecina de la que no sabés nada.
+    const unseen = map.routesByCity[to].map((r) => otherEnd(r, to)).find((id) => !state.prices[id]);
+    if (unseen) {
+      snapshotPrices(game, unseen);
+      addLog(state, `Con el catalejo ves los puestos de ${map.cityById[unseen].name}: ya sabés sus precios.`, 'info');
+    }
   }
   refreshOffers(game, to);
   refreshHires(game, to);
   crewArrive(game);
+  chronicleArrive(game);
   see(state, 'cityTypes', map.cityById[to].type);
   notePeaks(state);
   addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');

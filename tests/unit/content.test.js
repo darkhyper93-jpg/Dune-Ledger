@@ -19,9 +19,9 @@ function play(profile, opts, tweak = () => {}) {
   return { g, res: recordSeason(profile, g) };
 }
 
-test('hay 45 logros con id único y los mercaderes piden logros que existen', () => {
-  assert.equal(ACHIEVEMENTS.length, 45);
-  assert.equal(new Set(ACHIEVEMENTS.map((a) => a.id)).size, 45);
+test('hay 47 logros con id único y los mercaderes piden logros que existen', () => {
+  assert.equal(ACHIEVEMENTS.length, 47);
+  assert.equal(new Set(ACHIEVEMENTS.map((a) => a.id)).size, 47);
   for (const m of Object.values(MERCHANTS_BY_ID)) if (m.requires) assert.ok(ACHIEVEMENTS_BY_ID[m.requires], m.id);
 });
 

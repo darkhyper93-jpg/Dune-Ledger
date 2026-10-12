@@ -26,6 +26,9 @@ export const CODEX = {
   traits: TRAITS,
 };
 
+/** Cuántas temporadas recuerda el historial del perfil. */
+export const PROFILE_HISTORY = 12;
+
 /** Consejos de una sola vez (ver js/ui/coach.js). */
 export const HINT_IDS = ['kasim', 'cronica', 'bazar', 'invertir', 'clima'];
 
@@ -34,13 +37,21 @@ export function defaultProfile() {
   return {
     seals: 0, totalSeals: 0, seasons: 0, wins: 0, bestScore: 0, tutorialDone: false,
     merchants: ['aprendiz'], upgrades: {}, achievements: {},
-    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null, hints: {},
+    regions: ['desierto'], wonIn: [], chronicles: [], hardWin: false, daily: null, hints: {}, history: [],
     codex: Object.fromEntries(Object.keys(CODEX).map((k) => [k, {}])),
   };
 }
 
 const isObj = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const intIn = (v, max) => Number.isInteger(v) && v >= 0 && v <= max;
+
+/** Una entrada válida del historial de temporadas. */
+function validEntry(e) {
+  return isObj(e) && Object.hasOwn(REGIONS_BY_ID, e.region) && Object.hasOwn(DIFFICULTIES, e.difficulty)
+    && ['temporada', 'diario', 'libre'].includes(e.mode) && Number.isInteger(e.score) && Math.abs(e.score) <= 1e8
+    && typeof e.won === 'boolean' && (e.rivalGold === null || (Number.isInteger(e.rivalGold) && e.rivalGold >= 0))
+    && Number.isInteger(e.day) && e.day >= 1 && e.day <= 999 && Object.keys(e).length === 7;
+}
 
 /**
  * Valida un perfil leído. Los números imposibles lo vuelven al de fábrica;
@@ -63,6 +74,7 @@ export function validateProfile(raw) {
     out.regions = REGIONS.map((r) => r.id).filter((id) => id === 'desierto' || ok.has(id));
   }
   out.hardWin = raw.hardWin === true;
+  if (Array.isArray(raw.history)) out.history = raw.history.filter(validEntry).slice(0, PROFILE_HISTORY).map((e) => ({ ...e }));
   if (isObj(raw.hints)) {
     for (const id of HINT_IDS) if (raw.hints[id] === true) out.hints[id] = true;
   }
@@ -165,6 +177,10 @@ export function recordSeason(profile, game) {
   if (!over || over.recorded) return { newAchievements: over?.newAchievements ?? [], unlocked: over?.unlocked ?? [] };
   // El modo libre no cuenta; el desafío cuenta sólo la primera vez del día.
   mergeSeen(profile, state.seen);
+  profile.history = [{
+    region: state.region ?? 'desierto', difficulty: state.difficulty, mode: state.mode ?? 'temporada',
+    score: Math.round(over.score), won: over.won, rivalGold: over.rivalGold ?? null, day: over.day,
+  }, ...profile.history].slice(0, PROFILE_HISTORY);
   const region = state.region ?? 'desierto';
   if ((state.chronicle?.step ?? 0) >= 3 && !profile.chronicles.includes(region)) {
     profile.chronicles = REGIONS.map((r) => r.id).filter((id) => id === region || profile.chronicles.includes(id));

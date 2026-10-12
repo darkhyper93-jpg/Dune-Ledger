@@ -29,6 +29,7 @@ import { initialStats, initialSeen, see, bump, notePeaks } from './stats.js';
 import { lastDay, isFree, MODES } from './modes.js';
 import { createRival } from './rival.js';
 import { createChronicle } from './chronicle.js';
+import { recordDay } from './history.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -101,9 +102,11 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     rival: null,
     chronicle: createChronicle(),
     gear: {},
+    history: [],
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);
+  recordDay(state);
   const game = { map, state, options: { events, eventRate } };
   discoverAround(game, start.id);
   applyStartPerks(game);

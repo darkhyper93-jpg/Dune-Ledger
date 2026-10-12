@@ -16,6 +16,8 @@ import { buyMerchant, buyUpgrade, canBuyMerchant, encodeProgress, decodeProgress
 import { fmt } from '../core/text.js';
 import { playCoins } from '../core/audio.js';
 import { goodArt } from './art.js';
+import { REGIONS_BY_ID } from '../data/regions.js';
+import { DIFFICULTIES } from '../data/rules.js';
 
 /** Títulos de los eventos para el códice. */
 const EVENT_NAMES = {
@@ -25,6 +27,26 @@ const EVENT_NAMES = {
   espejismo: 'Espejismo', 'pata-herida': 'Pata herida', peregrinos: 'Peregrinos', 'mercado-negro': 'Mercado negro', pozo: 'Pozo viejo',
   fogon: 'Fogón compartido', niebla: 'Niebla', lobos: 'Lobos', monasterio: 'Monasterio', banquete: 'Banquete del visir', pastor: 'Pastor',
 };
+
+/** Nombre corto del modo de una temporada. */
+const MODE_NAMES = { temporada: 'Temporada', diario: 'Desafío', libre: 'Libre' };
+
+/**
+ * Tus últimas temporadas: dónde, cómo terminó, puntaje y contra Kasim.
+ * @param {object} p perfil
+ */
+function historyCard(p) {
+  if (!p.history.length) return null;
+  const best = Math.max(...p.history.map((e) => e.score));
+  return h('div', { class: 'card stack', 'data-testid': 'season-history', style: 'gap:8px' },
+    h('div', { class: 'row between' }, h('h3', {}, 'Tus últimas temporadas'), h('span', { class: 'small muted' }, `récord: ${fmt(p.bestScore)}`)),
+    h('ol', { class: 'history-list' }, p.history.map((e) => h('li', { class: e.score === best ? 'best' : '' },
+      h('span', { class: `pill ${e.won ? 'bajo' : ''}` }, e.mode === 'libre' ? 'Libre' : e.won ? 'Ganada' : 'Perdida'),
+      h('span', { class: 'grow' }, h('b', {}, REGIONS_BY_ID[e.region].name),
+        h('span', { class: 'small muted' }, ` ${MODE_NAMES[e.mode]}, ${DIFFICULTIES[e.difficulty].name.toLowerCase()}, día ${e.day}`)),
+      h('span', { class: 'history-score' }, h('b', {}, fmt(e.score)),
+        e.rivalGold === null ? null : h('span', { class: `tiny ${e.score > e.rivalGold ? 'good' : 'muted'}` }, e.score > e.rivalGold ? 'le ganaste a Kasim' : `Kasim ${fmt(e.rivalGold)}`))))));
+}
 
 /**
  * Tienda del Gremio: mercaderes y mejoras.
@@ -87,6 +109,7 @@ export function renderRecords(app) {
   const named = (obj, names) => Object.keys(obj).map((id) => ({ id, name: names ? names[id] : obj[id].name }));
   return h('div', { class: 'stack' },
     h('h1', {}, 'Logros y códice'),
+    historyCard(p),
     h('div', { class: 'card row between' }, h('span', {}, 'Logros'), h('b', { 'data-testid': 'achievements-count' }, `${got}/${ACHIEVEMENTS.length}`)),
     h('div', { class: 'stack', style: 'gap:6px' }, ACHIEVEMENTS.map((a) => h('div', { class: `achievement${p.achievements[a.id] ? ' done' : ''}` },
       h('b', {}, `${p.achievements[a.id] ? '★' : '☆'} ${a.name}`), h('span', { class: 'small muted' }, a.desc)))),

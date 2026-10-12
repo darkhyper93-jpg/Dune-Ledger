@@ -24,6 +24,7 @@ import { tireCamels, healCamels, dayFatigue, THIRST_HP, REST_HP } from './camels
 import { mountName } from './caravan.js';
 import { rivalDay } from './rival.js';
 import { hasGear } from './gear.js';
+import { recordDay } from './history.js';
 import { lastDay } from './modes.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
@@ -163,10 +164,14 @@ export function passDay(game, use, where, mode = {}) {
       dueDay = true;
       const res = settleInstallment(state, inst);
       logSettlement(state, inst, res);
-      if (res.lost) return { lost: true };
+      if (res.lost) {
+        recordDay(state);
+        return { lost: true };
+      }
     }
   }
   tickBank(state, dueDay);
+  recordDay(state);
   return { lost: false };
 }
 

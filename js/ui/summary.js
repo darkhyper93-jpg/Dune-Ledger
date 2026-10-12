@@ -13,6 +13,7 @@ import { DIFFICULTIES } from '../data/rules.js';
 import { regionSvg } from '../render/regions-art.js';
 import { svgNode } from '../render/shapes.js';
 import { dailyResultCard } from './modes.js';
+import { worthChart } from './chart.js';
 import { kasimSvg } from '../render/portraits.js';
 
 /** Textos de cómo terminó la temporada. */
@@ -78,13 +79,14 @@ export function renderSummary(app) {
       over.won ? h('span', { class: 'stamp', 'aria-hidden': 'true' }, 'Saldado') : null,
       h('h1', {}, title),
       free ? null : h('p', { style: 'margin:6px 0 0' }, REASONS[over.reason]),
-      h('p', { class: 'small', style: 'margin:4px 0 0;opacity:.85' }, where)),
+      h('p', { class: 'small', style: 'margin:4px 0 0' }, where)),
     h('div', { class: 'card stack center' },
       h('div', { class: 'muted' }, 'Puntaje'),
       h('div', { class: 'score', 'data-testid': 'final-score' }, fmt(over.score)),
       counts ? h('div', {}, 'Ganaste ', h('b', { 'data-testid': 'final-seals' }, `${over.seals} sellos del Gremio`)) : null,
       h('div', { class: 'muted small' }, free ? 'Puntaje = oro + valor de la carga.' : 'Puntaje = oro + valor de la carga − deuda que quedó. Sellos = puntaje / 100 × dificultad.')),
     state.mode === 'diario' ? dailyResultCard(app) : null,
+    worthChart(state.history),
     rivalCard(over),
     h('div', { class: 'card' }, h('dl', { class: 'kv' },
       h('dt', {}, 'Oro final'), h('dd', {}, fmt(over.gold)),

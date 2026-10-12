@@ -79,3 +79,17 @@ export function gearPart(v) {
   if (v === undefined) return {};
   return record(v, (k) => Object.hasOwn(GEAR_BY_ID, k), (x, w) => { need(x === true, w); return true; }, 'equipo');
 }
+
+/** Valida el registro día a día del gráfico (las partidas viejas no tienen). */
+export function historyPart(v) {
+  if (v === undefined) return [];
+  need(Array.isArray(v) && v.length <= 120, 'registro');
+  return v.map((e) => {
+    need(isObj(e), 'registro');
+    return {
+      day: int(e.day, 1, 999, 'registro'),
+      me: int(e.me, -1e8, 1e8, 'registro'),
+      rival: e.rival === null ? null : int(e.rival, 0, 1e8, 'registro'),
+    };
+  });
+}

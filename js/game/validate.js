@@ -30,7 +30,7 @@ import { debtPlan } from './debt.js';
 import { initialStats } from './stats.js';
 import { CODEX } from './profile.js';
 import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
-import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart } from './validate-parts.js';
+import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart, historyPart } from './validate-parts.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
 const END_REASONS = ['fin', 'retiro', 'deuda'];
@@ -174,6 +174,7 @@ export function validateState(input) {
       rival: rivalPart(raw.rival, cityOk),
       chronicle: chroniclePart(raw.chronicle),
       gear: gearPart(raw.gear),
+      history: historyPart(raw.history),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);

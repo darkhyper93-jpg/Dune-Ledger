@@ -50,3 +50,32 @@ for (const scheme of ['light', 'dark']) {
     await check(page, 'hoja de compra');
   });
 }
+
+for (const scheme of ['light', 'dark']) {
+test(`el resumen con el gráfico y el historial son accesibles (${scheme === 'light' ? 'claro' : 'noche'})`, async ({ page }) => {
+  await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+  await page.goto('/?semilla=a11y-grafico');
+  await page.evaluate(async () => {
+    localStorage.clear();
+    const { createSeason, rest } = await import('./js/game/season.js');
+    const g = createSeason({ seed: 'a11y-grafico' });
+    for (let i = 0; i < 6; i++) { g.state.food = 40; g.state.water = 40; rest(g); }
+    g.state.gold = 3000;
+    g.state.debt.installments.forEach((i) => { i.paid = i.amount; });
+    localStorage.setItem('dune-ledger:temporada', JSON.stringify(g.state));
+  });
+  await page.reload();
+  await page.getByTestId('continue').click();
+  await page.getByTestId('finish').click();
+  await page.getByTestId('finish-confirm').click();
+  await expect(page.getByTestId('worth-chart')).toBeVisible();
+  await page.getByTestId('worth-chart').locator('svg').focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.chart-tip')).toContainText('Día');
+  await check(page, 'resumen');
+  await page.getByText('Volver al menú').click();
+  await page.getByTestId('records').click();
+  await expect(page.getByTestId('season-history')).toContainText('Ganada');
+  await check(page, 'historial');
+});
+}

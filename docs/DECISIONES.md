@@ -377,10 +377,8 @@ revisarlo más adelante.
   puntaje creíble; para evitarlo haría falta validar la partida en un
   servidor. La clave publicable va sólo en el encabezado `apikey` (como
   Bearer la rechazaría Supabase). Las pruebas usan un servidor simulado.
-  Para probarlo de punta a punta se activó `pg_net` en la base; la API REST
-  no lo expone (no está en los esquemas publicados y `public` no tiene
-  funciones), pero conviene desactivarlo desde el panel (Database →
-  Extensions) y borrar la fila de prueba "Prueba del juego".
+  Para probarlo de punta a punta se activó `pg_net` en la base; después se
+  desactivó desde el panel y se borraron las filas de prueba.
 
 ## Versión 1.1 — la luna y la marcha nocturna
 
@@ -402,9 +400,9 @@ revisarlo más adelante.
   no los ve) y una corrida de CI publicó 4 filas «La Zorra» en la base real
   del día. Ahora, con `navigator.webdriver`, el juego le habla a
   `ranking.invalid`; las pruebas del ranking bloquean el service worker y
-  fallan si algún pedido sale hacia supabase.co. Borrar filas desde acá no
-  fue posible (la herramienta se cuelga en sentencias que borran): las de
-  prueba sólo se ven en el ranking de ese día.
+  fallan si algún pedido sale hacia supabase.co. Las filas de prueba se
+  borraron a mano desde el panel (la herramienta de la base se cuelga con
+  sentencias que borran).
 
 ## Versión 1.2 — el libro mayor
 

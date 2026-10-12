@@ -14,6 +14,7 @@ import { playCoins } from '../core/audio.js';
 import { renderHires } from './crew.js';
 import { goodArt } from './art.js';
 import { RIVAL, rivalNews, rivalWorth } from '../game/rival.js';
+import { rivalOffer, buyRivalCargo, canBet, placeBet, BET } from '../game/rival-deals.js';
 import { kasimSvg } from '../render/portraits.js';
 import { svgNode } from '../render/shapes.js';
 import { CHRONICLES, CHAPTERS } from '../data/chronicles.js';
@@ -128,6 +129,25 @@ function chronicleCard(app) {
 }
 
 /**
+ * Tratos con Kasim el día que sale de acá: comprarle la carga o apostar.
+ * @param {object} app
+ */
+function rivalDeals(app) {
+  const offer = rivalOffer(app.game);
+  const bet = canBet(app.game);
+  if (!offer && !bet.ok) return null;
+  const run = (fn, msg) => {
+    const res = app.act(fn);
+    if (res.ok) app.toast(msg);
+  };
+  return h('div', { class: 'stack', style: 'gap:8px;margin-top:4px' },
+    offer ? h('button', { class: 'btn small', 'data-testid': 'rival-buy', disabled: app.game.state.gold < offer.price, onclick: () => run((g) => buyRivalCargo(g), '¡Le compraste toda la carga a Kasim!') },
+      `Comprarle ${offer.qty} de ${getGood(offer.goodId).name} (${fmt(offer.price)})`) : null,
+    bet.ok ? h('button', { class: 'btn small', 'data-testid': 'rival-bet', onclick: () => run((g) => placeBet(g), 'Apuesta hecha: ¡a llegar primero!') },
+      `Apostar ${fmt(BET.stake)} a que llegás antes (paga ${fmt(BET.stake * BET.payout)})`) : null);
+}
+
+/**
  * Lo que se cuenta en la taberna de Kasim, la caravana rival.
  * @param {object} app
  */
@@ -141,7 +161,10 @@ function rivalCard(app) {
     h('div', { class: 'stack', style: 'gap:4px' },
       h('h3', {}, `${RIVAL.name} «el Zorro»`),
       h('p', { class: 'small', style: 'margin:0' }, news ?? 'Nadie lo vio por esta zona. Anda por otro lado del mapa.'),
-      h('p', { class: 'small muted', style: 'margin:0' }, `Dicen que ya junta unos ${fmt(worth)} de oro. Donde él compra, sube el precio; donde vende, baja.`)));
+      h('p', { class: 'small muted', style: 'margin:0' }, `Dicen que ya junta unos ${fmt(worth)} de oro. Donde él compra, sube el precio; donde vende, baja.`),
+      app.game.state.bet ? h('p', { class: 'small', style: 'margin:0', 'data-testid': 'bet-active' }, h('b', {}, 'Apuesta en juego: '),
+        `llegá a ${app.game.map.cityById[app.game.state.bet.to].name} antes del día ${app.game.state.bet.rivalDay}.`) : null,
+      rivalDeals(app)));
 }
 
 /**

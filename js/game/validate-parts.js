@@ -93,3 +93,10 @@ export function historyPart(v) {
     };
   });
 }
+
+/** Valida la apuesta de carrera contra Kasim (puede no haber). */
+export function betPart(v, cityOk) {
+  if (v === undefined || v === null) return null;
+  need(isObj(v) && cityOk(v.to), 'apuesta');
+  return { to: v.to, stake: int(v.stake, 1, 1000, 'apuesta'), rivalDay: int(v.rivalDay, 1, 999, 'apuesta') };
+}

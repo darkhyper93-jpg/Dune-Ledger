@@ -17,6 +17,7 @@ import { buyPriceAt, sellPriceAt } from './market.js';
 import { otherEnd } from './map-gen.js';
 import { regionId, hasPerk } from './perks.js';
 import { addLog } from './knowledge.js';
+import { betRivalArrive } from './rival-deals.js';
 
 /** Datos fijos del rival. */
 export const RIVAL = {
@@ -136,6 +137,7 @@ export function rivalDay(game) {
     r.to = null;
     r.days = 0;
     if (r.cargo) sellCargo(game);
+    if (game.state.bet) betRivalArrive(game);
     r.wait = RIVAL.restDays;
     return;
   }

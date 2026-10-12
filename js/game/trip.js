@@ -16,6 +16,7 @@ import { refreshOffers } from './contracts.js';
 import { scoutLevel, refreshHires, crewArrive } from './crew.js';
 import { chronicleArrive } from './chronicle.js';
 import { hasGear } from './gear.js';
+import { betArrive } from './rival-deals.js';
 import { bump, see, notePeaks } from './stats.js';
 import { lastDay } from './modes.js';
 
@@ -88,6 +89,7 @@ function arrive(game) {
   refreshHires(game, to);
   crewArrive(game);
   chronicleArrive(game);
+  betArrive(game);
   see(state, 'cityTypes', map.cityById[to].type);
   notePeaks(state);
   addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');

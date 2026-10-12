@@ -126,6 +126,20 @@ export const REGIONAL_EVENTS = [
     ],
   },
   {
+    // Sabotaje de Kasim: sólo sale si le sacás mucha ventaja (ver `rivalBehind`).
+    id: 'matones-kasim',
+    when: { rivalBehind: true, notTerrain: ['mar'] },
+    weight: 1.2,
+    text: 'Tres matones te cortan el paso. "Saludos de Kasim", dice uno. Quieren $toll de oro para dejarte seguir.',
+    setup: (game) => ({ toll: Math.max(30, Math.round(cargoBase(game.state) * 0.1 + 20)) }),
+    options: [
+      { label: 'Pagarles ($toll)', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
+      { label: 'Pelear', chance: 'fight', win: { rep: 6, morale: 8 }, lose: { cargoPct: 0.2, morale: -8 },
+        winText: 'Salieron corriendo. Kasim se va a enterar.', loseText: 'Te dieron una paliza y se llevaron carga.' },
+      { label: 'Dar un rodeo (+1 día)', spareDays: 1, effects: { delay: 1 } },
+    ],
+  },
+  {
     id: 'pastor',
     when: { region: ['desierto'], terrain: ['arena', 'piedra'] },
     weight: 1,

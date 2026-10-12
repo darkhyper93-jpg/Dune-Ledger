@@ -11,6 +11,8 @@ import { cargoFree, provisionCap } from './caravan.js';
 import { hasPerk, upgradeValue, regionOf, regionId } from './perks.js';
 import { tireCamels, healCamels } from './camels.js';
 import { hasGear } from './gear.js';
+import { worthNow } from './history.js';
+import { rivalWorth } from './rival.js';
 import { fightBonus, stormBonus, scoutLevel, changeMorale } from './crew.js';
 import { changeRep } from './reputation.js';
 import { addLog, snapshotPrices } from './knowledge.js';
@@ -101,6 +103,7 @@ export function eventAllowed(game, route, def) {
   if (w.terrain && !w.terrain.includes(route.terrain)) return false;
   if (w.region && !w.region.includes(regionId(game.state))) return false;
   if (w.notTerrain && w.notTerrain.includes(route.terrain)) return false;
+  if (w.rivalBehind && !rivalBehind(game.state)) return false;
   return true;
 }
 
@@ -136,6 +139,17 @@ export function eventWeights(game, route) {
     weights[e.id] = w;
   }
   return weights;
+}
+
+/**
+ * Kasim va muy atrás (le sacás la mitad más y 400 de oro): manda matones.
+ * @param {object} state
+ */
+export function rivalBehind(state) {
+  const theirs = rivalWorth(state);
+  if (theirs === null) return false;
+  const mine = worthNow(state);
+  return mine > theirs * 1.5 && mine > theirs + 400;
 }
 
 /**

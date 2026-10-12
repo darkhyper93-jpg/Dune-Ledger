@@ -443,3 +443,39 @@ revisarlo más adelante.
   para esquivar el límite global ni el desempate del ranking.
 - Probado con una transacción que se deshace: 5 altas aceptadas y la sexta
   rechazada con PT429; no quedó ninguna fila.
+
+## Versión 1.3 — correcciones de la revisión de diseño
+
+Una revisión externa encontró con bots que **no comprar camellos y pedir el
+préstamo máximo ganaba el 96,5%** de las temporadas en Normal, y que agrandar
+la caravana bajaba el puntaje. Lo reprodujimos con las mismas semillas
+(`probe-0` a `probe-199`): mismo 71,5% → 96,5%. Cambios, medidos con bots:
+
+- **Bot explotador como techo** (`tests/sim/bots.js`, perfil `exploit`: 2
+  camellos y todo el préstamo hasta el día 40, devolviéndolo cuando le sobra)
+  y `tests/sim/ceiling.test.js`: ninguna estrategia simple gana más del 90% en
+  Normal; el préstamo suma a lo sumo 5 puntos; con 4 camellos la mediana
+  supera a la de 2.
+- **Préstamo con costo real**: 2% por día sobre lo que se debe (interés
+  compuesto; la Banquera, 1%) y presta hasta tu oro propio (mínimo 100, tope
+  1.000). Con 3% el préstamo ya restaba; con 1% seguía siendo casi gratis
+  (95%). El banco muestra cuánto devolvés por cada 100 a los 7, 14 y 30 días,
+  y el libro mayor separa el préstamo de los intereses pagados.
+- **Que la carga importe**: el límite no era la carga sino lo poco que
+  aguanta cada mercado. `stockImpact` baja de 1,2 a 0,9 (mercados más
+  profundos) y los animales cuentan en el patrimonio y el puntaje por lo que
+  te darían al venderlos (50 cada uno sano): comprar uno ya no es oro tirado.
+- **Cuotas que suben** para compensar: Normal 300 / 600 / 1.000 (antes
+  300 / 500 / 700); Fácil 200 / 400 / 650; Difícil 450 / 900 / 1.400;
+  Pesadilla 600 / 1.200 / 1.850. La Costa sube su deuda un 10% (con mercados
+  más profundos las perlas la volvían demasiado fácil).
+- **Renegociar** (`js/game/renegotiate.js`): una vez por temporada, desde 7
+  días antes de una cuota que no sea la última, pasa a la siguiente con 25% de
+  recargo y sin falta. Salida para el que viene mal.
+- **Gran Feria** (`js/game/fair.js`): el día 40 se anuncia una ciudad que, del
+  55 al 60, paga ×2,2 por un bien que no produce (el precio sigue con su tope
+  de 300% del base). Le da un objetivo al final.
+
+Resultado con las semillas de las métricas (300 temporadas): codicioso 77,3%,
+prudente 43,3%, aleatorio 0%, explotador 83,5% (antes 96,5%); el cuarto que
+peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).

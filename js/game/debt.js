@@ -22,7 +22,7 @@ const D = RULES.debt;
  * @param {{mult?:number, delays?:number}} [opts] ver debtPlan
  */
 export function createDebt(difficultyId, opts = {}) {
-  return { installments: debtPlan(difficultyId, opts), strikes: 0 };
+  return { installments: debtPlan(difficultyId, opts), strikes: 0, renegotiated: false };
 }
 
 /**

@@ -76,6 +76,21 @@ export function camelPrice(seed, city) {
 }
 
 /**
+ * Lo que vale un animal sano como bien de la caravana: lo que te darían en
+ * promedio por venderlo (la mitad de un precio típico de 100).
+ */
+export const ANIMAL_VALUE = Math.round(100 * RULES.camelResale);
+
+/**
+ * Valor de los animales de la caravana para el patrimonio y el puntaje: son
+ * un bien (se pueden vender), no oro gastado. Un animal cansado vale menos.
+ * @param {object} state
+ */
+export function animalsValue(state) {
+  return state.camelHp.reduce((sum, hp) => sum + Math.round(ANIMAL_VALUE * (0.4 + (0.6 * hp) / 100)), 0);
+}
+
+/**
  * Lo que te dan por vender un camello en esa ciudad (menos si está cansado).
  * @param {string} seed
  * @param {{id:string,type:string}} city

@@ -21,7 +21,7 @@ test('el Aprendiz arranca con lo de siempre', () => {
   assert.equal(g.state.merchant, 'aprendiz');
   assert.equal(g.state.gold, 300);
   assert.equal(g.state.camels, 2);
-  assert.equal(totalOwed(g.state.debt), 1500);
+  assert.equal(totalOwed(g.state.debt), 1900);
 });
 
 test('el Viejo Sultán: 500 de oro, 4 camellos y el doble de deuda', () => {
@@ -29,7 +29,7 @@ test('el Viejo Sultán: 500 de oro, 4 camellos y el doble de deuda', () => {
   assert.equal(g.state.gold, 500);
   assert.equal(g.state.camels, 4);
   assert.equal(g.state.camelHp.length, 4);
-  assert.equal(totalOwed(g.state.debt), 3000);
+  assert.equal(totalOwed(g.state.debt), 3800);
 });
 
 test('mejoras de inicio: oro, camellos, provisiones, fama y prórroga', () => {

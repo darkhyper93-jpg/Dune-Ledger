@@ -15,7 +15,7 @@ const season = (difficulty, seed = 'dif') => createSeason({ seed, difficulty, ev
 test('las dificultades van de menor a mayor: deuda y sellos', () => {
   assert.deepEqual(DIFFICULTY_LIST.map((d) => d.id), ['facil', 'normal', 'dificil', 'pesadilla']);
   const owed = DIFFICULTY_LIST.map((d) => totalOwed(season(d.id).state.debt));
-  assert.deepEqual(owed, [1000, 1500, 2200, 3000]);
+  assert.deepEqual(owed, [1250, 1900, 2750, 3650]);
   const seals = DIFFICULTY_LIST.map((d) => d.sealMult);
   assert.deepEqual(seals, [1, 1.25, 1.6, 2]);
 });

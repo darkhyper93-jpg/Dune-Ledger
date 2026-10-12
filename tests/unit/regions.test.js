@@ -75,7 +75,7 @@ test('el jade sólo existe en las Montañas de Jade, y vale mucho', () => {
 
 test('en el Reino del Sultán se paga impuesto al vender y la deuda es más alta', () => {
   const s = season('sultan');
-  assert.equal(totalOwed(s.state.debt), Math.round(300 * 1.2) + Math.round(500 * 1.2) + Math.round(700 * 1.2));
+  assert.equal(totalOwed(s.state.debt), Math.round(300 * 1.2) + Math.round(600 * 1.2) + Math.round(1000 * 1.2));
   const here = s.state.location;
   const taxed = quote(s, here, 'te', 10, 'sell').total;
   s.state.region = 'desierto';

@@ -16,6 +16,8 @@ export const FLOWS = [
   { id: 'sueldos', name: 'Sueldos' },
   { id: 'gremio', name: 'Pagos al Gremio' },
   { id: 'equipo', name: 'Equipo e inversiones' },
+  { id: 'prestamo', name: 'Préstamo (pedido menos devuelto)' },
+  { id: 'intereses', name: 'Intereses del préstamo' },
 ];
 
 /** Ids de las cuentas, para validar. */

@@ -9,6 +9,8 @@ import { addLog } from './knowledge.js';
 import { isFree } from './modes.js';
 import { rivalWorth } from './rival.js';
 import { investValue } from './invest.js';
+import { settleLoan } from './bank.js';
+import { animalsValue } from './caravan.js';
 
 /**
  * Valor de la carga si la vendieras toda acá, unidad por unidad.
@@ -26,12 +28,13 @@ export function cargoValueHere(game) {
 
 /**
  * Puntaje actual: oro (en la bolsa y guardado) + valor de la carga acá +
- * la mitad de lo invertido en ciudades − deuda que queda (cuotas y préstamo).
+ * los animales (lo que te darían por ellos) + la mitad de lo invertido en
+ * ciudades − deuda que queda (cuotas y préstamo).
  * @param {object} game
  */
 export function currentScore(game) {
   const { state } = game;
-  return state.gold + state.deposit + cargoValueHere(game) + investValue(state) - totalOwed(state.debt) - state.loan;
+  return state.gold + state.deposit + cargoValueHere(game) + animalsValue(state) + investValue(state) - totalOwed(state.debt) - state.loan;
 }
 
 /**
@@ -65,7 +68,7 @@ export function finishSeason(game, reason) {
   if (state.loan > 0) {
     const pay = Math.min(state.loan, state.gold + state.deposit);
     spendFunds(state, pay);
-    state.loan -= pay;
+    settleLoan(state, pay);
     if (pay > 0) addLog(state, `El Gremio cobró ${pay} del préstamo.`, 'debt');
   }
   const owed = totalOwed(state.debt) + state.loan;

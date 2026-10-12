@@ -22,6 +22,7 @@ import { playTap, playCoins } from '../core/audio.js';
 import { coachCard, hintCard } from './coach.js';
 import { climateOf } from '../game/climate.js';
 import { bazaarCard, investCard } from './bazaar.js';
+import { fairCard, renegotiateCard } from './fair.js';
 
 /**
  * Arma la pantalla de la ciudad actual.
@@ -54,7 +55,7 @@ export function renderCity(app, params = {}) {
   else if (tab === 'gremio') content = renderGuild(app);
   else content = renderMarket(app);
 
-  return h('div', {}, head, coachCard(app, 'city'), climateOf(state).id === 'templado' ? null : hintCard(app, 'clima'), endCard(app), deliverables(app), tabBar, content);
+  return h('div', {}, head, coachCard(app, 'city'), climateOf(state).id === 'templado' ? null : hintCard(app, 'clima'), endCard(app), fairCard(app), deliverables(app), tabBar, content);
 }
 
 /**
@@ -200,6 +201,7 @@ function renderGuild(app) {
       next ? h('button', { class: 'btn primary', 'data-testid': 'pay-next', disabled: state.gold <= 0, onclick: () => pay(owedOn(next)) }, `Pagar cuota (${fmt(Math.min(owedOn(next), state.gold))})`) : null,
       h('button', { class: 'btn', 'data-testid': 'pay-all', disabled: state.gold <= 0, onclick: () => pay(owed) }, `Pagar todo (${fmt(Math.min(owed, state.gold))})`))
       : h('p', { class: 'good center' }, '¡No le debés nada al Gremio!'),
+    renegotiateCard(app),
     renderBank(app),
     guildContracts(app));
 }

@@ -21,7 +21,7 @@ Dune Ledger es un roguelite de comercio por turnos que se juega con una mano. Ca
 
 El juego avanza por días y nada pasa mientras el jugador no toca nada.
 
-1. Empezás en una ciudad al azar con 2 camellos (40 de carga), 300 de oro, 10 días de comida y de agua, y una deuda de 1.500 de oro con el Gremio.
+1. Empezás en una ciudad al azar con 2 camellos (40 de carga), 300 de oro, 10 días de comida y de agua, y una deuda de 1.900 de oro con el Gremio.
 2. En la ciudad podés comprar y vender en el mercado, cargar comida y agua, contratar tripulación, comprar camellos, aceptar contratos y escuchar rumores.
 3. Elegís un destino en el mapa. Antes de salir se ve cuántos días tarda, cuánta comida y agua gasta y qué tan peligrosa es la ruta.
 4. Viajás. Durante el viaje sale un evento más o menos cada 3 días, y algunos te hacen elegir.
@@ -166,22 +166,24 @@ Así se pueden agregar eventos nuevos sin tocar la lógica, y las pruebas pueden
 
 La deuda es el reloj del juego: le da a cada temporada una meta clara y tensión creciente.
 
-En dificultad Normal se deben 1.500 de oro, en tres cuotas:
+En dificultad Normal se deben 1.900 de oro, en tres cuotas que suben (la presión crece hacia el final):
 
 | Día | Cuota |
 |---|---|
 | 20 | 300 |
-| 40 | 500 |
-| 60 | 700 |
+| 40 | 600 |
+| 60 | 1.000 |
 
 - Se paga en la capital o en un puesto del Gremio. Se puede adelantar.
 - Si no pagás una cuota: el Gremio te embarga la carga más valiosa y la cuota pendiente sube un 50%. Dos cuotas sin pagar terminan la temporada (perdiste).
-- **Préstamos:** el Gremio presta hasta 1.000 más, con un 20% de interés por cuota. Útil para arriesgar en grande; peligroso.
+- **Renegociar:** una vez por temporada, desde 7 días antes de una cuota (no la última), el Gremio la pasa a la siguiente con 25% de recargo y sin falta.
+- **Préstamos:** el Gremio presta hasta lo que tenés de oro propio (mínimo 100, tope 1.000), con 2% de interés por día sobre lo que debés (interés compuesto). Sirve para aprovechar una oportunidad; tenerlo mucho tiempo sale caro.
+- **Gran Feria:** el día 40 se anuncia una ciudad que, del día 55 al 60, paga mucho más por un bien.
 
 **Fin de la temporada** (día 60 o al pagar todo y elegir retirarse):
 
 ```
-puntaje = oro + valor de la carga (a precio de la ciudad actual) − deuda que quede
+puntaje = oro + valor de la carga (a precio de la ciudad actual) + animales (lo que te darían por ellos) − deuda que quede
 sellos  = puntaje / 100 (redondeado hacia abajo)
 ```
 
@@ -191,10 +193,10 @@ Ganar la temporada (pagar toda la deuda) desbloquea la siguiente región.
 
 | Dificultad | Deuda | Diferencias |
 |---|---|---|
-| Fácil | 1.000 | Eventos más suaves |
-| Normal | 1.500 | La base |
-| Difícil | 2.200 | Precios más volátiles, más bandidos |
-| Pesadilla | 3.000 | Se desbloquea ganando en Difícil; sin préstamos |
+| Fácil | 1.250 | Eventos más suaves |
+| Normal | 1.900 | La base |
+| Difícil | 2.750 | Precios más volátiles, más bandidos |
+| Pesadilla | 3.650 | Se desbloquea ganando en Difícil; sin préstamos |
 
 Más dificultad da más sellos por punto (×1, ×1,25, ×1,6, ×2).
 
@@ -209,7 +211,7 @@ Lo que hace volver: entre temporadas se gastan Sellos del Gremio, la moneda perm
 | Aprendiz | Gratis | Ninguna; empieza con 2 camellos y 150 de oro |
 | Contrabandista | 40 | Las armas no son ilegales para él; los controles fallan la mitad de las veces |
 | Nómada | 60 | Gasta la mitad de agua; conoce todos los oasis desde el inicio |
-| Banquera | 80 | Préstamos al 10%; cobra 2% de interés diario sobre el oro guardado en el Gremio |
+| Banquera | 80 | Préstamos a la mitad de interés (1% diario); cobra 2% de interés diario sobre el oro guardado en el Gremio |
 | Negociante | 100 | Compra un 8% más barato; el stock se le recupera más rápido |
 | Capitana de guardia | 120 | Empieza con 2 guardias; gana las peleas un 20% más seguido |
 | Cartógrafo | 150 | Ve todo el mapa y los precios de todas las ciudades al inicio |
@@ -246,7 +248,7 @@ Se juega con un dedo, el celular en vertical. Todo botón mide al menos 48 px y 
   - **Mercado:** lista de bienes con precio de compra y venta, cuánto llevás, botones − / + y Máx, y la ganancia estimada si lo vendés en la mejor ciudad que conocés.
   - **Provisiones:** comida, agua, camellos.
   - **Taberna:** rumores, contratos, tripulación para contratar.
-  - **Gremio** (sólo capital o puesto): pagar cuotas, préstamos.
+  - **Gremio** (sólo capital o puesto): pagar cuotas, renegociar, préstamos.
 - **Caravana:** camellos, tripulación (rol, rasgo, nivel, moral), contratos activos.
 - **Evento:** una carta grande en el centro con las opciones como botones.
 - **Diario:** lo que pasó cada día (compras, ventas, eventos), útil para aprender.

@@ -5,11 +5,12 @@ import { payDebt, totalOwed, settleInstallment, nextInstallment, mostValuableCar
 import { finishSeason, rest, sealsFor, canFinish } from '../../js/game/season.js';
 import { payGuild } from '../../js/game/actions.js';
 import { testGame } from './helpers.js';
+import { animalsValue } from '../../js/game/caravan.js';
 
-test('Normal: 1.500 en cuotas de 300, 500 y 700', () => {
+test('Normal: 1.900 en cuotas que suben: 300, 600 y 1.000', () => {
   const g = testGame();
-  assert.equal(totalOwed(g.state.debt), 1500);
-  assert.deepEqual(g.state.debt.installments.map((i) => [i.day, i.amount]), [[20, 300], [40, 500], [60, 700]]);
+  assert.equal(totalOwed(g.state.debt), 1900);
+  assert.deepEqual(g.state.debt.installments.map((i) => [i.day, i.amount]), [[20, 300], [40, 600], [60, 1000]]);
 });
 
 test('pagar adelantado cubre primero la cuota más próxima', () => {
@@ -25,7 +26,7 @@ test('no se paga más que el oro ni más que la deuda', () => {
   const g = testGame({ gold: 100 });
   assert.equal(payDebt(g.state, 500), 100);
   g.state.gold = 5000;
-  assert.equal(payDebt(g.state, 5000), 1400);
+  assert.equal(payDebt(g.state, 5000), 1800);
   assert.equal(totalOwed(g.state.debt), 0);
 });
 
@@ -60,7 +61,7 @@ test('sin oro: embargo de la carga más valiosa, +50% a la próxima cuota y una 
   assert.equal(g.state.cargo.te, 0);
   assert.equal(g.state.cargo.sal, 10);
   assert.equal(res.carried, Math.ceil((300 - 90) * 1.5));
-  assert.equal(g.state.debt.installments[1].amount, 500 + res.carried);
+  assert.equal(g.state.debt.installments[1].amount, 600 + res.carried);
   assert.equal(g.state.debt.strikes, 1);
   assert.equal(res.lost, false);
 });
@@ -79,20 +80,21 @@ test('dos cuotas impagas terminan la temporada', () => {
 
 test('cerrar la temporada con toda la deuda paga es ganar', () => {
   const g = testGame({ gold: 3000 });
-  payDebt(g.state, 1500);
+  payDebt(g.state, 1900);
   assert.ok(canFinish(g));
   const over = finishSeason(g, 'retiro');
   assert.equal(over.won, true);
-  assert.equal(over.score, 1500);
-  assert.equal(over.seals, sealsFor(1500, 'normal'));
+  // Oro más los dos camellos sanos, que también son bienes.
+  assert.equal(over.score, 1100 + animalsValue(g.state));
+  assert.equal(over.seals, sealsFor(1100 + animalsValue(g.state), 'normal'));
 });
 
 test('el día 60 el Gremio cobra lo que falte al cerrar', () => {
-  const g = testGame({ gold: 2000, day: 60 });
-  payDebt(g.state, 800); // quedan 700 del día 60
+  const g = testGame({ gold: 2500, day: 60 });
+  payDebt(g.state, 900); // quedan 1.000 del día 60
   const over = finishSeason(g, 'fin');
   assert.equal(over.won, true);
-  assert.equal(g.state.gold, 1200 - 700 - Math.ceil(700 * 0.15));
+  assert.equal(g.state.gold, 1600 - 1000 - Math.ceil(1000 * 0.15));
 });
 
 test('sellos: puntaje / 100 por el multiplicador, nunca negativos', () => {

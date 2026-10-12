@@ -11,7 +11,7 @@ export const MERCHANTS = [
   { id: 'aprendiz', name: 'Aprendiz', cost: 0, desc: 'Sin habilidad especial. Empieza con 2 camellos y 300 de oro.' },
   { id: 'contrabandista', name: 'Contrabandista', cost: 40, requires: 'contrabando', desc: 'Las armas no son ilegales para él y los controles fallan la mitad de las veces.' },
   { id: 'nomada', name: 'Nómada', cost: 60, desc: 'Gasta la mitad de agua y conoce todos los oasis desde el inicio.' },
-  { id: 'banquera', name: 'Banquera', cost: 80, desc: 'Préstamos al 10% y 2% de interés diario sobre el oro guardado en el Gremio.' },
+  { id: 'banquera', name: 'Banquera', cost: 80, desc: 'Préstamos a mitad de interés (1% por día) y 2% de interés diario sobre el oro guardado en el Gremio.' },
   { id: 'negociante', name: 'Negociante', cost: 100, desc: 'Compra un 8% más barato y los mercados se le recuperan más rápido.' },
   { id: 'capitana', name: 'Capitana de guardia', cost: 120, desc: 'Empieza con 2 guardias leales y gana las peleas un 20% más seguido.' },
   { id: 'cartografo', name: 'Cartógrafo', cost: 150, requires: 'trotamundos', desc: 'Ve todo el mapa y los precios de todas las ciudades al inicio.' },

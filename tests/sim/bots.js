@@ -29,6 +29,9 @@ import { extrasBefore, chronicleBonus, nightChoice } from './bot-extras.js';
 import { chapterNow } from '../../js/game/chronicle.js';
 import { avgHealth } from '../../js/game/camels.js';
 import { hiresHere, hire } from '../../js/game/crew.js';
+import { takeLoan, repayLoan, maxLoan } from '../../js/game/bank.js';
+import { canRenegotiate, renegotiate } from '../../js/game/renegotiate.js';
+import { FAIR_MULT } from '../../js/game/fair.js';
 
 export { bestOption };
 
@@ -105,10 +108,15 @@ function provisionCost(game, route) {
  * ciudad, supone el precio base. Si las noticias dicen que la caravana
  * rival va a vender ese bien ahí, cuenta con que llegó antes.
  */
-function expectedSell(game, destId, goodId, k) {
+function expectedSell(game, destId, goodId, k, arrival = game.state.day) {
   const info = game.state.prices[destId];
   const good = getGood(goodId);
-  const p0 = info ? info.sell[goodId] : good.base;
+  let p0 = info ? info.sell[goodId] : good.base;
+  // La Gran Feria se anuncia para todos: si llega a tiempo, cuenta con ella.
+  const f = game.state.fair;
+  if (f && f.cityId === destId && f.goodId === goodId && arrival >= f.start && arrival <= f.end && !(info && info.day >= f.start)) {
+    p0 = Math.min(good.base * 3, p0 * FAIR_MULT);
+  }
   const r = game.state.rival;
   const ahead = r && r.to === destId && r.cargo?.goodId === goodId && rivalNews(game) ? r.cargo.qty : 0;
   return p0 * Math.max(0.3, 1 - ((k + ahead) * good.stockStep * RULES.market.stockImpact) / 100);
@@ -119,7 +127,7 @@ function expectedSell(game, destId, goodId, k) {
  * con más ganancia esperada por lugar de carga, mientras convenga.
  * @returns {{profit:number, buys:Record<string,number>}}
  */
-function planCargo(game, destId, budget) {
+function planCargo(game, destId, budget, arrival = game.state.day) {
   const { state, map } = game;
   const city = map.cityById[state.location];
   const stock = { ...state.stock[state.location] };
@@ -136,7 +144,7 @@ function planCargo(game, destId, budget) {
       if (good.weight > space) continue;
       const price = buyPriceAt(state.seed, city, id, stock[id], factor, marketMult(game, city.id, id));
       if (price > budget) continue;
-      const gain = expectedSell(game, destId, id, bought[id]) - price;
+      const gain = expectedSell(game, destId, id, bought[id], arrival) - price;
       const score = gain / Math.max(1, good.weight);
       if (gain > price * 0.08 && (!best || score > best.score)) best = { id, price, gain, score };
     }
@@ -161,12 +169,35 @@ function reserveFor(game, arrivalDay) {
   return arrivalDay > inst.day ? Math.ceil(owedOn(inst) * (1 + RULES.debt.collectorFee)) : 0;
 }
 
+/**
+ * Préstamo del explotador: pide todo lo que le prestan antes del día
+ * `until` y lo devuelve en cuanto le sobra el oro (o al llegar a ese día).
+ */
+function useLoan(game, until) {
+  const { state, map } = game;
+  if (!canPayHere(map.cityById[state.location])) return;
+  if (state.loan > 0 && (state.day >= until || state.gold > state.loan + 600)) {
+    repayLoan(game, state.loan);
+    return;
+  }
+  if (state.day < until) {
+    const room = Math.floor((maxLoan(state) - state.loan) / 100) * 100;
+    if (room > 0) takeLoan(game, room);
+  }
+}
+
 /** Cómo juega cada bot "pensante". */
 export const PROFILES = {
   /** Codicioso: cualquier ruta, provisiones justas, descansa poco. */
   greedy: { maxDanger: 2, extraDays: 1, restBelow: 35, hire: ['contable'] },
   /** Prudente: sólo rutas de peligro bajo, provisiones de sobra, camellos descansados. */
   prudent: { maxDanger: 0, extraDays: 2, restBelow: 40, hire: ['guardia'] },
+  /**
+   * Explotador: la estrategia que encontró la revisión de diseño (no agranda
+   * la caravana y toma todo el préstamo hasta el día 40). Sirve de techo:
+   * ninguna estrategia simple tiene que ganar casi siempre.
+   */
+  exploit: { maxDanger: 2, extraDays: 1, restBelow: 35, hire: ['contable'], maxCamels: 2, loanUntil: 40 },
 };
 
 const DANGER_LEVEL = { bajo: 0, medio: 1, alto: 2 };
@@ -197,15 +228,18 @@ function greedyTurn(game, profile = PROFILES.greedy) {
   sellAll(game, profile.extras);
   const here = map.cityById[state.location];
   const inst = nextInstallment(state.debt);
-  if (inst && canPayHere(here)) {
+  // Si no le alcanza para la cuota que viene, pide más plazo (una vez).
+  if (inst && canPayHere(here) && state.gold < owedOn(inst) && canRenegotiate(game).ok) renegotiate(game);
+  if (inst && canPayHere(here) && owedOn(inst) > 0) {
     const keep = inst.day - state.day > 12 ? 150 : 0;
     if (state.gold - keep > 0) payGuild(game, Math.min(owedOn(inst), state.gold - keep));
   }
   const debtLeft = totalOwed(state.debt);
   const cp = camelPrice(state.seed, here);
-  if (state.camels < RULES.maxCamels && state.day < 42 && state.gold > cp + 250 + debtLeft * 0.25) buyCamel(game);
+  if (state.camels < (profile.maxCamels ?? RULES.maxCamels) && state.day < 42 && state.gold > cp + 250 + debtLeft * 0.25) buyCamel(game);
 
   maybeHire(game, profile.hire);
+  if (profile.loanUntil) useLoan(game, profile.loanUntil);
   if (avgHealth(state) < profile.restBelow && state.day < RULES.seasonDays - 2) {
     const ration = { days: 1, terrain: 'piedra' };
     stockUp(game, ration, 0);
@@ -223,7 +257,7 @@ function greedyTurn(game, profile = PROFILES.greedy) {
     if (DANGER_LEVEL[route.danger] > allowed) continue;
     const dest = otherEnd(route, state.location);
     const budget = state.gold - provisionCost(game, route) - reserveFor(game, state.day + route.days);
-    const plan = planCargo(game, dest, Math.max(0, budget));
+    const plan = planCargo(game, dest, Math.max(0, budget), state.day + route.days);
     const explore = state.prices[dest] ? 0 : 15;
     const value = (plan.profit + explore + (bonus[dest] ?? 0)) / route.days;
     if (!best || value > best.value) best = { route, plan, value };
@@ -272,7 +306,7 @@ function randomTurn(game, rng) {
 
 /**
  * Juega una temporada completa con un bot.
- * @param {'greedy'|'prudent'|'random'} kind
+ * @param {'greedy'|'prudent'|'exploit'|'random'} kind
  * @param {string} seed
  * @param {{difficulty?:string, region?:string, extras?:boolean, onTurn?:Function}} [opts] onTurn se llama después de cada turno;
  *   extras: el bot también compra equipo y sigue la crónica

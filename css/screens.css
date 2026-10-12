@@ -269,3 +269,8 @@ html[data-text='muy-grande'] .hud-item { gap: 4px; }
 /* Doble raya de cierre, como en los libros de contabilidad. */
 .ledger-total { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; padding-top: 8px; border-top: 3px double var(--ink); font-size: 14px; }
 .ledger-note { margin: 12px 0 0; color: var(--ink-2); }
+
+/* ---------- Gran Feria ---------- */
+.fair-card { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; border-color: var(--gold-deep); }
+.fair-card.live { background: color-mix(in srgb, var(--gold) 22%, var(--surface)); }
+.fair-art { flex: none; display: inline-flex; }

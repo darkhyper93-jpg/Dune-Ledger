@@ -33,7 +33,7 @@ export const RULES = {
     /** Parte de la distancia al stock normal que se recupera por día. */
     stockRecovery: 0.03,
     /** Multiplica el `stockStep` de cada bien: más alto, mercados más chicos. */
-    stockImpact: 1.2,
+    stockImpact: 0.9,
     /** Comprar cuesta este factor sobre el precio de venta. */
     buyMarkup: 1.1,
     modProduces: 0.6,
@@ -76,10 +76,10 @@ export const RULES = {
  * - noLoans: el Gremio no presta. `unlock: 'hardWin'` = hay que ganar en Difícil.
  */
 export const DIFFICULTIES = {
-  facil: { id: 'facil', name: 'Fácil', desc: 'Menos sorpresas en el camino.', installments: [{ day: 20, amount: 200 }, { day: 40, amount: 350 }, { day: 60, amount: 450 }], sealMult: 1, eventRate: 0.7 },
-  normal: { id: 'normal', name: 'Normal', desc: 'La temporada de siempre.', installments: [{ day: 20, amount: 300 }, { day: 40, amount: 500 }, { day: 60, amount: 700 }], sealMult: 1.25 },
-  dificil: { id: 'dificil', name: 'Difícil', desc: 'Precios que cambian cada semana y más bandidos.', installments: [{ day: 20, amount: 450 }, { day: 40, amount: 750 }, { day: 60, amount: 1000 }], sealMult: 1.6, volatility: 0.15, bandits: 1.5 },
-  pesadilla: { id: 'pesadilla', name: 'Pesadilla', desc: 'Como Difícil, pero el Gremio no presta.', installments: [{ day: 20, amount: 600 }, { day: 40, amount: 1000 }, { day: 60, amount: 1400 }], sealMult: 2, volatility: 0.15, bandits: 1.5, noLoans: true, unlock: 'hardWin' },
+  facil: { id: 'facil', name: 'Fácil', desc: 'Menos sorpresas en el camino.', installments: [{ day: 20, amount: 200 }, { day: 40, amount: 400 }, { day: 60, amount: 650 }], sealMult: 1, eventRate: 0.7 },
+  normal: { id: 'normal', name: 'Normal', desc: 'La temporada de siempre.', installments: [{ day: 20, amount: 300 }, { day: 40, amount: 600 }, { day: 60, amount: 1000 }], sealMult: 1.25 },
+  dificil: { id: 'dificil', name: 'Difícil', desc: 'Precios que cambian cada semana y más bandidos.', installments: [{ day: 20, amount: 450 }, { day: 40, amount: 900 }, { day: 60, amount: 1400 }], sealMult: 1.6, volatility: 0.15, bandits: 1.5 },
+  pesadilla: { id: 'pesadilla', name: 'Pesadilla', desc: 'Como Difícil, pero el Gremio no presta.', installments: [{ day: 20, amount: 600 }, { day: 40, amount: 1200 }, { day: 60, amount: 1850 }], sealMult: 2, volatility: 0.15, bandits: 1.5, noLoans: true, unlock: 'hardWin' },
 };
 
 /** Dificultades en orden, de la más fácil a la más difícil. */

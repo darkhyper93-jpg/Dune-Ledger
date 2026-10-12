@@ -28,7 +28,7 @@ export const REGIONS = [
     id: 'costa', name: 'Costa de las Perlas', star: 'perlas',
     desc: 'Puertos por todas partes: entre puertos se viaja en barco, pero hay piratas.',
     mount: { one: 'camello', many: 'camellos', capacity: 20, speed: 1 },
-    map: { minPorts: 4, sea: true },
+    map: { minPorts: 4, sea: true }, debtMult: 1.1,
   },
   {
     id: 'jade', name: 'Montañas de Jade', star: 'jade',

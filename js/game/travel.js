@@ -29,6 +29,7 @@ import { climateOf } from './climate.js';
 import { investLevel, INVEST_RECOVERY } from './invest.js';
 import { lastDay } from './modes.js';
 import { NIGHT_WATER, NIGHT_FATIGUE } from './moon.js';
+import { tickFair } from './fair.js';
 
 /** Parte de la carga que se pierde por cada día sin agua. */
 export const SHORTAGE_LOSS = 0.1;
@@ -160,16 +161,15 @@ export function passDay(game, use, where, mode = {}) {
   recoverStock(state.stock, RULES.market.stockRecovery * (hasPerk(state, 'negociante') ? 1.5 : 1), (id) => 1 + INVEST_RECOVERY * investLevel(state, id));
   rivalDay(game);
   tickNews(game);
+  tickFair(game);
   if (crew.extraRumor) extraRumor(game);
   tickContracts(game);
   for (const id of Object.keys(state.freshness)) {
     const good = getGood(id);
     if (good.decay) state.freshness[id] = Math.max(0.05, state.freshness[id] * (1 - good.decay));
   }
-  let dueDay = false;
   for (const inst of state.debt.installments) {
     if (inst.day === state.day - 1) {
-      dueDay = true;
       const res = settleInstallment(state, inst);
       logSettlement(state, inst, res);
       if (res.lost) {
@@ -178,7 +178,7 @@ export function passDay(game, use, where, mode = {}) {
       }
     }
   }
-  tickBank(state, dueDay);
+  tickBank(state);
   recordDay(state);
   return { lost: false };
 }

@@ -1,7 +1,12 @@
 /**
- * El banco del Gremio: préstamos (hasta 1.000, con interés en cada cuota) y
- * oro guardado (a salvo y, para la Banquera, con 2% de interés por día).
- * Se usa en la Capital o en un Puesto del Gremio.
+ * El banco del Gremio: préstamos y oro guardado (a salvo y, para la
+ * Banquera, con 2% de interés por día). Se usa en la Capital o en un Puesto
+ * del Gremio.
+ *
+ * El préstamo cobra interés todos los días, sobre lo que se debe (interés
+ * compuesto), y el Gremio presta según lo que tenés: nunca más que tu oro
+ * propio. Así un préstamo sirve para aprovechar una buena oportunidad, pero
+ * tenerlo mucho tiempo sale caro (ver docs/DECISIONES.md).
  */
 
 import { canPayHere } from './debt.js';
@@ -10,11 +15,16 @@ import { getDifficulty } from '../data/rules.js';
 import { isFree } from './modes.js';
 import { addLog } from './knowledge.js';
 import { fmt } from '../core/text.js';
+import { noteFlow } from './ledger.js';
 
-/** Máximo que se puede deber en préstamos. */
-export const LOAN_LIMIT = 1000;
-/** Interés del préstamo en cada cuota (la Banquera paga la mitad). */
-export const LOAN_RATE = 0.2;
+/**
+ * Condiciones del préstamo (un objeto para poder calibrarlas con los bots).
+ * limit: lo máximo que se puede deber; daily: interés por día; minimum: lo
+ * que presta aunque tengas poco; ofGold: parte de tu oro propio que presta.
+ */
+export const LOAN_TERMS = { limit: 1000, daily: 0.02, minimum: 100, ofGold: 1 };
+/** Máximo absoluto que se puede deber en préstamos. */
+export const LOAN_LIMIT = LOAN_TERMS.limit;
 /** Interés diario del oro guardado para la Banquera. */
 export const DEPOSIT_RATE = 0.02;
 
@@ -27,9 +37,23 @@ function check(game, amount) {
   return null;
 }
 
-/** Interés del préstamo para esta temporada. */
+/**
+ * Cuánto se puede deber en préstamos ahora: tu oro propio (bolsa y guardado,
+ * sin contar lo prestado), con un mínimo y un tope. Redondeado a 100.
+ * @param {object} state
+ */
+export function maxLoan(state) {
+  const own = Math.max(0, state.gold + state.deposit - state.loan);
+  const byGold = Math.floor((own * LOAN_TERMS.ofGold) / 100) * 100;
+  return Math.min(LOAN_TERMS.limit, Math.max(LOAN_TERMS.minimum, byGold));
+}
+
+/**
+ * Interés diario del préstamo para esta temporada (la Banquera paga la mitad).
+ * @param {object} state
+ */
 export function loanRate(state) {
-  return hasPerk(state, 'banquera') ? LOAN_RATE / 2 : LOAN_RATE;
+  return hasPerk(state, 'banquera') ? LOAN_TERMS.daily / 2 : LOAN_TERMS.daily;
 }
 
 /**
@@ -43,11 +67,16 @@ export function takeLoan(game, amount) {
   const { state } = game;
   if (getDifficulty(state.difficulty).noLoans) return { ok: false, error: 'En Pesadilla el Gremio no presta.' };
   if (isFree(state)) return { ok: false, error: 'En el modo libre no hay deuda ni préstamos.' };
-  if (state.loan + amount > LOAN_LIMIT) return { ok: false, error: `El Gremio presta hasta ${fmt(LOAN_LIMIT)} en total.` };
+  const max = maxLoan(state);
+  if (state.loan + amount > max) {
+    return { ok: false, error: `Con lo que tenés, el Gremio te presta hasta ${fmt(max)} en total${state.loan ? ` (ya debés ${fmt(state.loan)})` : ''}.` };
+  }
   state.loan += amount;
+  state.loanTaken += amount;
   state.gold += amount;
+  noteFlow(state, 'prestamo', amount);
   state.undo = [];
-  addLog(state, `Pediste ${fmt(amount)} prestados al Gremio (${Math.round(loanRate(state) * 100)}% de interés en cada cuota).`, 'debt');
+  addLog(state, `Pediste ${fmt(amount)} prestados al Gremio (${pct(loanRate(state))} de interés por día).`, 'debt');
   return { ok: true, total: amount };
 }
 
@@ -61,7 +90,7 @@ export function repayLoan(game, amount) {
   const pay = Math.min(amount, state.loan, state.gold);
   const err = check(game, pay);
   if (err) return { ok: false, error: state.loan === 0 ? 'No debés préstamos.' : err };
-  state.loan -= pay;
+  settleLoan(state, pay);
   state.gold -= pay;
   state.undo = [];
   addLog(state, `Devolviste ${fmt(pay)} del préstamo. Quedan ${fmt(state.loan)}.`, 'debt');
@@ -99,16 +128,36 @@ export function withdrawGold(game, amount) {
 }
 
 /**
- * Paso diario del banco: interés del oro guardado (Banquera) y, en los días
- * de cuota, interés del préstamo.
+ * Baja el préstamo por un pago y lo anota en el libro: primero se paga el
+ * interés que se juntó y después lo que te prestaron.
  * @param {object} state
- * @param {boolean} dueDay si hoy venció una cuota
+ * @param {number} pay oro que va al préstamo (ya descontado o por descontar)
  */
-export function tickBank(state, dueDay) {
+export function settleLoan(state, pay) {
+  const interest = Math.min(pay, Math.max(0, state.loan - state.loanTaken));
+  state.loan -= pay;
+  state.loanTaken = Math.max(0, state.loanTaken - (pay - interest));
+  if (state.loan === 0) state.loanTaken = 0;
+  noteFlow(state, 'intereses', -interest);
+  noteFlow(state, 'prestamo', -(pay - interest));
+}
+
+/** "3%" o "1,5%". */
+function pct(rate) {
+  return `${String(Math.round(rate * 1000) / 10).replace('.', ',')}%`;
+}
+
+/**
+ * Paso diario del banco: interés del oro guardado (Banquera) e interés del
+ * préstamo (se anota en el diario una vez por semana).
+ * @param {object} state
+ */
+export function tickBank(state) {
   if (hasPerk(state, 'banquera') && state.deposit > 0) state.deposit = Math.round(state.deposit * (1 + DEPOSIT_RATE));
-  if (dueDay && state.loan > 0) {
-    const before = state.loan;
+  if (state.loan > 0) {
     state.loan = Math.ceil(state.loan * (1 + loanRate(state)));
-    addLog(state, `El préstamo del Gremio generó ${fmt(state.loan - before)} de interés.`, 'debt');
+    if (state.day % 7 === 0) {
+      addLog(state, `El préstamo ya suma ${fmt(state.loan - state.loanTaken)} de interés: debés ${fmt(state.loan)} (te prestaron ${fmt(state.loanTaken)}).`, 'debt');
+    }
   }
 }

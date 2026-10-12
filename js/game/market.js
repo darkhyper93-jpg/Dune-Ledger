@@ -19,6 +19,7 @@ import { tradeBonus } from './crew.js';
 import { hasPerk, upgradeValue, regionOf } from './perks.js';
 import { investLevel, INVEST_DISCOUNT } from './invest.js';
 import { climatePrice } from './climate.js';
+import { fairMult } from './fair.js';
 
 const M = RULES.market;
 
@@ -61,7 +62,7 @@ const SWING_DAYS = 5;
 export function marketMult(game, cityId, goodId) {
   const { state } = game;
   const vol = getDifficulty(state.difficulty).volatility ?? 0;
-  const news = newsMult(game, cityId, goodId) * climatePrice(state, game.map.cityById[cityId].type, goodId);
+  const news = newsMult(game, cityId, goodId) * climatePrice(state, game.map.cityById[cityId].type, goodId) * fairMult(state, cityId, goodId);
   if (!vol) return news;
   const week = Math.floor((state.day - 1) / SWING_DAYS);
   return news * (1 + vol * (2 * hashUnit(`${state.seed}|vaiven|${cityId}|${goodId}|${week}`) - 1));

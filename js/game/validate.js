@@ -72,6 +72,13 @@ function stats(v, map) {
   };
 }
 
+/** Valida la Gran Feria (null si todavía no se anunció o la partida es vieja). */
+function fairPart(v, map) {
+  if (v === null || v === undefined) return null;
+  need(isObj(v) && typeof v.cityId === 'string' && Object.hasOwn(map.cityById, v.cityId) && isGoodId(v.goodId), 'feria');
+  return { cityId: v.cityId, goodId: v.goodId, start: int(v.start, 1, FREE_DAYS, 'feria'), end: int(v.end, 1, FREE_DAYS, 'feria') };
+}
+
 /** Valida el libro mayor (una partida vieja sin libro arranca uno vacío). */
 function ledgerPart(v) {
   if (v === undefined) return initialLedger(null);
@@ -177,6 +184,8 @@ export function validateState(input) {
       upgrades: perks.upgrades,
       debt: debtPart(raw.debt, raw.difficulty, perks, raw.mode),
       loan: int(raw.loan, 0, 1e6, 'préstamo'),
+      // Lo que te prestaron (sin el interés); una partida vieja no lo tiene.
+      loanTaken: Math.min(int(raw.loanTaken ?? raw.loan, 0, 1e6, 'préstamo'), int(raw.loan, 0, 1e6, 'préstamo')),
       deposit: int(raw.deposit, 0, 1e8, 'depósito'),
       rep: repPart(raw.rep),
       news: newsPart(raw.news),
@@ -195,6 +204,7 @@ export function validateState(input) {
       bet: betPart(raw.bet, cityOk),
       invest: investPart(raw.invest, cityOk),
       climate: climatePart(raw.climate),
+      fair: fairPart(raw.fair, map),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);
@@ -220,6 +230,7 @@ function debtPart(v, difficulty, perks, mode) {
       return { day: inst.day, amount, paid: int(inst.paid, 0, amount, 'cuota pagada') };
     }),
     strikes: int(v.strikes, 0, RULES.debt.maxStrikes, 'faltas'),
+    renegotiated: v.renegotiated === true,
   };
 }
 

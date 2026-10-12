@@ -120,7 +120,7 @@ export function renderHelp(app) {
   return h('div', { class: 'stack' },
     h('h1', {}, 'Cómo se juega'),
     h('div', { class: 'card stack' },
-      p('Tenés 60 días para pagarle 1.500 de oro al Gremio de Mercaderes, en tres cuotas: 300 el día 20, 500 el día 40 y 700 el día 60.'),
+      p('Tenés 60 días para pagarle 1.900 de oro al Gremio de Mercaderes, en tres cuotas que suben: 300 el día 20, 600 el día 40 y 1.000 el día 60.'),
       p('Cada tipo de ciudad produce algunos bienes (ahí son baratos) y consume otros (ahí se pagan bien). Comprá barato, viajá y vendé caro.'),
       p('Si comprás mucho de golpe, el precio sube; si vendés mucho, baja. Los mercados se recuperan de a poco con los días.'),
       p('Antes de viajar mirá cuánta comida y agua hace falta. Sin provisiones vas a dejar carga en el camino.'),

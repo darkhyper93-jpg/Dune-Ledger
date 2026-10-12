@@ -27,7 +27,7 @@ export const GOODS = [
   { id: 'seda', name: 'Seda', base: 60, weight: 1, produces: ['puerto'], consumes: ['capital'], stockStep: 4.4, icon: '∿' },
   { id: 'armas', name: 'Armas', base: 70, weight: 2, produces: ['minera'], consumes: ['aldea'], stockStep: 4.8, banned: ['santa'], icon: '⚔', note: 'Ilegales en la ciudad santa' },
   { id: 'jade', name: 'Jade', base: 150, weight: 1, produces: ['minera'], consumes: ['capital', 'santa'], stockStep: 6, regions: ['jade'], icon: '◆', note: 'Sólo en las Montañas de Jade' },
-  { id: 'perlas', name: 'Perlas', base: 120, weight: 0, produces: ['puerto'], consumes: ['capital', 'santa'], stockStep: 6, icon: '○', note: 'No ocupan lugar, pero atraen bandidos' },
+  { id: 'perlas', name: 'Perlas', base: 120, weight: 0, produces: ['puerto'], consumes: ['capital', 'santa'], stockStep: 8, icon: '○', note: 'No ocupan lugar, pero atraen ladrones y tienen pocos compradores' },
 ];
 
 /** Ids de todos los bienes (el jade sólo se comercia en su región). */

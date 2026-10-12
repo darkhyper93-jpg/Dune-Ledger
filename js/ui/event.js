@@ -16,6 +16,7 @@ import { buzz } from '../core/haptics.js';
 const TITLES = {
   bandidos: '¡Bandidos!',
   'bandidos-amigos': 'Bandidos conocidos',
+  'ladron-perlas': 'Un ladrón en la noche',
   tormenta: 'Tormenta de arena',
   'oasis-seco': 'Oasis seco',
   nomada: 'Mercader nómada',

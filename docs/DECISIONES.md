@@ -479,3 +479,16 @@ la caravana bajaba el puntaje. Lo reprodujimos con las mismas semillas
 Resultado con las semillas de las métricas (300 temporadas): codicioso 77,3%,
 prudente 43,3%, aleatorio 0%, explotador 83,5% (antes 96,5%); el cuarto que
 peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).
+- **Pagar a bandidos o piratas** da un salvoconducto de 7 días sin ellos
+  (`safeUntil`): pagar compra tranquilidad, como un seguro. El bot que elige
+  por valor esperado ahora paga cuando lleva mucha carga por peligro alto y
+  huye con poca carga.
+- **Perlas**: siguen sin ocupar lugar, pero su mercado es más fino
+  (`stockStep` 6 → 8) y aparece un ladrón de perlas en cualquier ruta, incluso
+  segura, más seguido cuantas más llevás (si sale mal, se lleva la mitad). Su
+  parte de la ganancia del bot bajó de 22% a 18% en el Desierto (22% en la
+  Costa, donde son el bien estrella).
+- **Pedidos grandes del Gremio**: los contratos del Gremio piden 40 a 64
+  lugares de carga. Con eso, 2 camellos pasó a ser lo peor: mediana ~2.990
+  contra 3.200–4.000 con 3 o 4 (antes, más camellos siempre bajaba el
+  puntaje). La Estepa sube su deuda un 10%.

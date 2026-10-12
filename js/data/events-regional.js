@@ -21,7 +21,7 @@ export const REGIONAL_EVENTS = [
     text: 'Una galera de velas negras se pone a la par. Los piratas piden $toll de oro para no abordarte.',
     setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
     options: [
-      { label: 'Pagar $toll de oro', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
+      { label: 'Pagar $toll de oro (salvoconducto por 7 días)', cost: { gold: '$toll' }, effects: { gold: '-$toll', safePass: true } },
       { label: 'Defender el barco', chance: 'fight', stat: 'piratesBeaten', win: { rep: 5, loot: [30, 90], morale: 10 }, lose: { cargoPct: 0.4, morale: -10 },
         winText: '¡Los rechazaste! En la huida dejaron caer un cofre.', loseText: 'Te abordaron y se llevaron parte de la carga.' },
       { label: 'Escapar a toda vela', chance: 'flee', win: {}, lose: { cargoPct: 0.25 },

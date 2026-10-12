@@ -33,6 +33,10 @@ export function riskOf(game, idx) {
     const part = lose.cargoPct * cargoLossFactor(state);
     parts.push(`perdés el ${Math.round(part * 100)}% de la carga (unos ${fmt(Math.round(cargoValue(state) * part))} de oro)`);
   }
+  if (lose.losePart && state.cargo[lose.losePart.good] > 0) {
+    const n = Math.round(state.cargo[lose.losePart.good] * lose.losePart.pct * cargoLossFactor(state));
+    parts.push(`te roban ${n} de ${getGood(lose.losePart.good).name.toLowerCase()}`);
+  }
   if (lose.breakFragile && state.cargo.ceramica > 0) {
     parts.push(`se rompe el ${Math.round(lose.breakFragile * cargoLossFactor(state) * 100)}% de la cerámica`);
   }

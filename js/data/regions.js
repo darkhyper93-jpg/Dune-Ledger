@@ -22,7 +22,7 @@ export const REGIONS = [
     id: 'estepa', name: 'Estepa del Viento', star: 'lana',
     desc: 'Pastizales sin fin. Los caballos son rápidos, pero cargan menos que un camello.',
     mount: { one: 'caballo', many: 'caballos', capacity: 12, speed: 0.8 },
-    map: { terrain: { piedra: 4, rio: 2 }, distPerDay: 16 },
+    map: { terrain: { piedra: 4, rio: 2 }, distPerDay: 16 }, debtMult: 1.1,
   },
   {
     id: 'costa', name: 'Costa de las Perlas', star: 'perlas',

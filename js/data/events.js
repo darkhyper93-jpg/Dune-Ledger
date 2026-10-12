@@ -40,7 +40,8 @@ const COMMON_EVENTS = [
     text: 'Una banda de bandidos te corta el paso. El jefe pide $toll de oro para dejarte seguir.',
     setup: (game) => ({ toll: Math.max(25, Math.round(cargoBase(game.state) * 0.15 + 10)) }),
     options: [
-      { label: 'Pagar $toll de oro', cost: { gold: '$toll' }, effects: { gold: '-$toll' } },
+      // Pagar compra un salvoconducto: unos días sin bandidos ni piratas (como un seguro).
+      { label: 'Pagar $toll de oro (salvoconducto por 7 días)', cost: { gold: '$toll' }, effects: { gold: '-$toll', safePass: true } },
       { label: 'Pelear', chance: 'fight', win: { rep: 5, loot: [20, 70], morale: 10 }, lose: { cargoPct: 0.4, camelHp: -15, morale: -10 },
         winText: '¡Los espantaste! Hasta dejaron algo de oro.', loseText: 'Te ganaron: se llevaron parte de la carga.' },
       { label: 'Huir', chance: 'flee', win: {}, lose: { cargoPct: 0.25 },
@@ -52,6 +53,19 @@ const COMMON_EVENTS = [
     weight: 0, // sólo sale en lugar de "bandidos" si tenés buena reputación en la zona
     text: 'Unos bandidos te rodean… pero el jefe te reconoce: "Con vos no, mercader". Te dejan pasar.',
     options: [{ label: 'Seguir viaje', effects: {} }],
+  },
+  {
+    // Las perlas no ocupan lugar, pero llaman la atención en cualquier ruta.
+    id: 'ladron-perlas',
+    when: { carrying: 'perlas' },
+    weight: 3,
+    text: 'De noche, alguien rondó la caravana. Buscaba tus perlas.',
+    options: [
+      { label: 'Hacer guardia toda la noche (+1 día)', spareDays: 1, effects: { delay: 1 } },
+      { label: 'Que el guardia vigile', role: 'guardia', effects: { morale: -3 } },
+      { label: 'Esconderlas y seguir', chance: 'hide', win: {}, lose: { losePart: { good: 'perlas', pct: 0.5 } },
+        winText: 'Nadie las encontró.', loseText: 'A la mañana faltaban perlas.' },
+    ],
   },
   {
     id: 'tormenta',

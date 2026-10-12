@@ -31,6 +31,9 @@ function effectValue(state, eff, params) {
   if (eff.give) v += getGood(num(eff.give.good)).base * num(eff.give.qty);
   if (eff.takeAll) v -= cargoBase(state, num(eff.takeAll));
   if (eff.inspect && state.cargo.armas > 0) v -= cargoBase(state, 'armas') + (params.fine ?? 30);
+  if (eff.losePart) v -= cargoBase(state, eff.losePart.good) * eff.losePart.pct;
+  // El salvoconducto evita otros encuentros en los próximos días (estimado).
+  if (eff.safePass) v += cargoBase(state) * 0.03;
   return v;
 }
 

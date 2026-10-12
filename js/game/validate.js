@@ -205,6 +205,7 @@ export function validateState(input) {
       invest: investPart(raw.invest, cityOk),
       climate: climatePart(raw.climate),
       fair: fairPart(raw.fair, map),
+      safeUntil: int(raw.safeUntil ?? 0, 0, FREE_DAYS + 10, 'salvoconducto'),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);

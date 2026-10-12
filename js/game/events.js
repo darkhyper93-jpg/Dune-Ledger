@@ -45,6 +45,8 @@ export const CHANCES = {
   fight: (game) => clamp(0.45 + Math.min(0.3, game.state.cargo.armas * 0.08) + fightBonus(game.state) + (hasPerk(game.state, 'capitana') ? 0.2 : 0), 0.05, 0.95),
   /** Huir: más difícil en rutas de peligro alto. */
   flee: (game) => (tripInfo(game).route.danger === 'alto' ? 0.45 : 0.6) + (hasGear(game.state, 'brujula') ? 0.12 : 0),
+  /** Esconder las perlas del ladrón. */
+  hide: () => 0.6,
   /** Cavar en un oasis seco. */
   dig: () => 0.55,
   /** Seguir en una tormenta de arena. */
@@ -106,6 +108,7 @@ export function eventAllowed(game, route, def) {
   if (w.region && !w.region.includes(regionId(game.state))) return false;
   if (w.notTerrain && w.notTerrain.includes(route.terrain)) return false;
   if (w.rivalBehind && !rivalBehind(game.state)) return false;
+  if (w.carrying && !(game.state.cargo[w.carrying] > 0)) return false;
   return true;
 }
 
@@ -138,6 +141,10 @@ export function eventWeights(game, route) {
       w *= 1 + Math.min(2, game.state.cargo.perlas / 5); // las perlas atraen bandidos
     }
     if (e.id === 'bandidos' || e.id === 'piratas') w *= bandits;
+    // Con salvoconducto, ni bandidos ni piratas.
+    if ((e.id === 'bandidos' || e.id === 'piratas') && game.state.safeUntil >= game.state.day) w = 0;
+    // Cuantas más perlas, más ganas de robarlas.
+    if (e.when?.carrying) w *= Math.min(3, game.state.cargo[e.when.carrying] / 3);
     // De noche y sin luna los bandidos no te ven.
     if (e.id === 'bandidos' && game.state.trip?.night) w *= nightBanditMult(game.state);
     weights[e.id] = w;
@@ -197,6 +204,9 @@ export function optionState(game, idx) {
   return { available: reason === null, reason, chance, label };
 }
 
+/** Días de salvoconducto que da pagarles a bandidos o piratas. */
+export const SAFE_PASS_DAYS = 7;
+
 /**
  * Qué parte de una pérdida de carga se pierde de verdad: el Seguro del
  * Gremio y el cofre con candado la achican.
@@ -230,6 +240,18 @@ function applyEffects(game, eff, params, rng) {
     lines.push(`+${fmt(n)} de oro`);
   }
   const insured = cargoLossFactor(state);
+  if (eff.losePart) {
+    const { good, pct } = eff.losePart;
+    const n = Math.min(state.cargo[good], Math.round(state.cargo[good] * pct * insured));
+    if (n > 0) {
+      state.cargo[good] -= n;
+      lines.push(`Perdiste ${n} de ${getGood(good).name}`);
+    }
+  }
+  if (eff.safePass) {
+    state.safeUntil = state.day + SAFE_PASS_DAYS;
+    lines.push(`Salvoconducto: hasta el día ${state.safeUntil} no te molestan bandidos ni piratas`);
+  }
   if (eff.cargoPct) lines.push(...loseCargo(state, null, eff.cargoPct * insured));
   if (eff.breakFragile) lines.push(...loseCargo(state, 'ceramica', eff.breakFragile * insured));
   if (eff.give) {

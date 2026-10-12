@@ -21,6 +21,8 @@ export const MAX_ACTIVE = 3;
 /** Reputación que se gana al cumplir y se pierde al fallar. */
 export const DONE_REP = 10;
 export const FAIL_REP = 15;
+/** Carga (en lugares) que piden los pedidos grandes del Gremio. */
+export const BIG_ORDER = [40, 64];
 /** Cada cuántos días se renuevan las ofertas de una ciudad. */
 export const OFFER_TTL = 7;
 
@@ -50,7 +52,10 @@ function makeOffer(game, city, days, rng, source, taken) {
     if (!dests.length) continue;
     const dest = rng.pick(dests);
     const w = getGood(goodId).weight;
-    const qty = w > 0 ? Math.max(3, Math.round(rng.range(12, 26) / w)) : rng.int(2, 4);
+    // Los pedidos del Gremio son grandes: piden más carga que la de una
+    // caravana chica (ahí es donde un camello más se paga solo).
+    const [lo, hi] = source === 'gremio' ? BIG_ORDER : [12, 26];
+    const qty = w > 0 ? Math.max(3, Math.round(rng.range(lo, hi) / w)) : rng.int(2, 4);
     const market = sellPriceAt(state.seed, dest, goodId, RULES.market.stockNormal) * qty;
     const bonus = source === 'gremio' ? 1.6 : rng.range(1.3, 1.45);
     const deadline = Math.min(lastDay(state), state.day + Math.ceil(days[dest.id] * 1.5) + rng.int(3, 6));

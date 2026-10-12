@@ -110,6 +110,7 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     invest: {},
     climate: pickClimate(String(seed)),
     fair: null,
+    safeUntil: 0,
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);

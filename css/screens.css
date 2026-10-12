@@ -192,3 +192,37 @@ input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--f
 .climate-chip.sequia::before { background: #F6B73C; }
 .climate-chip.cosecha::before { background: #76B35C; }
 .climate-chip.ferias::before { background: #E07E45; }
+
+/* ---------- Comodidad: tamaño de texto, alto contraste e interruptores ---------- */
+/* El mapa y el viaje (canvas) quedan igual: el zoom desalinearía los toques. */
+html[data-text='grande'] :is(.hud, .nav, .screen:not(.full), #sheet-root, .toast) { zoom: 1.12; }
+html[data-text='muy-grande'] :is(.hud, .nav, .screen:not(.full), #sheet-root, .toast) { zoom: 1.25; }
+.seg.seg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.switch-row { display: flex; gap: 12px; align-items: center; min-height: 48px; cursor: pointer; }
+.switch {
+  appearance: none; flex: none; width: 52px; height: 30px; border-radius: 999px; cursor: pointer; position: relative;
+  background: var(--surface-2); border: 2px solid var(--edge); transition: background 120ms ease-out;
+}
+.switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--ink-2); transition: transform 120ms ease-out;
+}
+.switch:checked { background: var(--primary); border-color: var(--primary-deep); }
+.switch:checked::after { transform: translateX(22px); background: var(--primary-ink); }
+.switch:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Alto contraste: tinta más oscura (o más clara de noche), bordes marcados. */
+html[data-contrast='alto'] {
+  --ink: #000000; --ink-2: #2B2B3A; --line: #6B5A3A; --edge: #4A3C22; --surface: #FFFDF7; --surface-2: #F3E7CC;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-contrast='alto'] {
+    --ink: #FFFFFF; --ink-2: #E2E2F0; --line: #8C93B8; --edge: #B4BADB; --surface: #0E1530; --surface-2: #1A2448;
+  }
+}
+html[data-contrast='alto'] .card, html[data-contrast='alto'] .btn { border-width: 3px; }
+/* Con texto grande: las pestañas pasan a dos filas y la barra de arriba no se corta. */
+html[data-text='grande'] .tabs, html[data-text='muy-grande'] .tabs { flex-wrap: wrap; }
+html[data-text='grande'] .tabs button, html[data-text='muy-grande'] .tabs button { flex: 1 1 40%; }
+html[data-text='muy-grande'] .hud { font-size: 13px; gap: 6px; padding-left: 8px; padding-right: 8px; }
+html[data-text='muy-grande'] .hud-item { gap: 4px; }

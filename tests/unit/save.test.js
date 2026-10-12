@@ -1,7 +1,7 @@
 /** Pruebas del guardado: ida y vuelta, validación y claves peligrosas. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { saveSeason, loadSeason, safeParse, KEYS, loadProfile, saveProfile, defaultProfile, loadSettings, clearSeason } from '../../js/core/save.js';
+import { saveSeason, loadSeason, safeParse, KEYS, loadProfile, saveProfile, defaultProfile, loadSettings, clearSeason, defaultSettings, validateSettings } from '../../js/core/save.js';
 import { validateState } from '../../js/game/validate.js';
 import { buy } from '../../js/game/actions.js';
 import { travel, finishSeason, createSeason } from '../../js/game/season.js';
@@ -136,11 +136,21 @@ test('perfil y ajustes: valores raros vuelven a los de fábrica', () => {
   saveProfile({ seals: 12, seasons: 2, wins: 1, bestScore: 900, tutorialDone: true }, store);
   assert.equal(loadProfile(store).seals, 12);
   store.setItem(KEYS.settings, JSON.stringify({ music: 7, sfx: 0.3 }));
-  assert.deepEqual(loadSettings(store), { music: 0.5, sfx: 0.3 });
+  assert.deepEqual(loadSettings(store), { ...defaultSettings(), music: 0.5, sfx: 0.3 });
 });
 
 test('sin localStorage no explota', () => {
   const g = testGame();
   assert.equal(typeof saveSeason(g), 'boolean');
   assert.equal(loadSeason(), null);
+});
+
+test('los ajustes de comodidad se validan y tienen valores por defecto', () => {
+  assert.deepEqual(defaultSettings(), { music: 0.5, sfx: 0.8, vibrate: true, text: 'normal', contrast: false });
+  const ok = validateSettings({ music: 0.2, sfx: 0, vibrate: false, text: 'grande', contrast: true });
+  assert.deepEqual(ok, { music: 0.2, sfx: 0, vibrate: false, text: 'grande', contrast: true });
+  const bad = validateSettings({ vibrate: 'sí', text: 'gigante', contrast: 1 });
+  assert.equal(bad.vibrate, true);
+  assert.equal(bad.text, 'normal');
+  assert.equal(bad.contrast, false);
 });

@@ -16,6 +16,7 @@ import { dailyResultCard } from './modes.js';
 import { worthChart } from './chart.js';
 import { climateOf } from '../game/climate.js';
 import { kasimSvg } from '../render/portraits.js';
+import { buzz } from '../core/haptics.js';
 
 /** Textos de cómo terminó la temporada. */
 const REASONS = {
@@ -66,6 +67,10 @@ export function renderSummary(app) {
   const { state, map } = app.game;
   const over = state.over;
   const { newAchievements: fresh, unlocked } = record(app);
+  if (over.won && !over.buzzed) {
+    buzz('win');
+    over.buzzed = true;
+  }
   const best = state.stats.bestSale;
   const routes = Object.entries(state.stats.routeProfit).sort((a, b) => b[1] - a[1]);
   const topRoute = routes[0];

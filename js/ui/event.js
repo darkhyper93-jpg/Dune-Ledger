@@ -8,6 +8,7 @@ import { h, openSheet } from './dom.js';
 import { eventDef, fillText, optionState } from '../game/events.js';
 import { chooseOption } from '../game/season.js';
 import { playCoins, playTap } from '../core/audio.js';
+import { buzz } from '../core/haptics.js';
 
 /** Títulos cortos de cada evento para la carta. */
 const TITLES = {
@@ -30,6 +31,7 @@ export function showEvent(app, onDone) {
   const { game } = app;
   const ev = game.state.trip.event;
   const def = eventDef(ev.id);
+  buzz('event');
   openSheet((close) => {
     const body = h('div', { class: 'stack event-card', 'data-testid': 'event-card' });
     const options = def.options.map((_, i) => {
@@ -47,6 +49,7 @@ export function showEvent(app, onDone) {
     const choose = (i) => {
       const res = app.quiet((g) => chooseOption(g, i));
       if (!res.ok) return;
+      if (res.success === false) buzz('bad');
       if (res.lines?.some((l) => l.startsWith('+') && l.includes('oro'))) playCoins(60);
       else playTap();
       body.replaceChildren(

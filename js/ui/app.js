@@ -25,6 +25,7 @@ import { saveSeason, loadSeason, loadProfile, saveProfile, loadSettings, saveSet
 import { setInMenu } from '../core/updates.js';
 import { setVolumes, unlockAudio } from '../core/audio.js';
 import { startMusic, stopMusic } from '../core/music.js';
+import { applyComfort } from '../core/haptics.js';
 
 /** Pantallas de juego que muestran barra superior y navegación. */
 const GAME_SCREENS = ['city', 'map', 'caravan', 'journal', 'travel'];
@@ -197,6 +198,7 @@ export function createApp(els) {
   };
 
   setVolumes(app.settings);
+  applyComfort(app.settings);
   document.addEventListener('pointerdown', () => {
     unlockAudio();
     startMusic();

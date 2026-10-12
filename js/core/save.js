@@ -115,8 +115,11 @@ export function saveProfile(profile, store) {
 
 /** Ajustes por defecto: volúmenes de 0 a 1. */
 export function defaultSettings() {
-  return { music: 0.5, sfx: 0.8 };
+  return { music: 0.5, sfx: 0.8, vibrate: true, text: 'normal', contrast: false };
 }
+
+/** Tamaños de texto que se pueden elegir. */
+export const TEXT_SIZES = ['normal', 'grande', 'muy-grande'];
 
 /**
  * Valida ajustes leídos.
@@ -126,7 +129,13 @@ export function validateSettings(raw) {
   const d = defaultSettings();
   if (typeof raw !== 'object' || raw === null) return d;
   const vol = (v, def) => (typeof v === 'number' && v >= 0 && v <= 1 ? v : def);
-  return { music: vol(raw.music, d.music), sfx: vol(raw.sfx, d.sfx) };
+  return {
+    music: vol(raw.music, d.music),
+    sfx: vol(raw.sfx, d.sfx),
+    vibrate: typeof raw.vibrate === 'boolean' ? raw.vibrate : d.vibrate,
+    text: TEXT_SIZES.includes(raw.text) ? raw.text : d.text,
+    contrast: typeof raw.contrast === 'boolean' ? raw.contrast : d.contrast,
+  };
 }
 
 /** @param {Storage} [store] */

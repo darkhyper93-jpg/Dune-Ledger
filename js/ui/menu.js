@@ -12,6 +12,8 @@ import { startMusic, stopMusic } from '../core/music.js';
 import { fmt } from '../core/text.js';
 import { progressCodeCard } from './progress.js';
 import { openDailySheet } from './modes.js';
+import { applyComfort } from '../core/haptics.js';
+import { TEXT_SIZES } from '../core/save.js';
 
 /**
  * Menú principal.
@@ -59,6 +61,35 @@ function volume(app, key, label) {
       } }));
 }
 
+/** Nombres de los tamaños de texto. */
+const TEXT_NAMES = { normal: 'Normal', grande: 'Grande', 'muy-grande': 'Muy grande' };
+
+/**
+ * Comodidad: vibración, tamaño de texto y alto contraste.
+ * @param {object} app
+ */
+function comfortCard(app) {
+  const set = (patch) => {
+    Object.assign(app.settings, patch);
+    applyComfort(app.settings);
+    app.saveAll();
+    app.render();
+  };
+  const toggle = (key, label, hint) => h('label', { class: 'switch-row' },
+    h('span', { class: 'grow' }, h('b', {}, label), h('span', { class: 'small muted', style: 'display:block' }, hint)),
+    h('input', { type: 'checkbox', role: 'switch', class: 'switch', 'data-testid': `set-${key}`, checked: app.settings[key] ? true : null, onchange: (e) => set({ [key]: e.target.checked }) }));
+  return h('div', { class: 'card stack' },
+    h('h3', {}, 'Comodidad'),
+    h('div', { class: 'stack', style: 'gap:6px' },
+      h('span', { id: 'text-size-label' }, h('b', {}, 'Tamaño del texto')),
+      h('div', { class: 'seg seg-3', role: 'radiogroup', 'aria-labelledby': 'text-size-label' }, TEXT_SIZES.map((t) => h('button', {
+        class: `seg-btn${app.settings.text === t ? ' chosen' : ''}`, role: 'radio', 'aria-checked': String(app.settings.text === t), 'data-testid': `text-${t}`,
+        onclick: () => set({ text: t }),
+      }, h('b', {}, TEXT_NAMES[t]))))),
+    toggle('contrast', 'Alto contraste', 'Textos más oscuros y bordes más marcados.'),
+    toggle('vibrate', 'Vibración', 'Al vender con ganancia, en los eventos y al ganar (en celulares que la tienen).'));
+}
+
 /**
  * Ajustes: volúmenes, versión y botón Actualizar.
  * @param {object} app
@@ -67,6 +98,7 @@ export function renderSettings(app) {
   return h('div', { class: 'stack' },
     h('h1', {}, 'Ajustes'),
     h('div', { class: 'card stack' }, volume(app, 'music', 'Música'), volume(app, 'sfx', 'Efectos')),
+    comfortCard(app),
     h('div', { class: 'card stack' },
       h('div', { class: 'row between' }, h('span', {}, 'Versión'), h('b', { 'data-testid': 'version' }, VERSION)),
       h('button', { class: 'btn', 'data-testid': 'update', onclick: (e) => {

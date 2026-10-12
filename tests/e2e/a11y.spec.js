@@ -79,3 +79,25 @@ test(`el resumen con el gráfico y el historial son accesibles (${scheme === 'li
   await check(page, 'historial');
 });
 }
+
+test('comodidad: texto grande y alto contraste se aplican, se guardan y siguen siendo accesibles', async ({ page }) => {
+  // Sin animaciones: axe mediría el texto a mitad del fundido entre pantallas.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/?semilla=comodidad');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByTestId('settings').click();
+  await page.getByTestId('text-muy-grande').click();
+  await page.getByTestId('set-contrast').check();
+  await expect(page.locator('html')).toHaveAttribute('data-text', 'muy-grande');
+  await expect(page.locator('html')).toHaveAttribute('data-contrast', 'alto');
+  await check(page, 'ajustes con texto grande y contraste');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-text', 'muy-grande');
+  await page.getByText('Nueva temporada').first().click();
+  await page.getByTestId('start-season').click();
+  await check(page, 'ciudad con texto grande y contraste');
+  // La pantalla no se desborda a lo ancho.
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});

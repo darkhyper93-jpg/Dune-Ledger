@@ -15,6 +15,7 @@ import { bestKnownSell } from '../game/knowledge.js';
 import { newsMult } from '../game/news.js';
 import { fmt, plural } from '../core/text.js';
 import { playCoins, playTap } from '../core/audio.js';
+import { buzz } from '../core/haptics.js';
 
 /**
  * Texto "hace N días" para un precio visto.
@@ -150,6 +151,7 @@ export function openTrade(app, goodId, startMode) {
       if (!res.ok) return;
       if (mode === 'sell') {
         playCoins(res.profit);
+        if (res.profit > 0) buzz('coin');
         app.toast(res.profit >= 0 ? `Vendiste por ${fmt(res.total)}: ganaste ${fmt(res.profit)}.` : `Vendiste por ${fmt(res.total)}: perdiste ${fmt(-res.profit)}.`);
       } else {
         playTap();

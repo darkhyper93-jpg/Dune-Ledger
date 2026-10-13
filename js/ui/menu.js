@@ -7,6 +7,7 @@ import { svgNode } from '../render/shapes.js';
 import { sceneSvg } from '../render/scenes.js';
 import { VERSION } from '../core/version.js';
 import { forceUpdate } from '../core/updates.js';
+import { offerInstall, openInstallSheet } from './app-shell.js';
 import { setVolumes, playTap } from '../core/audio.js';
 import { startMusic, stopMusic } from '../core/music.js';
 import { fmt } from '../core/text.js';
@@ -34,7 +35,8 @@ export function renderMenu(app) {
       h('button', { class: 'btn big', 'data-testid': 'shop', onclick: () => app.go('shop') }, `Gremio (${fmt(profile.seals)} sellos)`),
       h('button', { class: 'btn big', 'data-testid': 'records', onclick: () => app.go('records') }, 'Logros y códice'),
       h('button', { class: 'btn big', 'data-testid': 'help', onclick: () => app.go('help') }, 'Cómo se juega'),
-      h('button', { class: 'btn big', 'data-testid': 'settings', onclick: () => app.go('settings') }, 'Ajustes')),
+      h('button', { class: 'btn big', 'data-testid': 'settings', onclick: () => app.go('settings') }, 'Ajustes'),
+      offerInstall() ? h('button', { class: 'btn big', 'data-testid': 'install', onclick: () => openInstallSheet(app) }, 'Instalar en el celular') : null),
     h('div', { class: 'profile-strip' },
       h('span', {}, h('b', {}, fmt(profile.seals)), ' sellos'),
       h('span', {}, h('b', {}, String(profile.seasons)), ' temporadas'),
@@ -106,7 +108,7 @@ export function renderSettings(app) {
         e.currentTarget.textContent = 'Actualizando…';
         forceUpdate();
       } }, 'Actualizar'),
-      h('p', { class: 'muted small', style: 'margin:0' }, 'El juego se actualiza solo cuando estás en el menú. Si algo se traba, tocá Actualizar.')),
+      h('p', { class: 'muted small', style: 'margin:0' }, 'El juego busca versiones nuevas cada vez que lo abrís o regresás a él. Se actualiza solo en el menú; si estás jugando, te avisa con un cartel. Si algo se traba, tocá Actualizar.')),
     progressCodeCard(app),
     h('button', { class: 'btn big', onclick: () => app.go('menu') }, 'Volver'));
 }

@@ -518,3 +518,22 @@ peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).
   con números (intereses pagados, días sin provisiones, el peor negocio,
   faltas, renegociación, el mejor negocio, Kasim) y tres preguntas para
   conversar después de jugar.
+
+## Versión 1.4 — la app en el celular
+
+- **Instalar**: el menú ofrece "Instalar en el celular" (salvo que ya se abra
+  como app). En Android se guarda el evento `beforeinstallprompt` apenas carga
+  la página y el botón muestra el cartel del navegador; en iPhone no existe,
+  así que la hoja explica Compartir → "Agregar a inicio".
+- **Actualizaciones** (`js/core/updates.js`): se busca una versión nueva al
+  abrir, al volver de segundo plano (`visibilitychange`, no más de una vez por
+  minuto) y cada 30 minutos con la app a la vista. En el menú se aplica sola;
+  jugando aparece un cartel arriba con "Actualizar ahora" (la partida ya está
+  guardada) o "Después" (se aplica al volver al menú). Tras recargar por una
+  actualización, un aviso dice "¡Listo! Ya tenés la última versión".
+- No usamos notificaciones del sistema: con la app cerrada el navegador no deja
+  correr nada sin un servidor de notificaciones push, y para esto alcanza con
+  el cartel dentro del juego en cuanto lo abrís.
+- Prueba de punta a punta (`tests/e2e/pwa.spec.js`) con el service worker de
+  verdad: cambia el `sw.js` del sitio armado y comprueba cartel, actualización
+  y "¡Listo!".

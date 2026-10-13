@@ -57,6 +57,20 @@ Se juega en https://darkhyper93-jpg.github.io/Dune-Ledger/
   las cartas de evento dicen qué se pierde si sale mal; "Lo que conviene" al
   comprar; pagarles a los bandidos da un salvoconducto; Kasim compite de
   verdad; y el resumen explica por qué ganaste o perdiste.
+- Versión 1.4: app para el celular. Botón "Instalar en el celular" en el menú
+  (en Android abre el cartel del navegador; en iPhone explica Compartir →
+  "Agregar a inicio"). Busca versiones nuevas al abrir y al volver de segundo
+  plano: en el menú se actualiza sola; jugando, avisa con un cartel y un botón
+  "Actualizar ahora", y después dice "¡Listo!".
+
+## Instalarlo en el celular
+
+1. Abrí https://darkhyper93-jpg.github.io/Dune-Ledger/ en el celular.
+2. En el menú del juego tocá **Instalar en el celular**.
+   - Android (Chrome, Brave, Edge, Samsung): tocá **Instalar ahora**, o en el
+     menú del navegador (⋮) elegí **Instalar app**.
+   - iPhone (Safari): tocá **Compartir** y después **Agregar a inicio**.
+3. Listo: queda con su ícono, abre a pantalla completa y funciona sin internet.
 
 Las decisiones tomadas donde el diseño dejaba algo abierto están en
 `docs/DECISIONES.md`.

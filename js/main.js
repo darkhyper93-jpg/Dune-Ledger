@@ -5,6 +5,11 @@
 
 import { createApp } from './ui/app.js';
 import { registerUpdates } from './core/updates.js';
+import { listenInstall } from './core/install.js';
+import { setupAppShell } from './ui/app-shell.js';
+
+// El navegador avisa una sola vez que se puede instalar: escuchar ya.
+listenInstall();
 
 const app = createApp({
   hud: document.getElementById('hud'),
@@ -15,4 +20,5 @@ const app = createApp({
 // Acceso para las pruebas de navegador (no se usa en el juego).
 globalThis.__duneLedger = app;
 
+setupAppShell(app);
 registerUpdates();

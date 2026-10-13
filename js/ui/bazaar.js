@@ -43,7 +43,7 @@ export function bazaarCard(app) {
               playCoins(40);
               app.toast(`¡${it.name} para la caravana!`);
             }
-          } }, `${fmt(it.price)} de oro`));
+          } }, `Comprar por ${fmt(it.price)} de oro`));
     }));
 }
 
@@ -75,7 +75,7 @@ export function investCard(app) {
     h('div', { class: 'invest-steps', 'aria-hidden': 'true' }, INVEST.map((_, i) => h('span', { class: i < lvl ? 'on' : '' }))),
     lvl ? h('p', { class: 'small', style: 'margin:0' }, `Acá comprás un ${Math.round(lvl * INVEST_DISCOUNT * 100)}% más barato y el mercado se repone más rápido.`) : null,
     next
-      ? h('div', { class: 'gear-row' },
+      ? h('div', { class: 'gear-row noart' },
         h('div', { class: 'grow' }, h('b', {}, next.name), h('div', { class: 'small muted' }, `${next.desc} Al final de la temporada vale la mitad de lo que pusiste.`)),
         h('button', { class: 'btn small', 'data-testid': 'invest-buy', disabled: state.gold < next.cost, onclick: () => {
           const res = app.act((g) => invest(g));
@@ -83,6 +83,6 @@ export function investCard(app) {
             playCoins(30);
             app.toast(`¡${next.name} en ${city.name}!`);
           }
-        } }, `${fmt(next.cost)} de oro`))
+        } }, `Invertir ${fmt(next.cost)} de oro`))
       : h('p', { class: 'small muted', style: 'margin:0' }, 'Ya invertiste todo lo posible en esta ciudad.'));
 }

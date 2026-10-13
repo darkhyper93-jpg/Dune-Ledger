@@ -76,11 +76,12 @@ export function renderMarket(app) {
       h('span', { class: 'grow' },
         h('div', { class: 'gname' }, g.name, owned > 0 ? h('span', { class: 'pill', style: 'margin-left:6px' }, `llevás ${owned}`) : null),
         h('div', { class: 'gsub' }, tag, tag ? ' · ' : '', nm !== 1 ? h('b', { class: nm > 1 ? 'tag-dear' : 'tag-cheap' }, `Noticia ×${nm === 2 ? '2' : '½'} · `) : null,
-          `peso ${g.weight}`, g.decay ? ' · se echan a perder' : '', g.id === 'perlas' ? ' · atraen bandidos' : '', g.id === 'ceramica' ? ' · frágil' : ''),
-        h('div', { class: 'gsub tiny' }, hint)),
+          `peso ${g.weight}`, g.decay ? ' · se echan a perder' : '', g.id === 'perlas' ? ' · atraen ladrones' : '', g.id === 'ceramica' ? ' · frágil' : '')),
       h('span', { class: 'gprice' },
         h('div', {}, h('span', { class: 'muted tiny' }, 'Compra '), h('b', {}, fmtPrice(prices.buy[g.id]))),
-        h('div', {}, h('span', { class: 'muted tiny' }, 'Venta '), h('b', {}, fmtPrice(prices.sell[g.id]))))));
+        h('div', {}, h('span', { class: 'muted tiny' }, 'Venta '), h('b', {}, fmtPrice(prices.sell[g.id])))),
+      // Lo mejor que viste en otra ciudad ocupa todo el ancho, debajo del nombre y el precio.
+      h('span', { class: 'gsub tiny ghint' }, hint)));
   }
   wrap.append(list);
   return wrap;
@@ -141,9 +142,9 @@ export function openTrade(app, goodId, startMode) {
           h('button', { class: 'btn small', disabled: max < 10, onclick: () => { qty = Math.min(max, qty + 10); paint(); } }, '+10'),
           h('button', { class: 'btn small', 'data-testid': 'qty-max', disabled: max === 0, onclick: () => { qty = max; paint(); } }, `Máx (${max})`),
           advice && advice.qty > 0 ? h('button', { class: 'btn small primary', 'data-testid': 'qty-worth', onclick: () => { qty = advice.qty; paint(); } }, `Lo que conviene (${advice.qty})`) : null),
-        advice ? h('p', { class: 'small muted', style: 'margin:0', 'data-testid': 'worth-note' }, advice.qty > 0
-          ? `Para venderlo en ${map.cityById[advice.cityId].name}, conviene hasta ${advice.qty}: cada una que comprás sale más cara y allá cada una que vendés rinde menos.`
-          : `Con el precio que viste en ${map.cityById[advice.cityId].name}, comprarlo acá no deja ganancia.`) : null,
+        // Si no conviene nada, ya lo dice la cuenta de "perderías" más abajo.
+        advice && advice.qty > 0 ? h('p', { class: 'small muted', style: 'margin:0', 'data-testid': 'worth-note' },
+          `Para venderlo en ${map.cityById[advice.cityId].name}, conviene hasta ${advice.qty}: cada una que comprás sale más cara y allá cada una que vendés rinde menos.`) : null,
         qty > 0 ? h('div', {}, h('div', { class: 'muted tiny', style: 'margin-bottom:4px', 'data-testid': 'unit-why' }, mode === 'buy'
           ? 'Precio de cada unidad (sube porque en la ciudad queda menos):'
           : 'Precio de cada unidad (baja porque en la ciudad ya sobra):'), h('div', { class: 'unit-prices' }, chips)) : null,

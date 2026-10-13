@@ -270,6 +270,7 @@ svg { display: block; }
 .gico, .goodart { display: inline-block; flex: none; }
 .gico svg, .goodart svg { width: 100%; height: 100%; }
 .good-row .gname { font-weight: 700; font-size: 17px; }
+.good-row .ghint { grid-column: 2 / -1; margin-top: -6px; line-height: 1.35; }
 .good-row .gsub { font-size: 13px; color: var(--ink-2); }
 .good-row .gprice { text-align: right; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
 .good-row .gprice b { font-size: 17px; color: var(--ink); }
@@ -288,6 +289,8 @@ svg { display: block; }
   max-width: 560px;
   max-height: 88dvh;
   overflow-y: auto;
+  /* Al llegar al final, el scroll no arrastra la pantalla de atrás. */
+  overscroll-behavior: contain;
   background: var(--surface);
   border-radius: 24px 24px 0 0;
   border-top: 3px solid var(--line);

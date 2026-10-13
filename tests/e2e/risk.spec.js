@@ -17,7 +17,6 @@ async function openWith(page, setup) {
     const { createEvent } = await import('./js/game/events.js');
     const { Rng } = await import('./js/core/rng.js');
     const g = createSeason({ seed: 'riesgo' });
-    // eslint-disable-next-line no-new-func
     new Function('g', 'createEvent', 'Rng', code)(g, createEvent, Rng);
     localStorage.setItem('dune-ledger:temporada', JSON.stringify(g.state));
   }, setup);

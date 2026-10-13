@@ -15,7 +15,7 @@
 .codex-goods .locked .goodart { filter: grayscale(1) brightness(0.4); opacity: 0.35; }
 .achievement { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); opacity: 0.6; }
 .achievement.done { opacity: 1; border-color: var(--gold); box-shadow: 0 2px 0 var(--gold-deep); }
-textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); overflow-wrap: anywhere; }
+textarea.code { width: 100%; font: 16px/1.4 ui-monospace, monospace; padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); overflow-wrap: anywhere; }
 
 
 /* ---------- Nueva temporada: regiones ---------- */
@@ -65,7 +65,7 @@ textarea.code { width: 100%; font: 13px/1.4 ui-monospace, monospace; padding: 10
 .region-unlock .region-art { aspect-ratio: 16 / 5; }
 
 /* ---------- Desafío del día: código de puntaje ---------- */
-input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--font); font-variant-numeric: tabular-nums; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); }
+input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 16px/1.2 var(--font); font-variant-numeric: tabular-nums; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); }
 .score-code { width: 100%; text-align: center; font-size: 17px; letter-spacing: 0.03em; }
 
 /* ---------- Tutorial ---------- */
@@ -130,9 +130,13 @@ input.code { flex: 1; min-width: 0; min-height: 48px; font: 600 15px/1.2 var(--f
 .chronicle.done { opacity: 0.85; }
 
 /* ---------- Bazar de equipo ---------- */
-.gear-row { display: flex; gap: 12px; align-items: center; }
+/* Dibujo a la izquierda; nombre y descripción a todo el ancho; el botón abajo. */
+.gear-row { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 8px; align-items: start; }
+.gear-row + .gear-row { padding-top: 12px; border-top: 1px dashed var(--line); }
 .gear-row .goodart { flex: none; }
-.gear-row .btn { flex: none; min-width: 108px; }
+.gear-row > .btn, .gear-row > .pill { grid-column: 2; justify-self: start; }
+.gear-row.noart { grid-template-columns: 1fr; }
+.gear-row.noart > .btn { grid-column: 1; }
 
 /* ---------- Gráfico del resumen (colores validados en claro y noche) ---------- */
 .chart { margin: 0; display: grid; gap: 8px; }

@@ -3,6 +3,7 @@
  * y Diario (lo que pasó cada día, o el libro mayor).
  */
 
+import { treasureCard } from './treasure.js';
 import { h } from './dom.js';
 import { getGood, ACTIVE_GOODS } from '../data/goods.js';
 import { RULES } from '../data/rules.js';
@@ -39,6 +40,7 @@ export function renderCaravan(app) {
         h('dt', {}, 'Faltas con el Gremio'), h('dd', { class: state.debt.strikes ? 'bad' : '' }, `${state.debt.strikes} de ${RULES.debt.maxStrikes}`))),
     renderCamels(app),
     gearOwnedCard(app),
+    treasureCard(app),
     h('h2', {}, 'Tripulación'),
     renderCrew(app),
     h('h2', {}, 'Carga'),

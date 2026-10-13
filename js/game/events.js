@@ -20,6 +20,7 @@ import { addLog, snapshotPrices } from './knowledge.js';
 import { fmt, plural } from '../core/text.js';
 import { lastDay } from './modes.js';
 import { nightBanditMult } from './moon.js';
+import { markDug } from './treasure.js';
 
 /** Probabilidad base de evento por día de viaje (≈ uno cada 3 o 4 días). */
 export const EVENT_RATE = 0.33;
@@ -343,6 +344,7 @@ function noteEvent(state, id, idx, success) {
   if (id === 'tormenta' && idx === 1 && success) state.stats.stormsBeaten += 1;
   if (id === 'viajero' && idx === 0) state.stats.helped += 1;
   if (id === 'control' && idx === 1 && success && state.cargo.armas > 0) state.stats.smuggled += 1;
+  if (id === 'tesoro' && idx === 0) markDug(state);
 }
 
 /**

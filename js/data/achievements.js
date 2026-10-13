@@ -36,6 +36,7 @@ export const ACHIEVEMENTS = [
   { id: 'bien-comidos', name: 'Bien comidos', desc: 'Ganá sin pasar ni un día de hambre o sed.', check: ({ over, state }) => over.won && state.stats.shortageDays === 0 },
   { id: 'incansable', name: 'Incansable', desc: 'Ganá sin descansar ni un día.', check: ({ over, state }) => over.won && state.stats.restDays === 0 },
   { id: 'tesoro', name: 'Cazatesoros', desc: 'Encontrá un tesoro en unas ruinas.', check: ({ state }) => state.stats.treasures >= 1 },
+  { id: 'mapa-tesoro', name: 'La cruz marca el lugar', desc: 'Juntá los 3 pedazos del mapa y desenterrá el tesoro.', check: ({ state }) => (state.stats.mapTreasures ?? 0) >= 1 },
   { id: 'tormenta', name: 'Contra el viento', desc: 'Atravesá una tormenta sin esperar y sin perder nada.', check: ({ state }) => state.stats.stormsBeaten >= 1 },
   { id: 'samaritano', name: 'Buen samaritano', desc: 'Ayudá a 3 viajeros heridos en una temporada.', check: ({ state }) => state.stats.helped >= 3 },
   { id: 'prudente', name: 'Paso seguro', desc: 'Ganá viajando sólo por rutas de peligro bajo.', check: ({ over, state }) => over.won && state.stats.riskyTrips === 0 && state.stats.trips > 0 },

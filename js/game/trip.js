@@ -7,7 +7,7 @@
 
 import { getGood } from '../data/goods.js';
 import { canTravel, dailyRation, waterUntil, passDay, routeDays } from './travel.js';
-import { rollEvent, resolveOption } from './events.js';
+import { rollEvent, resolveOption, createEvent } from './events.js';
 import { otherEnd } from './map-gen.js';
 import { addLog, discoverAround, snapshotPrices } from './knowledge.js';
 import { withRng } from './random.js';
@@ -19,6 +19,7 @@ import { hasGear } from './gear.js';
 import { betArrive } from './rival-deals.js';
 import { bump, see, notePeaks } from './stats.js';
 import { lastDay } from './modes.js';
+import { treasureArrive, treasureDue } from './treasure.js';
 import { canNightMarch, lostChance, moonLight, moonPhase } from './moon.js';
 
 /** Probabilidad por día de que se rompa cada cerámica en la montaña. */
@@ -102,6 +103,7 @@ function arrive(game) {
   crewArrive(game);
   chronicleArrive(game);
   betArrive(game);
+  treasureArrive(game);
   see(state, 'cityTypes', map.cityById[to].type);
   notePeaks(state);
   addLog(state, `Llegaste a ${map.cityById[to].name}.`, 'travel');
@@ -124,7 +126,8 @@ export function advanceTrip(game) {
     if (trip.rolled < k) {
       trip.rolled = k;
       if (game.options?.events !== false) {
-        const ev = withRng(state, (rng) => rollEvent(game, route, rng));
+        // Con el mapa entero, en la ruta del tesoro: el lugar para cavar.
+        const ev = treasureDue(game, route, k) ? createEvent(game, 'tesoro', null) : withRng(state, (rng) => rollEvent(game, route, rng));
         if (ev) {
           trip.event = ev;
           return { status: 'event', from: trip.from };

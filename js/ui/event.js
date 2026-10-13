@@ -21,6 +21,7 @@ const TITLES = {
   'oasis-seco': 'Oasis seco',
   nomada: 'Mercader nómada',
   ruinas: 'Ruinas antiguas',
+  tesoro: 'El lugar del mapa',
   viajero: 'Viajero herido',
   control: 'Control del sultán',
 };

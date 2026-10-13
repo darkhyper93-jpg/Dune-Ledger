@@ -118,3 +118,13 @@ export function climatePart(v) {
   need(typeof v === 'string' && Object.hasOwn(CLIMATES_BY_ID, v), 'clima');
   return v;
 }
+
+/** Valida el mapa del tesoro (las partidas viejas no tienen). */
+export function treasurePart(v, cityOk, routeOk) {
+  if (v === undefined || v === null) return null;
+  need(isObj(v) && Array.isArray(v.pieces) && Array.isArray(v.found), 'tesoro');
+  need(v.pieces.length === 3 && new Set(v.pieces).size === 3 && v.pieces.every(cityOk), 'pedazos del tesoro');
+  need(v.found.length <= 3 && new Set(v.found).size === v.found.length && v.found.every((id) => v.pieces.includes(id)), 'pedazos encontrados');
+  need(routeOk(v.route) && (v.hint === null || v.pieces.includes(v.hint)), 'tesoro');
+  return { pieces: [...v.pieces], found: [...v.found], route: v.route, gold: int(v.gold, 0, 1000, 'oro del tesoro'), hint: v.hint, dug: v.dug === true };
+}

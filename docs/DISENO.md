@@ -162,6 +162,20 @@ Durante cada viaje puede pasar algo (más probable en rutas de peligro alto). Un
 
 Así se pueden agregar eventos nuevos sin tocar la lógica, y las pruebas pueden recorrerlos todos para verificar que ningún efecto deja valores imposibles.
 
+### El mapa del tesoro
+
+Cada temporada hay un tesoro enterrado en una ruta y un mapa roto en tres
+pedazos, escondidos en tres ciudades (nunca en la de salida). Al llegar a una
+de ellas encontrás su pedazo, y cada uno dice más: el primero, la zona; el
+segundo, una punta de la ruta (que aparece en tu mapa); con el tercero, la
+ruta exacta queda marcada con una cruz. Al pasar por ella aparece la carta
+"El lugar del mapa": cavar cuesta un día de viaje y da entre 220 y 320 de
+oro; si no te da el tiempo, podés volver otro día. En la Taberna, por 25 de
+oro, un rumor dice dónde está el pedazo más cercano.
+
+La idea es premiar explorar: el negocio más rentable suele ser repetir la
+misma ruta, y el tesoro es una razón para ir a ciudades que no conocés.
+
 ## La deuda con el Gremio
 
 La deuda es el reloj del juego: le da a cada temporada una meta clara y tensión creciente.

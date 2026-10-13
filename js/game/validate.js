@@ -31,7 +31,7 @@ import { initialStats } from './stats.js';
 import { canNightMarch } from './moon.js';
 import { CODEX } from './profile.js';
 import { ACHIEVEMENTS_BY_ID } from '../data/achievements.js';
-import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart, historyPart, betPart, investPart, climatePart } from './validate-parts.js';
+import { SaveError, need, isObj, int, num, str, record, chroniclePart, rivalPart, gearPart, historyPart, betPart, investPart, climatePart, treasurePart } from './validate-parts.js';
 import { initialLedger, FLOW_IDS } from './ledger.js';
 
 const LOG_KINDS = ['info', 'trade', 'travel', 'debt', 'bad', 'good'];
@@ -207,6 +207,7 @@ export function validateState(input) {
       fair: fairPart(raw.fair, map),
       safeUntil: int(raw.safeUntil ?? 0, 0, FREE_DAYS + 10, 'salvoconducto'),
       amuletUsed: raw.amuletUsed === true,
+      treasure: treasurePart(raw.treasure, cityOk, routeOk),
       over: overPart(raw.over),
     };
     for (const c of map.cities) need(Object.hasOwn(state.stock, c.id), `stock falta ${c.id}`);

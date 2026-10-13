@@ -21,6 +21,7 @@ import { CHRONICLES, CHAPTERS } from '../data/chronicles.js';
 import { chapterNow, chronicleCheck, chronicleAct, goalText } from '../game/chronicle.js';
 import { regionId } from '../game/perks.js';
 import { hintCard } from './coach.js';
+import { treasureCard } from './treasure.js';
 
 /**
  * Tarjeta de un contrato (oferta o activo).
@@ -80,6 +81,7 @@ export function renderTavern(app) {
   return h('div', { class: 'stack' },
     hintCard(app, 'cronica'),
     chronicleCard(app),
+    treasureCard(app, { rumor: true }),
     h('h3', {}, 'Rumores'),
     rumors.length
       ? h('ul', { class: 'result-lines', 'data-testid': 'rumors' }, rumors.map((n) => h('li', {}, `Dicen que… ${newsText(n)} `, h('span', { class: 'muted small' }, `(se sabrá el día ${n.startDay})`))))

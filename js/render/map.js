@@ -13,6 +13,7 @@ import { TERRAINS } from '../data/routes.js';
 import { routeDays } from '../game/travel.js';
 import { hashUnit } from '../core/rng.js';
 import { drawMoon, drawStars } from './moon-art.js';
+import { drawTreasureMarks } from './map-treasure.js';
 import { moonLight } from '../game/moon.js';
 
 const CITY_R = 4.4;
@@ -196,6 +197,8 @@ export function createMapView(canvas, opts) {
         selected: c.id === extra.selected,
       });
     }
+
+    drawTreasureMarks(ctx, { game, sx, sy, s, r: CITY_R * s, pal });
 
     let caravan = map.cityById[state.location];
     if (extra.travel) {

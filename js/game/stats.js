@@ -13,7 +13,7 @@ export function initialStats() {
     restDays: 0, shortageDays: 0, treasures: 0, stormsBeaten: 0, helped: 0,
     maxCamels: 0, maxCrew: 0, maxLevel: 0,
     pilgrims: 0, wolves: 0, banquets: 0, piratesBeaten: 0, betsWon: 0, cargoBought: 0,
-    nightTrips: 0,
+    nightTrips: 0, mapTreasures: 0,
   };
 }
 

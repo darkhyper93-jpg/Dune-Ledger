@@ -22,7 +22,7 @@ import { DIFFICULTIES } from '../data/rules.js';
 /** Títulos de los eventos para el códice. */
 const EVENT_NAMES = {
   bandidos: 'Bandidos', 'bandidos-amigos': 'Bandidos conocidos', tormenta: 'Tormenta de arena', 'oasis-seco': 'Oasis seco',
-  nomada: 'Mercader nómada', ruinas: 'Ruinas', viajero: 'Viajero herido', control: 'Control del sultán',
+  nomada: 'Mercader nómada', ruinas: 'Ruinas', tesoro: 'El lugar del mapa', viajero: 'Viajero herido', control: 'Control del sultán',
   piratas: 'Piratas', calma: 'Calma chicha', estampida: 'Estampida', avalancha: 'Avalancha', recaudador: 'Recaudador del sultán',
   espejismo: 'Espejismo', 'pata-herida': 'Pata herida', peregrinos: 'Peregrinos', 'mercado-negro': 'Mercado negro', pozo: 'Pozo viejo',
   'matones-kasim': 'Matones de Kasim', fogon: 'Fogón compartido', niebla: 'Niebla', lobos: 'Lobos', monasterio: 'Monasterio', banquete: 'Banquete del visir', pastor: 'Pastor',

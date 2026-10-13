@@ -32,6 +32,7 @@ import { createChronicle } from './chronicle.js';
 import { recordDay } from './history.js';
 import { pickClimate } from './climate.js';
 import { initialLedger } from './ledger.js';
+import { createTreasure } from './treasure.js';
 
 export { cargoValueHere, currentScore, sealsFor, finishSeason } from './finish.js';
 export { startTrip, chooseOption } from './trip.js';
@@ -112,9 +113,11 @@ export function createSeason({ seed, mode = 'temporada', daily = null, region = 
     fair: null,
     safeUntil: 0,
     amuletUsed: false,
+    treasure: null,
     over: null,
   };
   state.rival = createRival(map, state.seed, start.id);
+  state.treasure = createTreasure(map, state.seed, start.id);
   recordDay(state);
   const game = { map, state, options: { events, eventRate } };
   discoverAround(game, start.id);

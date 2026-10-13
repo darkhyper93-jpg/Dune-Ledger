@@ -124,6 +124,18 @@ const COMMON_EVENTS = [
     ],
   },
   {
+    // Sólo sale con el mapa del tesoro entero, en su ruta (ver js/game/treasure.js).
+    id: 'tesoro',
+    weight: 0,
+    text: 'Las marcas del mapa coinciden con el paisaje: una roca partida y tres palmeras. El tesoro tiene que estar acá abajo.',
+    setup: (game) => ({ gold: game.state.treasure?.gold ?? 0 }),
+    options: [
+      { label: 'Cavar (un día más de viaje)', spareDays: 1, effects: { gold: '$gold', delay: 1 },
+        winText: '¡Un cofre lleno de monedas antiguas! Valió la pena el mapa.' },
+      { label: 'Seguir de largo (podés volver otro día)', effects: {} },
+    ],
+  },
+  {
     id: 'viajero',
     when: { notTerrain: ['mar'] },
     weight: 1,

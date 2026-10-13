@@ -537,3 +537,21 @@ peor arranca (patrimonio al día 15) gana alrededor del 52% (antes 44%).
 - Prueba de punta a punta (`tests/e2e/pwa.spec.js`) con el service worker de
   verdad: cambia el `sw.js` del sitio armado y comprueba cartel, actualización
   y "¡Listo!".
+
+## Versión 1.5 — interfaz en el celular y mapa del tesoro
+
+- **Pulido de pantallas** (revisadas una por una a 360 px, claro y oscuro):
+  los campos del código de progreso usan 16 px para que el iPhone no haga zoom
+  al tocarlos; las hojas no arrastran el scroll de la página de atrás; en el
+  mercado, el "Mejor visto" ocupa todo el ancho y no repite el consejo cuando
+  no conviene comprar; en el bazar y las inversiones el botón va debajo del
+  texto y dice el precio ("Comprar por 70 de oro").
+- **Mapa del tesoro** (`js/game/treasure.js`, ver el diseño): sale de la
+  semilla con su propio azar (`tesoro:<semilla>`), así que no cambia mercados,
+  eventos ni a Kasim de la misma semilla. La carta para cavar no usa azar y
+  ocupa el lugar del evento de ese día. Las partidas guardadas antes no tienen
+  tesoro (`treasure: null`) y siguen andando.
+- El tesoro vale 220 a 320 de oro: alcanza para que juntar el mapa valga un
+  par de desvíos, pero no reemplaza al comercio. Los bots no lo buscan; lo
+  encuentran sólo de paso, y el codicioso pasó de 72,5% a 73% de victorias.
+- Logro nuevo: "La cruz marca el lugar" (52 en total).
